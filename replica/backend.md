@@ -27,6 +27,7 @@ Without the `VITE_SUPABASE_*` values the frontend keeps using the fake in-browse
 | file | does |
 | --- | --- |
 | `supabase/migrations/0001_init.sql` | the schema (copy of `replica/schema.sql`) |
+| `supabase/migrations/0002_deleted_accounts.sql` | ids of deleted accounts, so their still-valid login tokens get 401 (BUG-003). The purge job (M3) can drop rows older than a day |
 | `backend/app/migrate.py` | runs each migration file once, records it in `schema_migrations` |
 | `backend/app/seed.py` | made-up folders and designs; refuses non-local databases without `--allow-remote` |
 | `backend/app/auth.py` | checks the login token (JWT) against Supabase's public keys; creates the profile row |

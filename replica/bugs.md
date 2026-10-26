@@ -5,10 +5,10 @@ Only bugs reproduced on 2026-10-27. Things that might be wrong but weren't repro
 
 | id | severity | title | status |
 | --- | --- | --- | --- |
-| BUG-001 | S1 | The frontend doesn't start: no `src/main.tsx`, no router, no editor | open: finish via `/replica-build` milestone 1 |
-| BUG-002 | S2 | `npm run build` fails on 8 TypeScript errors in `fake.ts` and `stubs.tsx` | open: fix waiting for your OK |
-| BUG-003 | S3 | After "delete my account", the old login token still works for up to 1 hour and recreates data | open: fix waiting for your OK |
-| BUG-004 | S3 | S24 "not found" page puts a link inside a button | open: fix waiting for your OK |
+| BUG-001 | S1 | The frontend doesn't start: no `src/main.tsx`, no router, no editor | fixed in 06f9fe2 (shell) + a583f43 (editor) |
+| BUG-002 | S2 | `npm run build` fails on 8 TypeScript errors in `fake.ts` and `stubs.tsx` | fixed in 06f9fe2 |
+| BUG-003 | S3 | After "delete my account", the old login token still works for up to 1 hour and recreates data | fixed in c0c21a9 |
+| BUG-004 | S3 | S24 "not found" page puts a link inside a button | fixed in 06f9fe2 |
 
 ### BUG-001: The frontend doesn't start
 
@@ -29,7 +29,7 @@ Actual: `Error: Failed to resolve /src/main.tsx from C:/Users/HARSHIT/alacrity/c
 Evidence: build output above; `Grep createRoot|<Routes|path=` in `frontend/src` finds nothing.
 Suspected cause: the last `/replica-build` run stopped after the screen pieces (Login, Home, CreateDesign,
 DesignCard, UI kit), before the app shell.
-Status: open. This is unfinished build work, not a regression; fixed by `/replica-build` milestone 1.
+Status: fixed in 06f9fe2 (`main.tsx`, routes) and a583f43 (editor S08). Check: `npm run build` passes; the app runs and the core loop was clicked through on fake data (see `build-log.md`).
 
 ### BUG-002: The production build fails on TypeScript errors
 
@@ -52,7 +52,7 @@ Evidence: `npx tsc --noEmit` output, 2026-10-27.
 Suspected cause: `fake.ts`'s `put(store, row: { id: string })` is too narrow for object literals (TypeScript
 refuses extra fields written inline); it should take any row that has an `id`. `Button` has no `asLink`
 prop (see BUG-004).
-Status: open. The fix is small (type of `put()`, and BUG-004); waiting for your OK.
+Status: fixed in 06f9fe2. `put()` is generic over rows with an `id`; `npx tsc --noEmit` reports 0 errors.
 
 ### BUG-003: After deleting the account, the old login token still works and recreates data
 
@@ -76,7 +76,7 @@ Suspected cause: the API trusts any validly signed, unexpired token and creates 
 missing (`auth.py`). Deleting the Supabase user doesn't revoke tokens already handed out.
 Suggested fix: on account deletion, record the user id in a small `deleted_accounts` table (new migration,
 RLS on); `current_user` answers 401 for those ids. Waiting for your OK.
-Status: open.
+Status: fixed in c0c21a9. Migration `0002_deleted_accounts.sql`; the login check answers 401 for deleted ids. Regression test `test_BUG_003_old_token_refused_after_account_deletion` (failed before the fix, passes after). Still possible: a request landing in the very same moment as the deletion.
 
 ### BUG-004: The "not found" page (S24) puts a link inside a button
 
@@ -95,7 +95,7 @@ Actual: `<Button asLink><Link …/></Button>`. `Button` has no `asLink` prop (TS
 Evidence: TS2322 at `stubs.tsx(25,19)`; `Button.tsx` props (`ButtonProps extends ButtonHTMLAttributes`).
 Suggested fix: render the `Link` itself with the button's classes (or give `Button` an `asChild` via Radix
 `Slot`, already installed through `radix-ui`).
-Status: open.
+Status: fixed in 06f9fe2. "Back to Home" is one link with the button styling (`buttonStyles()`); it says Home because Projects is still a stub in milestone 1.
 
 ## To check (not reproduced, can't be yet)
 

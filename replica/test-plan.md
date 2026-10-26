@@ -2,7 +2,10 @@
 
 Build: no commit yet (working tree of 2026-10-27)  Date: 2026-10-27  Env: local, throwaway Postgres + fake Storage / login keys
 
-**State of the app:** the backend runs and is tested. The frontend **does not start** (BUG-001: no
+**Update 2026-10-27, after `/replica-build` milestone 1:** the app starts and the core loop runs on fake
+data (BUG-001/002/003/004 fixed). Many "blocked" rows below can now be run: re-run `/replica-test`.
+
+**State of the app (when this plan was written):** the backend runs and is tested. The frontend **does not start** (BUG-001: no
 `src/main.tsx`, no router, no editor yet), so every case that needs a screen is **blocked** until
 `/replica-build` milestone 1. Playwright + axe specs get written then, one per flow, in `e2e/`.
 
