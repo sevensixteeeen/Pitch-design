@@ -80,6 +80,14 @@ export class NotFoundError extends Error {
   }
 }
 
+/** The login expired or was revoked. HTTP 401. */
+export class SignedOutError extends Error {
+  constructor() {
+    super("Please log in again.");
+    this.name = "SignedOutError";
+  }
+}
+
 /** Input the server refuses (size, file type, quota). HTTP 422. */
 export class ValidationError extends Error {
   constructor(message: string) {

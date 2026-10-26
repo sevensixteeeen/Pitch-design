@@ -6,6 +6,7 @@ import { AppLayout } from "./layouts/AppLayout";
 import { Login } from "./pages/Login";
 import { Home } from "./pages/Home";
 import { NotFound, StubPage } from "./pages/stubs";
+import { EditorPage } from "./editor/EditorPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <Login /> }, // S01
@@ -29,9 +30,7 @@ export const router = createBrowserRouter([
     path: "/design/:designId/edit",
     element: (
       <RequireAuth>
-        <div className="p-8">
-          <StubPage id="S08" title="Editor" milestone="milestone 1" />
-        </div>
+        <EditorPage />
       </RequireAuth>
     ),
   },

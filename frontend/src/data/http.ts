@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import {
   ConflictError,
   NotFoundError,
+  SignedOutError,
   UPLOAD_TYPES,
   ValidationError,
   type Asset,
@@ -15,14 +16,6 @@ import {
   type Folder,
   type User,
 } from "./api";
-
-/** The login expired or was revoked. getUser() turns it into "signed out". */
-class SignedOutError extends Error {
-  constructor() {
-    super("Please log in again.");
-    this.name = "SignedOutError";
-  }
-}
 
 interface SignedUpload {
   bucket: string;
