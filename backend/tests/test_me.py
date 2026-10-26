@@ -52,3 +52,13 @@ def test_auth_user_deleted_only_after_rows(database_url, client, storage, alice)
     except RuntimeError:
         pass
     assert count_rows(database_url, alice.id)["designs"] == 0
+
+
+def test_BUG_003_old_token_refused_after_account_deletion(database_url, client, alice):
+    """A login token handed out before the deletion stays valid for up to an hour. It must not
+    bring the account back (an open tab would otherwise recreate the profile and new designs)."""
+    assert client.request("DELETE", "/api/me", json={"confirm": "DELETE"}, headers=alice.headers).status_code == 204
+    assert client.get("/api/me", headers=alice.headers).status_code == 401
+    res = client.post("/api/designs", json={"width_px": 100, "height_px": 100}, headers=alice.headers)
+    assert res.status_code == 401
+    assert set(count_rows(database_url, alice.id).values()) == {0}

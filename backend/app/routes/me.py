@@ -36,7 +36,9 @@ def delete_me(body: DeleteAccount, user: User, conn: Conn, files: Files) -> Resp
     """Deletes everything, in an order where a failure at any step can simply be retried:
 
     1. the user's files in Storage (rows still point at them, so a retry finds them again)
-    2. the profile row; the database cascades to designs, folders, assets, versions
+    2. the profile row; the database cascades to designs, folders, assets, versions. The id goes
+       into deleted_accounts in the same step, so tokens still in use stop working
+       (they stay validly signed until they expire)
     3. the Supabase login itself
     """
     paths = [
@@ -49,6 +51,8 @@ def delete_me(body: DeleteAccount, user: User, conn: Conn, files: Files) -> Resp
         ).fetchall()
     ]
     files.remove(paths)
+    # remembered first, in the same transaction: tokens still in use get 401 from now on
+    conn.execute("insert into deleted_accounts (id) values (%s) on conflict do nothing", (user.id,))
     conn.execute("delete from profiles where id = %s", (user.id,))
     conn.commit()
     files.delete_auth_user(user.id)

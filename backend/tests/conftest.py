@@ -113,7 +113,7 @@ def storage():
 @pytest.fixture
 def client(database_url, storage):
     with psycopg.connect(database_url) as conn:
-        conn.execute("truncate profiles, templates cascade")
+        conn.execute("truncate profiles, templates, deleted_accounts cascade")
     reset_all()
     app.dependency_overrides[get_jwks_client] = lambda: FakeJwks(SIGNING_KEY.public_key())
     app.dependency_overrides[get_storage] = lambda: storage

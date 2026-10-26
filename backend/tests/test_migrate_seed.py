@@ -8,8 +8,8 @@ def test_migrate_runs_each_file_once(database_url):
     # the session fixture already applied everything
     assert migrate(database_url) == []
     with psycopg.connect(database_url) as conn:
-        names = [r[0] for r in conn.execute("select filename from schema_migrations")]
-        assert names == ["0001_init.sql"]
+        names = [r[0] for r in conn.execute("select filename from schema_migrations order by filename")]
+        assert names == ["0001_init.sql", "0002_deleted_accounts.sql"]
 
 
 def test_rls_on_for_every_table(database_url):

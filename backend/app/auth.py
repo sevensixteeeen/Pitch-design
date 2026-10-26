@@ -70,6 +70,9 @@ def current_user(
         user_id = UUID(claims["sub"])
     except ValueError as exc:
         raise _unauthorized() from exc
+    # a token issued before "delete my account" is still validly signed until it expires (BUG-003)
+    if conn.execute("select 1 from deleted_accounts where id = %s", (user_id,)).fetchone():
+        raise _unauthorized()
     # make sure the profile exists before any route inserts rows that point at it
     conn.execute("insert into profiles (id) values (%s) on conflict do nothing", (user_id,))
     return CurrentUser(id=user_id, email=claims.get("email") or "")
