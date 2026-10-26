@@ -72,7 +72,7 @@ async function get<T>(store: Store, id: string): Promise<T | undefined> {
   const tx = (await db()).transaction(store, "readonly");
   return request(tx.objectStore(store).get(id) as IDBRequest<T | undefined>);
 }
-async function put(store: Store, row: { id: string }): Promise<void> {
+async function put<T extends { id: string }>(store: Store, row: T): Promise<void> {
   const tx = (await db()).transaction(store, "readwrite");
   await request(tx.objectStore(store).put(row));
 }

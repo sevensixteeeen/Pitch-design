@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Construction, SearchX } from "lucide-react";
-import { Button } from "../components/ui/Button";
+import { buttonStyles } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/feedback";
 
 /** Placeholder for a screen that exists in the route map but isn't built yet. */
@@ -22,9 +22,10 @@ export function NotFound() {
         title="We can't find that page"
         body="It may have been deleted, or it belongs to someone else."
         action={
-          <Button asLink>
-            <Link to="/projects">Back to Projects</Link>
-          </Button>
+          // one link that looks like a button (a link inside a <button> is two controls in one)
+          <Link to="/" className={buttonStyles()}>
+            Back to Home
+          </Link>
         }
       />
     </div>

@@ -25,6 +25,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
 }
 
+/** The button look, for a link that should look like a button (e.g. <Link className={buttonStyles()}>). */
+export function buttonStyles({ variant = "secondary", size = "md", className }: { variant?: Variant; size?: Size; className?: string } = {}) {
+  return cn(
+    "inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-md transition-colors duration-[var(--tk-motion-fast)] active:translate-y-px",
+    "disabled:pointer-events-none disabled:opacity-50",
+    focusRing,
+    variants[variant],
+    sizes[size],
+    className,
+  );
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = "secondary", size = "md", loading = false, icon, className, children, disabled, type = "button", ...rest },
   ref,
@@ -35,14 +47,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        "inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-md transition-colors duration-[var(--tk-motion-fast)] active:translate-y-px",
-        "disabled:pointer-events-none disabled:opacity-50",
-        focusRing,
-        variants[variant],
-        sizes[size],
-        className,
-      )}
+      className={buttonStyles({ variant, size, className })}
       {...rest}
     >
       {loading ? <Spinner /> : icon}
