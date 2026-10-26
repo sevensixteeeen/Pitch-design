@@ -1,0 +1,112 @@
+# Bugs: Canva clone
+
+Only bugs reproduced on 2026-10-27. Things that might be wrong but weren't reproduced are under
+"To check" at the end. Format: replica-test `bug-report.md`. Build: no commit yet (working tree 2026-10-27).
+
+| id | severity | title | status |
+| --- | --- | --- | --- |
+| BUG-001 | S1 | The frontend doesn't start: no `src/main.tsx`, no router, no editor | open: finish via `/replica-build` milestone 1 |
+| BUG-002 | S2 | `npm run build` fails on 8 TypeScript errors in `fake.ts` and `stubs.tsx` | open: fix waiting for your OK |
+| BUG-003 | S3 | After "delete my account", the old login token still works for up to 1 hour and recreates data | open: fix waiting for your OK |
+| BUG-004 | S3 | S24 "not found" page puts a link inside a button | open: fix waiting for your OK |
+
+### BUG-001: The frontend doesn't start
+
+- Severity: S1 (core flow blocked: no flow can be used at all)
+- Flow / case: every flow; F01-H1, F02-H1
+- Screen: all
+- Build: working tree 2026-10-27  Browser / device: n/a (fails before a browser is involved)
+
+Steps
+1. `cd frontend`
+2. `npx vite build` (or `npm run dev` and open http://localhost:5173)
+
+Expected: the app builds / the login screen (S01) loads.
+Actual: `Error: Failed to resolve /src/main.tsx from C:/Users/HARSHIT/alacrity/canva-clone/frontend/index.html`.
+`index.html` loads `/src/main.tsx`, which doesn't exist. Nothing creates the React root or the routes
+(`/login`, `/`, `/create`, `/design/:id/edit`…). The editor screen (S08) isn't written yet.
+(`@supabase/supabase-js`, which was also missing, was installed on 2026-10-27.)
+Evidence: build output above; `Grep createRoot|<Routes|path=` in `frontend/src` finds nothing.
+Suspected cause: the last `/replica-build` run stopped after the screen pieces (Login, Home, CreateDesign,
+DesignCard, UI kit), before the app shell.
+Status: open. This is unfinished build work, not a regression; fixed by `/replica-build` milestone 1.
+
+### BUG-002: The production build fails on TypeScript errors
+
+- Severity: S2 (`npm run build` runs `tsc --noEmit` first, so nothing can be built for deploy; no workaround
+  short of skipping the type check)
+- Flow / case: all (deploy)
+- Screen: n/a
+- Build: working tree 2026-10-27
+
+Steps
+1. `cd frontend`
+2. `npx tsc --noEmit`
+
+Expected: no errors.
+Actual: 8 errors (re-checked after installing supabase-js, which removed 2 others):
+- `src/data/fake.ts` lines 167, 290, 296, 309, 348, 389, 394: TS2353 "Object literal may only specify known
+  properties, and 'owner_id' / 'deleted_at' / 'folder_id' does not exist in type '{ id: string; }'".
+- `src/pages/stubs.tsx` line 25: TS2322 "Property 'asLink' does not exist on type … ButtonProps".
+Evidence: `npx tsc --noEmit` output, 2026-10-27.
+Suspected cause: `fake.ts`'s `put(store, row: { id: string })` is too narrow for object literals (TypeScript
+refuses extra fields written inline); it should take any row that has an `id`. `Button` has no `asLink`
+prop (see BUG-004).
+Status: open. The fix is small (type of `put()`, and BUG-004); waiting for your OK.
+
+### BUG-003: After deleting the account, the old login token still works and recreates data
+
+- Severity: S3 (deletion does run; but a still-open tab can bring back a profile and create designs that no
+  one can ever log in to see or delete)
+- Flow / case: X-3 (delete account)
+- Screen: S23 (route only so far)
+- Build: working tree 2026-10-27
+
+Steps
+1. Alice is logged in in two tabs.
+2. Tab A: `DELETE /api/me` with `{"confirm": "DELETE"}` → 204.
+3. Tab B, same token (valid up to 1 hour): `GET /api/me`, then `POST /api/designs`.
+
+Expected: 401 "Please log in again." in tab B; nothing of Alice's in the database.
+Actual: `GET /api/me` → 200, `POST /api/designs` → 201. Afterwards the database has 1 profile and 1 design for
+Alice. Her Supabase login no longer exists, so these rows stay forever.
+Evidence: a probe test run 2026-10-27 printed `me=200 create=201 profiles=1 designs=1`. The test was removed
+again; it becomes the regression test with the fix.
+Suspected cause: the API trusts any validly signed, unexpired token and creates the profile if it is
+missing (`auth.py`). Deleting the Supabase user doesn't revoke tokens already handed out.
+Suggested fix: on account deletion, record the user id in a small `deleted_accounts` table (new migration,
+RLS on); `current_user` answers 401 for those ids. Waiting for your OK.
+Status: open.
+
+### BUG-004: The "not found" page (S24) puts a link inside a button
+
+- Severity: S3 (visibly works with a mouse, but it's invalid HTML: a `<button>` containing an `<a>`.
+  Keyboard users get two tab stops for one action, and screen readers announce it oddly)
+- Flow / case: F02-N1 (someone else's design → S24)
+- Screen: S24
+- Build: working tree 2026-10-27
+
+Steps
+1. Read `frontend/src/pages/stubs.tsx` lines 24–28, or run `npx tsc --noEmit`.
+
+Expected: one link styled as a button ("Back to Projects").
+Actual: `<Button asLink><Link …/></Button>`. `Button` has no `asLink` prop (TS2322), so it renders a real
+`<button>` with the link inside.
+Evidence: TS2322 at `stubs.tsx(25,19)`; `Button.tsx` props (`ButtonProps extends ButtonHTMLAttributes`).
+Suggested fix: render the `Link` itself with the button's classes (or give `Button` an `asChild` via Radix
+`Slot`, already installed through `radix-ui`).
+Status: open.
+
+## To check (not reproduced, can't be yet)
+
+- **T1 Accent search on Supabase.** `F02-E8` passes locally, but the test database uses the Windows locale
+  `English_India.utf8`; Supabase's differs. Run the same search (`CAFÉ` → `Café menu`) once live.
+- **T2 "Email already used" message.** With "Confirm email" on, Supabase hides whether an email exists
+  (sign-up "succeeds" without a session), so F01-N2 will likely show "Check your inbox" instead of
+  "There's already an account". That is Supabase's anti-enumeration behaviour; decide if that is fine.
+- **T3 Groups and future element types.** `backend/app/document.py` knows text, shape and image only. When
+  milestone 2 adds groups or lines, saves will be refused (422) unless the model is updated first.
+- **T4 Real Storage calls.** Every upload / thumbnail / delete test uses a fake Storage. First live upload:
+  if every upload ends in "didn't match", check `file_info()` in `storage.py`.
+- **T5 Canvas tainting.** F02-E15 (PNG export including an uploaded photo) can only be checked with live
+  Storage and the editor.

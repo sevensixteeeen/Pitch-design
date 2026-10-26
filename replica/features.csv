@@ -1,0 +1,63 @@
+feature,area,priority,original,clone,notes
+Sign up and log in with email,onboarding,must,yes,partial,S01 | backend: Supabase Auth + token check in API; live test pending (needs Supabase keys)
+Home with recent designs and empty state,home,must,yes,no,S02
+Create a design from a preset size,create,must,yes,no,S03 - presets are our own list (post / story / A4 / slide)
+Create a design with custom width x height,create,must,yes,no,S03 - 40..8000 px; area cap; px/in/mm/cm units [help][api]
+Editor shell with side panel and top bar,editor,must,yes,no,S08
+Add text box (heading / subheading / body),text,must,yes,no,S10
+Edit text in place on the canvas,text,must,yes,no,S08 - hard part 2
+Font family / size / colour / bold / italic / underline / align,text,must,yes,no,S15 S14 - Google Fonts only
+Add basic shapes and lines,elements,must,yes,no,S09
+Shape fill and stroke colour,elements,must,yes,no,S14
+Upload your own images,uploads,must,yes,no,S11 - size and type limits; error state | backend: 3-step upload (start/complete) with type/size/quota checks done
+Place uploaded image on page,uploads,must,yes,no,S11 -> S08 drag or click
+Select / multi-select / drag-select,canvas,must,yes,no,hard part 1
+Move resize and rotate elements,canvas,must,yes,no,hard part 1
+Snap and smart alignment guides,canvas,must,yes,no,hard part 1
+Align to page and to each other,arrange,must,yes,no,S13 [help]
+Layer order forward / backward / front / back,arrange,must,yes,no,S13 [help]
+Group and ungroup,arrange,must,yes,no,Ctrl+G / Ctrl+Shift+G [help][3p]
+Duplicate and delete elements,arrange,must,yes,no,context toolbar + keyboard
+Transparency / opacity,elements,must,yes,no,slider [3p]
+Page background colour,pages,must,yes,no,S14
+Undo and redo,editor,must,yes,no,Ctrl+Z / Ctrl+Shift+Z - hard part 4
+Autosave with saved / saving indicator,editor,must,yes,no,S08 states - hard part 4 | backend: PUT content with revision + 409 done
+Zoom and fit to screen,editor,must,yes,no,BottomBar
+Add / duplicate / delete pages,pages,must,yes,no,cannot delete last page
+Download as PNG,export,must,yes,no,S20 - core loop end
+Download as JPG with quality slider,export,must,yes,no,S20 [help]
+Download as PDF (all or chosen pages),export,must,yes,no,S20 - hard part 3
+Projects list of all designs,projects,must,yes,no,S05 | backend: GET /api/designs done
+Rename and delete a design,projects,must,yes,no,S05 DesignCard menu | backend: PATCH + trash routes done
+Lock and unlock elements,arrange,should,yes,no,Alt+Shift+L [3p]
+Layers list with drag to reorder,arrange,should,yes,no,S13 Layers tab [help][3p]
+Exact position and size inputs (X Y W H rotation),arrange,should,yes,no,S13
+Crop an image,uploads,should,yes,no,S17
+Flip horizontal / vertical,elements,should,yes,no,[3p]
+Text effects (shadow / outline),text,should,yes,no,S16 [3p]
+Letter spacing and line height,text,should,yes,no,[3p]
+Start from a template (our own set),templates,should,yes,no,S04 S12 - write 10-20 of our own
+Pages grid view with drag reorder,pages,should,yes,no,S18
+Folders and move design to folder,projects,should,yes,no,S05 S06 | backend: folder routes done
+Trash with restore and 30-day purge,projects,should,yes,no,S07 [help] | backend: trash/restore/delete done; purge job pending
+Keyboard shortcuts (copy paste nudge delete),editor,should,yes,no,[3p] list - verify
+Right-click context menu,editor,should,yes,no,S08
+Export scale (1x 2x 3x),export,should,yes,no,S20 [help] - paid in original
+Not found / no access page,editor,should,yes,no,S24 - deleted design or someone else's design
+Sign in with Google,onboarding,could,yes,no,OAuth
+Transparent PNG export,export,could,yes,no,[help] paid in original
+Version history and restore,editor,could,yes,no,S21 [help] paid in original
+Resize design to another size (copy and resize),editor,could,yes,no,S22 - paid Magic Resize in original
+Curved text,text,could,yes,no,S16 [3p]
+Image corner radius and border,uploads,could,yes,no,[3p]
+Search your own designs,projects,could,yes,no,S02 SearchInput | backend: q= title search (ilike) done
+Account settings and delete account,account,could,yes,partial,S23 | backend: DELETE /api/me done and tested; S23 screen pending
+Canva template library,templates,skip,yes,skip,owned by Canva and its creators - use our own templates
+Stock photos / graphics / video / audio,elements,skip,yes,skip,licensed content - optional later via Unsplash/Pexels API under their terms
+Pro / licensed fonts,text,skip,yes,skip,licensed - use open-licence Google Fonts
+Magic Studio AI tools (bg remover / Magic Write / Magic Design),ai,skip,yes,skip,Canva's own models - could add later with your own model
+Print ordering,print,skip,yes,skip,partner deals
+Apps marketplace and integrations,integrations,skip,yes,skip,partner network
+Real-time collaboration / comments / share links,sharing,skip,yes,skip,out of the chosen scope - would make it L
+Brand kit,brand,skip,yes,skip,out of the chosen scope (paid in original)
+Video / Docs / Whiteboards / Sheets / Websites,products,skip,yes,skip,separate products
