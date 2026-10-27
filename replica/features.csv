@@ -3,7 +3,7 @@ Sign up and log in with email,onboarding,must,yes,yes,S01 | backend: Supabase Au
 Home with recent designs and empty state,home,must,yes,yes,S02 | M1 built (search; empty; loading; error states) | live on Supabase 2026-10-27: empty state then the new design listed
 Create a design from a preset size,create,must,yes,yes,S03 - presets are our own list (post / story / A4 / slide) | M1 built (5 presets of our own) | live on Supabase 2026-10-27: a design created (presets and custom size use the same call)
 Create a design with custom width x height,create,must,yes,yes,S03 - 40..8000 px; area cap; px/in/mm/cm units [help][api] | M1 built (px/in/mm/cm; limits checked) | live on Supabase 2026-10-27: a design created (presets and custom size use the same call)
-Editor shell with side panel and top bar,editor,must,yes,partial,S08 | M1: Home; title; save status; PNG download; Text/Elements/Uploads rail. File menu; rename; undo/redo; Share; BottomBar later
+Editor shell with side panel and top bar,editor,must,yes,partial,"S08 | M1: Home; title; save status; PNG download; Text/Elements/Uploads rail. File menu; rename; undo/redo; Share; BottomBar later | 2a adds undo/redo, the selection toolbar and the bottom bar (zoom; page counter); File menu, rename and Share still to come"
 Add text box (heading / subheading / body),text,must,yes,yes,S10 | M1 all three presets | live on Supabase 2026-10-27: text saved and reloaded
 Edit text in place on the canvas,text,must,yes,no,S08 - hard part 2
 Font family / size / colour / bold / italic / underline / align,text,must,yes,no,S15 S14 - Google Fonts only
@@ -11,18 +11,18 @@ Add basic shapes and lines,elements,must,yes,partial,S09 | M1 rectangle only; el
 Shape fill and stroke colour,elements,must,yes,no,S14
 Upload your own images,uploads,must,yes,yes,S11 - size and type limits; error state | backend: 3-step upload (start/complete) with type/size/quota checks done | M1 upload panel with errors | live on Supabase 2026-10-27: file in the private bucket; size checked by the server
 Place uploaded image on page,uploads,must,yes,partial,S11 -> S08 drag or click | M1 click to place; drag onto page in M2 | live check pending (photo uploaded but not yet placed)
-Select / multi-select / drag-select,canvas,must,yes,partial,hard part 1 | M1 click to select one; multi/drag-select in M2
-Move resize and rotate elements,canvas,must,yes,partial,hard part 1 | M1 drag to move only; resize/rotate in M2
-Snap and smart alignment guides,canvas,must,yes,no,hard part 1
-Align to page and to each other,arrange,must,yes,no,S13 [help]
-Layer order forward / backward / front / back,arrange,must,yes,no,S13 [help]
+Select / multi-select / drag-select,canvas,must,yes,yes,hard part 1 | M1 click to select one; multi/drag-select in M2 | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): click; Shift-click; drag a box; plain click picks one
+Move resize and rotate elements,canvas,must,yes,yes,hard part 1 | M1 drag to move only; resize/rotate in M2 | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): several at once; text corners scale the font and the sides re-wrap; images keep proportions; rotation snaps to 45 degrees
+Snap and smart alignment guides,canvas,must,yes,partial,hard part 1 | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): snaps to page edges and centre and to other elements while moving (Alt turns it off); not yet while resizing; no equal-spacing guides
+Align to page and to each other,arrange,must,yes,yes,S13 [help] | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Position menu; one element aligns to the page and several align together
+Layer order forward / backward / front / back,arrange,must,yes,yes,S13 [help] | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Position menu and Ctrl+] / Ctrl+[ (+Shift)
 Group and ungroup,arrange,must,yes,no,Ctrl+G / Ctrl+Shift+G [help][3p]
-Duplicate and delete elements,arrange,must,yes,no,context toolbar + keyboard
-Transparency / opacity,elements,must,yes,no,slider [3p]
+Duplicate and delete elements,arrange,must,yes,yes,context toolbar + keyboard | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): toolbar and Ctrl+D / Delete
+Transparency / opacity,elements,must,yes,yes,slider [3p] | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Opacity slider; one undo step per drag
 Page background colour,pages,must,yes,no,S14
-Undo and redo,editor,must,yes,no,Ctrl+Z / Ctrl+Shift+Z - hard part 4
+Undo and redo,editor,must,yes,yes,Ctrl+Z / Ctrl+Shift+Z - hard part 4 | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): 100 steps; buttons and Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y; history lives in the browser and is cleared on reload
 Autosave with saved / saving indicator,editor,must,yes,yes,S08 states - hard part 4 | backend: PUT content with revision + 409 done | M1 all states (saving; reconnecting; other tab; gone; logged out) | live on Supabase 2026-10-27: 9 saves; reload shows every edit
-Zoom and fit to screen,editor,must,yes,no,BottomBar
+Zoom and fit to screen,editor,must,yes,yes,BottomBar | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): bottom bar buttons and menu; Ctrl+= / Ctrl+- / Ctrl+0; Ctrl+scroll; PNG stays at real size
 Add / duplicate / delete pages,pages,must,yes,no,cannot delete last page
 Download as PNG,export,must,yes,partial,S20 - core loop end | M1 exact design size; photo included (fake data); live Storage tainting check pending | live check pending: PNG with a Storage photo (bugs.md T5)
 Download as JPG with quality slider,export,must,yes,no,S20 [help]
@@ -40,7 +40,7 @@ Start from a template (our own set),templates,should,yes,no,S04 S12 - write 10-2
 Pages grid view with drag reorder,pages,should,yes,no,S18
 Folders and move design to folder,projects,should,yes,no,S05 S06 | backend: folder routes done
 Trash with restore and 30-day purge,projects,should,yes,no,S07 [help] | backend: trash/restore/delete done; purge job pending
-Keyboard shortcuts (copy paste nudge delete),editor,should,yes,no,[3p] list - verify
+Keyboard shortcuts (copy paste nudge delete),editor,should,yes,partial,[3p] list - verify | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): nudge (Shift = 10 px); delete; duplicate; select all; undo; zoom; layers; Escape. Copy/paste not yet
 Right-click context menu,editor,should,yes,no,S08
 Export scale (1x 2x 3x),export,should,yes,no,S20 [help] - paid in original
 Not found / no access page,editor,should,yes,partial,S24 - deleted design or someone else's design | M1 S24 for unknown pages and missing designs; fake data only; live Supabase pending

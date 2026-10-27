@@ -65,6 +65,56 @@ publishable key ("permission denied"). You clicked through with your own email:
 
 Features moved to `yes`: 7 (parity 16.4 → 24.6, must-haves 0 → 7 of 30).
 
+## Milestone 2a: canvas editing (2026-10-27)
+
+| part | state | notes |
+| --- | --- | --- |
+| select: click, Shift-click, drag a box; a plain click picks one | done | |
+| move several at once, snapping to page edges and centre and to other elements | done | Alt turns snapping off |
+| resize and rotate handles | done | text: the corners scale the font, the sides re-wrap; images keep proportions; rotation snaps to 45° |
+| duplicate, delete, layer order, align | done | selection toolbar (Position menu) and shortcuts |
+| opacity | done | slider; one undo step per drag |
+| undo / redo | done | 100 steps, browser only (cleared on reload, as planned) |
+| zoom | done | bottom bar, Ctrl+= / − / 0, Ctrl+scroll; scrollbars when zoomed in; PNG stays at real size |
+| keyboard | done | the element list (Tab into it, Enter selects), then arrows nudge 1 px (Shift: 10 px), Delete, Escape |
+| group / ungroup | **moved to 2b** | needs a new element type in the document model (server first, `bugs.md` T3) |
+| not in 2a | | snapping while resizing, equal-spacing guides, hover outline, context menu, copy/paste, the zoom slider (+/− buttons and a menu instead) |
+
+Harder than expected:
+- **Konva's own dragging would fight a multi-selection.** Its handles already move the other selected
+  items themselves (by starting a drag on each), which would have clashed with snapping and moved them
+  twice. Caught while reading the code, before testing. Moving is done by hand instead (mouse-move,
+  snapping, one commit on release).
+- **Re-wrapping text made it jump.** A narrower text box gets taller; keeping the box's centre fixed moved
+  the text up. Found in the browser test, fixed by keeping the (rotated) top-left corner fixed, and
+  re-tested.
+- **While a text side handle is dragged, the text is drawn stretched.** It re-wraps when the mouse is
+  released. Live re-wrapping during the drag is left for later.
+- **No screenshots this time.** The test browser window was behind other windows, and Chrome then neither
+  draws it nor lets it be captured. Every step was checked through the saved design data instead
+  (positions, sizes, rotation, font size, order, opacity) using real mouse drags and keys.
+
+Checked in the browser on fake data (a second dev server, `npx vite --mode fake --port 5174`, using
+`.env.fake.local`, so your Supabase project was untouched):
+- move +196 / +118 px
+- resize +98 px
+- rotate to exactly 90°
+- text corner: font 86 → 96.32
+- text side: width −294, two lines, top kept
+- snap the centre onto exactly 540
+- undo / redo
+- duplicate (+20 px), delete, undo a delete
+- keyboard select and nudge (+3, +10)
+- send to back
+- align left (x = 0)
+- opacity 0.8
+- zoom 51 → 67 → 75 % and back to fit
+- PNG still 1080 × 1080 while zoomed
+- no console errors
+- `npm run build` passes
+
+Feature matrix: 8 rows moved to `yes`, 2 to `partial`, 1 note updated. Parity 24.6 → 43.0; must-haves 7 → 15 of 30.
+
 ## Name and scope (2026-10-27)
 
 - **Renamed to Pitch:** the browser tab, sidebar, login screen, API title, README and `HOW-TO-RUN.md`.
