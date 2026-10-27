@@ -65,6 +65,39 @@ publishable key ("permission denied"). You clicked through with your own email:
 
 Features moved to `yes`: 7 (parity 16.4 → 24.6, must-haves 0 → 7 of 30).
 
+## Milestone 2b-1: text and colour (2026-10-27)
+
+| part | state | notes |
+| --- | --- | --- |
+| type on the page (S08) | done | double-click or Enter; a text area exactly over the text (font, size, spacing, rotation, zoom); Escape / Ctrl+Enter / click away finishes; one undo step; an emptied box is removed |
+| text toolbar (S15) | done | font menu (each font shown in itself), size, colour, B/I/U (+ Ctrl+B/I/U), alignment, Spacing popover (letter spacing, line height) |
+| fonts | done | 8 new open-licence fonts + Inter, installed as `@fontsource` packages and served by the app; the editor waits for the design's fonts before drawing |
+| colour picker (S14) | done | colours in this design, 12 defaults, "none" for outlines, the system picker (one undo step per drag), hex field with an error message |
+| shapes | done | fill, outline colour, outline width; a new outline starts at 4 px |
+| page background | done | the toolbar shows the Page controls when nothing is selected |
+| not in 2b-1 | | live re-wrapping while dragging a text side handle (still stretches until release); copy/paste; the colour picker's own saturation square (the system picker instead) |
+
+Every change that alters a text box's height (typing, font, size, bold, spacing, line height) re-measures
+it with the real font and keeps its top-left corner in place (same helper as the 2a fix).
+
+Checked in the browser on fake data:
+- page background to yellow
+- double-click and type: saved, 2 lines, top kept, focus back on the canvas
+- font to Lora: saved; Lora loaded from the app's own files; 0 requests outside the app
+- size 120: 3 lines, height 468
+- Ctrl+B turns bold off
+- red swatch, then hex `#2b8a3e`, then `zz12` refused with a message
+- left alignment
+- letter spacing +6 px and line height 1.5: height 540, top kept
+- blue fill
+- outline added at 4 px, then removed
+- three live system-picker colours undone in one step
+- Enter edits from the keyboard; emptying removes the box; Ctrl+Z restores it with every style
+- reload: the Lora heading reopens with its font ready
+- no console errors; `npm run build` passes; `npm audit` 0 vulnerabilities
+
+Feature matrix: 5 rows to `yes`, 1 note. Parity 43.0 → 53.9; must-haves 15 → 19 of 30.
+
 ## Milestone 2a: canvas editing (2026-10-27)
 
 | part | state | notes |

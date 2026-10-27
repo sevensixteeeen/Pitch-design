@@ -5,10 +5,10 @@ Create a design from a preset size,create,must,yes,yes,S03 - presets are our own
 Create a design with custom width x height,create,must,yes,yes,S03 - 40..8000 px; area cap; px/in/mm/cm units [help][api] | M1 built (px/in/mm/cm; limits checked) | live on Supabase 2026-10-27: a design created (presets and custom size use the same call)
 Editor shell with side panel and top bar,editor,must,yes,partial,"S08 | M1: Home; title; save status; PNG download; Text/Elements/Uploads rail. File menu; rename; undo/redo; Share; BottomBar later | 2a adds undo/redo, the selection toolbar and the bottom bar (zoom; page counter); File menu, rename and Share still to come"
 Add text box (heading / subheading / body),text,must,yes,yes,S10 | M1 all three presets | live on Supabase 2026-10-27: text saved and reloaded
-Edit text in place on the canvas,text,must,yes,no,S08 - hard part 2
-Font family / size / colour / bold / italic / underline / align,text,must,yes,no,S15 S14 - Google Fonts only
+Edit text in place on the canvas,text,must,yes,yes,S08 - hard part 2 | 2b-1: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): double-click or Enter; Escape / Ctrl+Enter / click away finishes; one undo step; an emptied box is removed; height re-measured and top kept
+Font family / size / colour / bold / italic / underline / align,text,must,yes,yes,S15 S14 - Google Fonts only | 2b-1: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): 9 open-licence fonts served by the app (no Google requests); size field; colour picker; B/I/U buttons and Ctrl+B/I/U; alignment menu
 Add basic shapes and lines,elements,must,yes,partial,S09 | M1 rectangle only; ellipse/lines in M2 | live on Supabase 2026-10-27: rectangle saved and reloaded
-Shape fill and stroke colour,elements,must,yes,no,S14
+Shape fill and stroke colour,elements,must,yes,yes,S14 | 2b-1: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): fill; outline colour or none; outline width (a new outline starts at 4 px)
 Upload your own images,uploads,must,yes,yes,S11 - size and type limits; error state | backend: 3-step upload (start/complete) with type/size/quota checks done | M1 upload panel with errors | live on Supabase 2026-10-27: file in the private bucket; size checked by the server
 Place uploaded image on page,uploads,must,yes,partial,S11 -> S08 drag or click | M1 click to place; drag onto page in M2 | live check pending (photo uploaded but not yet placed)
 Select / multi-select / drag-select,canvas,must,yes,yes,hard part 1 | M1 click to select one; multi/drag-select in M2 | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): click; Shift-click; drag a box; plain click picks one
@@ -19,7 +19,7 @@ Layer order forward / backward / front / back,arrange,must,yes,yes,S13 [help] | 
 Group and ungroup,arrange,must,yes,no,Ctrl+G / Ctrl+Shift+G [help][3p]
 Duplicate and delete elements,arrange,must,yes,yes,context toolbar + keyboard | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): toolbar and Ctrl+D / Delete
 Transparency / opacity,elements,must,yes,yes,slider [3p] | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Opacity slider; one undo step per drag
-Page background colour,pages,must,yes,no,S14
+Page background colour,pages,must,yes,yes,S14 | 2b-1: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Page toolbar when nothing is selected
 Undo and redo,editor,must,yes,yes,Ctrl+Z / Ctrl+Shift+Z - hard part 4 | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): 100 steps; buttons and Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y; history lives in the browser and is cleared on reload
 Autosave with saved / saving indicator,editor,must,yes,yes,S08 states - hard part 4 | backend: PUT content with revision + 409 done | M1 all states (saving; reconnecting; other tab; gone; logged out) | live on Supabase 2026-10-27: 9 saves; reload shows every edit
 Zoom and fit to screen,editor,must,yes,yes,BottomBar | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): bottom bar buttons and menu; Ctrl+= / Ctrl+- / Ctrl+0; Ctrl+scroll; PNG stays at real size
@@ -35,12 +35,12 @@ Exact position and size inputs (X Y W H rotation),arrange,should,yes,no,S13
 Crop an image,uploads,should,yes,no,S17
 Flip horizontal / vertical,elements,should,yes,no,[3p]
 Text effects (shadow / outline),text,should,yes,no,S16 [3p]
-Letter spacing and line height,text,should,yes,no,[3p]
+Letter spacing and line height,text,should,yes,yes,[3p] | 2b-1: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Spacing popover; letter spacing in thousandths of the font size
 Start from a template (our own set),templates,should,yes,no,S04 S12 - write 10-20 of our own
 Pages grid view with drag reorder,pages,should,yes,no,S18
 Folders and move design to folder,projects,should,yes,no,S05 S06 | backend: folder routes done
 Trash with restore and 30-day purge,projects,should,yes,no,S07 [help] | backend: trash/restore/delete done; purge job pending
-Keyboard shortcuts (copy paste nudge delete),editor,should,yes,partial,[3p] list - verify | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): nudge (Shift = 10 px); delete; duplicate; select all; undo; zoom; layers; Escape. Copy/paste not yet
+Keyboard shortcuts (copy paste nudge delete),editor,should,yes,partial,[3p] list - verify | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): nudge (Shift = 10 px); delete; duplicate; select all; undo; zoom; layers; Escape. Copy/paste not yet | 2b-1 adds Enter to edit text and Ctrl+B / Ctrl+I / Ctrl+U. Copy/paste not yet
 Right-click context menu,editor,should,yes,no,S08
 Export scale (1x 2x 3x),export,should,yes,no,S20 [help] - paid in original
 Not found / no access page,editor,should,yes,partial,S24 - deleted design or someone else's design | M1 S24 for unknown pages and missing designs; fake data only; live Supabase pending
