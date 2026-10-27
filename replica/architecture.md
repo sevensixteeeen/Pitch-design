@@ -1,7 +1,15 @@
-# Architecture: Canva clone (working name), a rebuild of Canva's core editor loop
+# Architecture: Pitch, a rebuild of Canva's core editor loop
 
 Learning / portfolio project. Built from `recon.md` and `features.csv` (public sources only).
-Date: 2026-10-26. Status: **plan, waiting for your approval. Nothing is installed or scaffolded yet.**
+Date: 2026-10-26. Status: approved and built through milestone 1 (see `build-log.md`).
+
+> **Decisions 2026-10-27:**
+> - The app is named **Pitch**.
+> - It is a learning project and will **not be deployed**. It runs locally, with only Supabase online.
+>
+> So the "hosting: Render" row and everything about serving it publicly (cold starts, custom SMTP
+> before friends sign up, a privacy policy, `/replica-launch`, `/replica-deploy`) no longer apply.
+> FastAPI can still serve the built frontend locally.
 
 ## The big picture (in plain words)
 

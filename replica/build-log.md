@@ -65,6 +65,13 @@ publishable key ("permission denied"). You clicked through with your own email:
 
 Features moved to `yes`: 7 (parity 16.4 → 24.6, must-haves 0 → 7 of 30).
 
+## Name and scope (2026-10-27)
+
+- **Renamed to Pitch:** the browser tab, sidebar, login screen, API title, README and `HOW-TO-RUN.md`.
+  Folder, repo and internal package names stay `canva-clone`.
+- **Learning project, never deployed:** `/replica-launch` and `/replica-deploy` are skipped. Nothing
+  about hosting, custom email, a privacy policy or billing will be built.
+
 ## Notes for later
 
 - The main JS file is 484 kB (Konva). Load the editor with `lazy()` so Home and Login stay small (M2).

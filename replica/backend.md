@@ -1,6 +1,8 @@
-# Backend: Canva clone
+# Backend: Pitch
 
-Status 2026-10-27: **built and tested locally (43 tests pass), not yet connected to a real Supabase project.**
+Status 2026-10-27: **connected to your Supabase project and checked live; 62 tests pass.** The app is named
+Pitch and is a learning project that **won't be deployed**. So the items below about friends signing up,
+custom SMTP, the privacy policy and Render no longer apply.
 Follows `architecture.md`. Where the replica-backend checklist and the architecture differ, the
 architecture wins and the reason is written below.
 

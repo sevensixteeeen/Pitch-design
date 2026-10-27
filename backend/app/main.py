@@ -27,7 +27,7 @@ async def lifespan(_app: FastAPI):
     close_pool()
 
 
-app = FastAPI(title="Canva clone API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Pitch API", version="0.1.0", lifespan=lifespan)
 for module in (me, designs, folders, assets):
     app.include_router(module.router)
 

@@ -36,7 +36,7 @@ export function Login() {
   return (
     <div className="flex min-h-full items-center justify-center bg-surface p-4">
       <main className="w-full max-w-100 rounded-lg bg-app p-6 shadow-pop">
-        <p className="text-sm text-muted">Canva clone</p>
+        <p className="text-sm text-muted">Pitch</p>
         <h1 className="mt-1 text-xl">{mode === "signup" ? "Make your first design" : "Welcome back"}</h1>
         <form onSubmit={submit} className="mt-6 flex flex-col gap-4" noValidate>
           {error && (

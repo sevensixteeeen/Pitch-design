@@ -21,7 +21,7 @@ export function AppLayout() {
         Skip to content
       </a>
       <aside className="flex shrink-0 items-center gap-1 border-b border-border bg-app px-2 py-2 md:w-(--tk-layout-sidebar-w) md:flex-col md:items-stretch md:border-r md:border-b-0 md:px-3 md:py-4">
-        <p className="hidden px-3 pb-4 text-lg md:block">Canva clone</p>
+        <p className="hidden px-3 pb-4 text-lg md:block">Pitch</p>
         <nav aria-label="Main" className="flex flex-1 gap-1 overflow-x-auto md:flex-col">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink

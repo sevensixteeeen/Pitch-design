@@ -1,7 +1,9 @@
-# How to run the Canva clone (and what to do next)
+# How to run Pitch (and what's next)
 
-Last updated 2026-10-27, end of milestone 1. The working app is on the branch **`build/milestone-1`**
-(not merged into `main` yet).
+Last updated 2026-10-27, end of milestone 1. Everything is on `main`.
+
+**Pitch is a learning project.** It runs only on this computer and is not deployed. The only online
+part is your Supabase project (logins, database, image files).
 
 ## What you need on the computer
 
@@ -17,15 +19,10 @@ git clone https://github.com/sevensixteeeen/canva-clone.git
 cd canva-clone
 ```
 
-Then make sure you are on the milestone branch (until it's merged):
+## 2. Run the app without Supabase (fake data)
 
-```
-git switch build/milestone-1
-```
-
-## 2. Run the app on fake data (no accounts needed)
-
-This is what was tested today. Everything is stored **in your browser only** (IndexedDB), so nothing
+On this laptop `.env.local` is filled in, so `npm run dev` uses your Supabase project instead: start
+the API too (section 4). Without those settings, the app uses fake data. Everything is stored **in your browser only** (IndexedDB), so nothing
 reaches the internet and a different browser starts empty.
 
 ```
@@ -46,12 +43,12 @@ The app uses fake data whenever `.env.local` has no `VITE_SUPABASE_*` values. Th
 ```
 cd backend
 uv sync           # only the first time: creates .venv with Python 3.12 and the packages
-uv run pytest     # 61 tests, about 15 seconds; uses a throwaway Postgres in backend/.test-postgres
+uv run pytest     # 62 tests, about 15 seconds; uses a throwaway Postgres in backend/.test-postgres
 ```
 
 They never touch Supabase or your own PostgreSQL service.
 
-## 4. Run it for real (after the Supabase setup, see "Tomorrow morning")
+## 4. Run it for real (with your Supabase project, as on this laptop)
 
 Two terminals, both from the repo folder:
 
@@ -89,50 +86,18 @@ API docs while it runs: http://127.0.0.1:8000/docs
 
 ---
 
-# Tomorrow morning
+# What's next
 
-In this order; each step unlocks the next.
+Done: milestone 1 is built, Supabase is set up, the live run passed (sign up, create, autosave,
+upload), and everything is merged into `main`.
 
-### 1. Look at the app, then decide about the branch
+Pitch won't be deployed, so `/replica-launch` and `/replica-deploy` are skipped. Custom email isn't
+needed either: Supabase's built-in email is fine for one person.
 
-Run it on fake data (section 2) and click through it. If you're happy, merge the branch into `main`
-(ask Claude: "merge build/milestone-1 into main and push"). If not, write down what's off.
-
-### 2. Create your Supabase project (you do this; Claude never handles your keys)
-
-Follow **"Your steps"** in `replica/backend.md`. In short:
-
-1. Create a free Supabase project; keep the database password in a password manager.
-2. Project Settings → JWT Keys: switch to the new **asymmetric signing keys**.
-3. Project Settings → Data API: untick **`public`** under Exposed schemas.
-4. Storage: create a **private** bucket named **`user-files`**, 25 MB limit, types
-   `image/png, image/jpeg, image/webp`.
-5. Authentication → Email: minimum password length **8**; add `http://localhost:5173` as Site URL /
-   redirect URL.
-6. Copy `.env.example` to `.env.local` and paste the values from the dashboard. Never paste them into
-   chat, never commit `.env.local` (git already ignores it).
-
-### 3. First live run
-
-Run section 4 (migration + API + editor). Then check, with your own email:
-
-- [ ] sign up → the confirmation email arrives → log in
-- [ ] create a design, add text and a rectangle, reload: still there
-- [ ] upload a photo, place it, **Download PNG**: the photo is in the PNG (the "tainted canvas" check)
-- [ ] two tabs on one design: the second save says "Changed in another tab"
-
-Tell Claude what happened. If uploads all fail with "didn't match", the first place to look is
-`file_info()` in `backend/app/storage.py` (it has only run against a fake so far).
-
-### 4. Then, with Claude
-
-1. Mark the 13 `partial` rows in `replica/features.csv` as `yes` where the live check passed.
-2. `/replica-test`: browser tests with Playwright and accessibility checks. It needs your OK to
-   install `@playwright/test` and `@axe-core/playwright`.
-3. `/replica-build` milestone 2: resize/rotate, multi-select, delete, undo/redo, zoom, editing text,
-   pages, JPG/PDF download, the Projects screen.
-
-### Not tomorrow, but before friends sign up
-
-Supabase's built-in email sends only a few emails per hour: set up custom SMTP (e.g. Resend's free
-tier) or turn off "Confirm email" for the demo. See `replica/backend.md`.
+1. **One last live check:** in the editor, Uploads → click your photo to place it → **Download PNG**.
+   The photo should be in the PNG (`replica/bugs.md` T5).
+2. **`/replica-build` milestone 2:** resize and rotate, multi-select, delete, undo/redo, zoom, editing
+   text on the page, fonts, pages, JPG and PDF download, the Projects screen. It's big, so Claude
+   plans it first and waits for your OK.
+3. **`/replica-test`:** browser tests with Playwright and accessibility checks. Needs your OK to install
+   `@playwright/test` and `@axe-core/playwright`.
