@@ -10,21 +10,35 @@ build → test → diff).
 > planned from public sources only (help pages, store listings, public reviews) and contains none of
 > Canva's code, logos, icons, fonts, templates or copy.
 
-## Status: milestone 1 of 4 (2026-10-27)
+## Status: milestone 2, part 2 of 4 done (2026-10-27)
 
-The core loop works end to end, live on a Supabase project: sign up, create, autosave, upload. Without
-Supabase settings it falls back to fake data stored in the browser.
+Milestone 1 (the core loop, live on Supabase) and milestone 2's first two parts (2a canvas editing,
+2b-1 text and colour) are done. Without Supabase settings the app falls back to fake data stored in the
+browser.
 
-| works now | coming next (milestone 2) |
+**Works now**
+
+| area | what you can do |
 | --- | --- |
-| sign up / log in, Home with your designs and search | resize, rotate, multi-select, delete |
-| create a design from a preset or a custom size (px, in, mm, cm) | undo / redo, zoom |
-| editor: add headings, a rectangle, your uploaded images | edit text on the page, fonts and styles |
-| drag to move, autosave with save status, warning when another tab saved first | more shapes and lines, pages |
-| download the page as a PNG at its real size | JPG and PDF download, the Projects screen |
+| account and home | sign up / log in; Home with your designs and search |
+| create | a design from a preset or a custom size (px, in, mm, cm) |
+| add | headings, subheadings, body text, a rectangle, your uploaded images |
+| select and arrange | click, Shift-click, drag a box; move several at once with snapping guides; resize and rotate handles; layer order; align; duplicate; delete; opacity |
+| text | type on the page; 9 open-licence fonts served by the app; size, colour, bold / italic / underline, alignment, letter spacing, line height |
+| colour | colour picker (colours in this design, defaults, custom, hex) for text, shape fill and outline, and the page background |
+| editing | undo / redo (100 steps), zoom (buttons, Ctrl+= / − / 0, Ctrl+scroll), keyboard shortcuts, a keyboard-only way to select and move |
+| saving and export | autosave with save status and a warning when another tab saved first; download the page as a PNG at its real size |
 
-Feature parity with the original's core loop: **24.6 / 100** (`replica/parity.md`, `replica/features.csv`).
-Screen by screen progress: `replica/build-log.md`.
+**Coming next**
+
+| part | what |
+| --- | --- |
+| 2b-2 | more shapes (ellipse, triangle, lines with arrows), several pages, group / ungroup |
+| 2c | JPG and PDF download, the Projects screen |
+| milestones 3–4 | templates, folders, trash, crop, layers list, version history and more (`replica/architecture.md`) |
+
+Feature parity with the original's core loop: **53.9 / 100**, with 19 of 30 must-haves done
+(`replica/features.csv`). Screen by screen progress and every browser check: `replica/build-log.md`.
 
 ## Quick start
 
@@ -37,7 +51,7 @@ npm run dev          # http://localhost:5173, fake data, no accounts needed
 ```
 cd backend
 uv sync
-uv run pytest        # 61 API tests against a throwaway local Postgres
+uv run pytest        # 62 API tests against a throwaway local Postgres
 ```
 
 Everything else (running against Supabase, fixing common errors, the next steps) is in
@@ -47,7 +61,8 @@ Everything else (running against Supabase, fixing common errors, the next steps)
 
 | part | tech |
 | --- | --- |
-| editor and pages | React 19 + TypeScript, Vite, Konva (canvas), Zustand (editor state), Tailwind CSS v4 with design tokens, Radix UI, Lucide icons |
+| editor and pages | React 19 + TypeScript, Vite, Konva (canvas), Zustand (editor state and undo history), Tailwind CSS v4 with design tokens, Radix UI, Lucide icons |
+| fonts | Inter, Montserrat, Poppins, Space Grotesk, Playfair Display, Lora, Oswald, Bebas Neue, Caveat: open-licence `@fontsource` packages, served by the app (no requests to Google) |
 | API | FastAPI (Python 3.12, uv), Pydantic validates every saved design, psycopg 3 with plain SQL |
 | database, logins, files | Supabase: Postgres, Auth, private Storage bucket with short-lived signed links |
 | hosting | none, by choice: it runs locally (the API on port 8000, the editor on 5173). Only Supabase is online |
@@ -59,7 +74,7 @@ rate limits, no secrets in the browser. Details: `replica/backend.md`.
 ## Where things are
 
 ```
-frontend/              React app: src/pages (screens), src/editor (canvas, panels, autosave), src/data (fake + real data layers)
+frontend/              React app: src/pages (screens), src/editor (canvas, toolbars, text editing, colour picker, undo, autosave), src/data (fake + real data layers)
 backend/               FastAPI app (app/) and its tests (tests/)
 supabase/migrations/   the database tables, applied by `python -m app.migrate`
 replica/               the plan and the reports
