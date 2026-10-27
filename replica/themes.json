@@ -1,0 +1,365 @@
+{
+  "_about": "Themes for a design-tool clone, used by replica-entrepreneur's reviews.py (python3 reviews.py replica/reviews.csv --themes replica/themes.json). Started from the skill's default list; added design-tool themes (Pro locks, pushy AI, samey templates, precision, export, resize, fonts, organisation, video) and took 'templates' and 'export' out of the generic themes so praise and complaints don't mix. Patterns are case-insensitive Python regular expressions. Revised 2026-10-27: tool names (Photoshop, Figma, ...) and generic words (layer, download, print) removed from precision/export, because they matched neutral comparisons.",
+  "request_patterns": [
+    "\\bi wish\\b",
+    "\\bplease add\\b",
+    "\\bwould be (nice|great|good|helpful)\\b",
+    "\\bwould love\\b",
+    "\\bneeds? (a|an|the|to|more)\\b",
+    "\\bno way to\\b",
+    "\\bthere'?s no (way|option)\\b",
+    "\\b(can'?t|cannot|unable to) (even )?(add|change|edit|set|choose|export|import|customi[sz]e|connect|undo|delete|turn off|remove|move|resize|group|align|save|download|upload)\\b",
+    "\\b(missing|lacks|lacking)\\b",
+    "\\bdoesn'?t (have|support|let|allow)\\b",
+    "\\bif only\\b",
+    "\\bfeature request\\b",
+    "\\bwhy (can'?t|isn'?t|doesn'?t)\\b",
+    "\\bshould (be able to|let|allow|have)\\b"
+  ],
+  "themes": [
+    {
+      "id": "pro_lock",
+      "label": "Pro-only elements and features (locks, watermarks, crowns)",
+      "kind": "complaint",
+      "patterns": [
+        "\\blocked (behind|for|unless)\\b",
+        "\\bpro (version|plan|subscription|only|users?|elements?|features?|templates?|account)\\b",
+        "\\bpremium (elements?|templates?|features?|ones|images|assets|graphics|stuff|content)\\b",
+        "\\bwatermark",
+        "\\bcrowns?\\b",
+        "\\bonly (available )?(in|with|for|to) (the )?(pro|paid|premium)\\b",
+        "\\bfind (the )?free (ones|elements?|stuff|options?)\\b",
+        "\\bpaid (version|plan|subscription|elements?|features?)\\b",
+        "\\bhave to pay\\b",
+        "\\bpay(ing)? (for|extra)\\b",
+        "\\bless and less\\b.{0,60}\\bfree\\b"
+      ]
+    },
+    {
+      "id": "pricing",
+      "label": "Price and value",
+      "kind": "complaint",
+      "patterns": [
+        "\\bexpensive\\b",
+        "\\boverpriced\\b",
+        "\\bpric(e|es|ey|ing)\\b",
+        "\\bpaywall",
+        "\\bsubscription\\b",
+        "\\bper (month|year|seat|user)\\b",
+        "\\bfree (plan|tier|version)\\b",
+        "\\bupgrade to\\b",
+        "\\bnot worth\\b",
+        "\\bcost(s|ly)?\\b",
+        "\\bmoney\\b"
+      ]
+    },
+    {
+      "id": "billing",
+      "label": "Billing, cancelling and refunds",
+      "kind": "complaint",
+      "patterns": [
+        "\\bcharged\\b",
+        "\\brefund",
+        "\\bcancel(l?ing|l?ed|lation)?\\b",
+        "\\bauto.?renew",
+        "\\bhidden (fee|charge)",
+        "\\bbilling\\b",
+        "\\bscam\\b",
+        "\\bcredit card\\b",
+        "\\btrial\\b"
+      ]
+    },
+    {
+      "id": "ai_push",
+      "label": "AI pushed on users, or AI that disappoints",
+      "kind": "complaint",
+      "patterns": [
+        "\\bAI\\b[^.!?\\n]{0,60}\\b(pushy|annoying|forced|useless|unwanted|everywhere|slop|terrible|garbage|hit or miss|worse|stop|crap|junk|ruin)",
+        "\\b(pushy|annoying|forced|unwanted|too much|so much|stop (pushing|adding))\\b[^.!?\\n]{0,40}\\bAI\\b",
+        "\\bno (more )?AI\\b",
+        "\\bAI (slop|junk|garbage|everything)\\b",
+        "\\bgenerative AI\\b[^.!?\\n]{0,60}\\b(train|consent|artists?)\\b"
+      ]
+    },
+    {
+      "id": "samey",
+      "label": "Designs all look the same",
+      "kind": "complaint",
+      "patterns": [
+        "\\bsame templates?\\b",
+        "\\b(look|looks|looking|feel|feels) (the )?same\\b",
+        "\\bgeneric\\b",
+        "\\boverused\\b",
+        "\\brecogni[sz]able\\b",
+        "\\b(less |not |totally |fully )?unique\\b",
+        "\\bcookie.?cutter\\b",
+        "\\bcanva (look|style|aesthetic)\\b",
+        "\\brepetitive\\b"
+      ]
+    },
+    {
+      "id": "precision",
+      "label": "Not enough precise control (alignment, typography, layers, vectors)",
+      "kind": "complaint",
+      "patterns": [
+        "\\bprecis(e|ion)\\b",
+        "\\balign(ment|ing)?\\b",
+        "\\btypograph",
+        "\\bkerning\\b",
+        "\\bvectors?\\b",
+        "\\b(restrictive|restricted|limited|constrained) (compared|for)\\b",
+        "\\badvanced (control|controls|customi[sz]ation|users?|options|design)\\b",
+        "\\bsnap(s|ping)?\\b",
+        "\\blayers? (panel|order|controls?)\\b",
+        "\\bmore control\\b",
+        "\\bpixel.?perfect\\b",
+        "\\b(can'?t|cannot|unable to) (select|move|align|position)\\b"
+      ]
+    },
+    {
+      "id": "export",
+      "label": "Export and download problems (formats, quality, print)",
+      "kind": "complaint",
+      "patterns": [
+        "\\bexport",
+        "\\b(can'?t|cannot|won'?t|unable to|not able to) (download|save)\\b",
+        "\\bdownload(ing)? (my|the|a|your) (design|video|image|file|pdf|png|jpe?g|work)",
+        "\\bpsd\\b",
+        "\\bsvg\\b",
+        "\\bcmyk\\b",
+        "\\blayered\\b",
+        "\\bfile (types?|formats?)\\b",
+        "\\bresolution\\b",
+        "\\bblurry\\b",
+        "\\bpixelat",
+        "\\bprint (quality|shop|ready)\\b",
+        "\\bfor print\\b"
+      ]
+    },
+    {
+      "id": "bugs",
+      "label": "Bugs and crashes",
+      "kind": "complaint",
+      "patterns": [
+        "\\bcrash(es|ed|ing)?\\b",
+        "\\bbugs?\\b",
+        "\\bbuggy\\b",
+        "\\bglitch",
+        "\\bfreez(e|es|ing)\\b",
+        "\\bbroken\\b",
+        "\\b(doesn'?t|does not|stopped|won'?t) work",
+        "\\bnot working\\b",
+        "\\berror\\b"
+      ]
+    },
+    {
+      "id": "performance",
+      "label": "Slow, laggy, heavy",
+      "kind": "complaint",
+      "patterns": [
+        "\\bslow(s|ly|er)?\\b",
+        "\\blag(gy|s|ging)?\\b",
+        "\\bloading\\b",
+        "\\btakes forever\\b",
+        "\\bbattery\\b",
+        "\\bsluggish\\b",
+        "\\bheavy\\b",
+        "\\b(large|big|bigger|larger) (files?|designs?|projects?)\\b"
+      ]
+    },
+    {
+      "id": "data",
+      "label": "Lost work and saving problems",
+      "kind": "complaint",
+      "patterns": [
+        "\\bsync(ing|s|ed)?\\b",
+        "\\blost (my|all|the)\\b",
+        "\\bdisappear",
+        "\\bdata loss\\b",
+        "\\bwiped\\b",
+        "\\bbackup\\b",
+        "\\b(didn'?t|not|wasn'?t) sav(e|ed|ing)\\b",
+        "\\bautosave\\b"
+      ]
+    },
+    {
+      "id": "ux",
+      "label": "Confusing, cluttered or hard to find things",
+      "kind": "complaint",
+      "patterns": [
+        "\\bconfus",
+        "\\bhard to (use|find|navigate|understand)\\b",
+        "\\bcomplicated\\b",
+        "\\bcluttered\\b",
+        "\\bunintuitive\\b",
+        "\\bnot intuitive\\b",
+        "\\bclunky\\b",
+        "\\btoo many (steps|clicks|taps|options|features)\\b",
+        "\\blearning curve\\b",
+        "\\bcan'?t find\\b",
+        "\\boverwhelm"
+      ]
+    },
+    {
+      "id": "organisation",
+      "label": "Organising designs and assets",
+      "kind": "complaint",
+      "patterns": [
+        "\\borgani[sz]",
+        "\\bfolders?\\b",
+        "\\bmessy\\b",
+        "\\basset management\\b",
+        "\\bfind my (designs?|files?|projects?)\\b"
+      ]
+    },
+    {
+      "id": "updates",
+      "label": "An update or redesign made it worse",
+      "kind": "complaint",
+      "patterns": [
+        "\\b(new|latest|recent) (update|version|design|layout|interface|ui)\\b",
+        "\\bredesign",
+        "\\bused to be\\b",
+        "\\bbring back\\b",
+        "\\bsince the (update|change)\\b",
+        "\\bchanged the\\b"
+      ]
+    },
+    {
+      "id": "support",
+      "label": "Support that does not answer",
+      "kind": "complaint",
+      "patterns": [
+        "\\bcustomer (service|support)\\b",
+        "\\bsupport (team|is|was)\\b",
+        "\\bno (response|reply)\\b",
+        "\\bnever (replied|responded|heard back)\\b",
+        "\\bticket\\b",
+        "\\bchat ?bot\\b"
+      ]
+    },
+    {
+      "id": "account",
+      "label": "Login and account problems",
+      "kind": "complaint",
+      "patterns": [
+        "\\blog ?in\\b",
+        "\\bsign ?in\\b",
+        "\\bpassword\\b",
+        "\\blocked out\\b",
+        "\\bverification\\b",
+        "\\b2fa\\b",
+        "\\bdelete (my )?account\\b"
+      ]
+    },
+    {
+      "id": "ads",
+      "label": "Ads and upsell pop-ups",
+      "kind": "complaint",
+      "patterns": [
+        "\\bads\\b",
+        "\\badvert",
+        "\\bpop.?ups?\\b",
+        "\\bupsell"
+      ]
+    },
+    {
+      "id": "privacy",
+      "label": "Privacy and permissions",
+      "kind": "complaint",
+      "patterns": [
+        "\\bprivacy\\b",
+        "\\btracking\\b",
+        "\\bsell(s|ing)? (my )?data\\b",
+        "\\bpermissions?\\b",
+        "\\bcreepy\\b",
+        "\\btrain(ed|ing)? (on|their|its)\\b"
+      ]
+    },
+    {
+      "id": "video",
+      "label": "Video editing (out of scope for this clone)",
+      "kind": "complaint",
+      "patterns": [
+        "\\bvideos?\\b",
+        "\\breels?\\b",
+        "\\btimeline\\b",
+        "\\banimation"
+      ]
+    },
+    {
+      "id": "resize",
+      "label": "Resizing a design to other formats",
+      "kind": "request",
+      "patterns": [
+        "\\bresiz",
+        "\\bmagic resize\\b",
+        "\\bdifferent (formats|sizes)\\b",
+        "\\breformat"
+      ]
+    },
+    {
+      "id": "fonts",
+      "label": "Fonts",
+      "kind": "request",
+      "patterns": [
+        "\\bfonts?\\b",
+        "\\btypefaces?\\b"
+      ]
+    },
+    {
+      "id": "platforms",
+      "label": "Mobile, tablet, desktop and offline",
+      "kind": "request",
+      "patterns": [
+        "\\boffline\\b",
+        "\\bandroid\\b",
+        "\\bipad\\b",
+        "\\btablet\\b",
+        "\\bdesktop (app|version)\\b",
+        "\\bmac app\\b",
+        "\\bmobile (app|version)\\b",
+        "\\bphone\\b",
+        "\\bsmall(er)? screen\\b"
+      ]
+    },
+    {
+      "id": "integrations",
+      "label": "Integrations and import",
+      "kind": "request",
+      "patterns": [
+        "\\bintegrat",
+        "\\bzapier\\b",
+        "\\bgoogle (drive|slides|docs|sheets)\\b",
+        "\\bslack\\b",
+        "\\bapi\\b",
+        "\\bimport\\b",
+        "\\bplugins?\\b"
+      ]
+    },
+    {
+      "id": "collaboration",
+      "label": "Teams and sharing",
+      "kind": "request",
+      "patterns": [
+        "\\bteam(s|mates?)?\\b",
+        "\\bshar(e|ing)\\b",
+        "\\bcollaborat",
+        "\\bmultiple (users|accounts|people)\\b",
+        "\\bclients?\\b"
+      ]
+    },
+    {
+      "id": "customisation",
+      "label": "Settings, branding and dark mode",
+      "kind": "request",
+      "patterns": [
+        "\\bdark mode\\b",
+        "\\bbrand (kit|colou?rs)\\b",
+        "\\bwhite.?label\\b",
+        "\\bsettings?\\b",
+        "\\boption to\\b"
+      ]
+    }
+  ]
+}

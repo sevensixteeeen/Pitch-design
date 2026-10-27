@@ -61,3 +61,9 @@ Apps marketplace and integrations,integrations,skip,yes,skip,partner network
 Real-time collaboration / comments / share links,sharing,skip,yes,skip,out of the chosen scope - would make it L
 Brand kit,brand,skip,yes,skip,out of the chosen scope (paid in original)
 Video / Docs / Whiteboards / Sheets / Websites,products,skip,yes,skip,separate products
+Nothing locked: every element / template / font / download free (no watermarks),plans,should,no,yes,fixes.md #1 (paywalls: 111 rows / 3 sources); true today - keep it true in /replica-launch
+No AI pushed: none by default; opt-in only; designs never train a model,ai,should,no,yes,fixes.md #2 (18+ of 89 low ratings); recommended angle B
+Nothing covers the canvas: no upgrade pop-ups in the editor,editor,should,no,yes,fixes.md #3; add a check in /replica-test
+Honest billing: one-click cancel and a reminder before a trial turns paid,billing,should,no,skip,"fixes.md #4 (31 rows / 2 sources); /replica-launch - only if a paid plan is added | skipped 2026-10-27: learning project, never deployed, no payments"
+Download the editable design file and open it again,export,could,no,no,fixes.md #5 (thin evidence); M; milestone 4
+SVG download for everyone,export,could,no,no,fixes.md #6 (thin evidence; SVG is paid in the original); M
