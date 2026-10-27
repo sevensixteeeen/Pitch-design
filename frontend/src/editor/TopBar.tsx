@@ -3,11 +3,11 @@
 // come in later milestones.
 import type { RefObject } from "react";
 import { Link, useNavigate } from "react-router";
-import { AlertTriangle, Check, Download, Home } from "lucide-react";
+import { AlertTriangle, Check, Download, Home, Redo2, Undo2 } from "lucide-react";
 import { Button, IconButton } from "../components/ui/Button";
 import { Spinner, toast } from "../components/ui/feedback";
 import type { ExportPng } from "./Canvas";
-import { useEditor, type SaveState } from "./store";
+import { useEditor, useEditorStore, type SaveState } from "./store";
 
 /** "Spring sale: poster!" -> "Spring sale poster.png" */
 function fileName(title: string) {
@@ -87,12 +87,23 @@ export function TopBar({ exportRef }: { exportRef: RefObject<ExportPng | null> }
   const title = useEditor((s) => s.design.title);
   const save = useEditor((s) => s.save);
   const readOnly = useEditor((s) => s.readOnly);
+  const canUndo = useEditor((s) => !s.readOnly && s.past.length > 0);
+  const canRedo = useEditor((s) => !s.readOnly && s.future.length > 0);
+  const store = useEditorStore();
   const navigate = useNavigate();
   return (
     <header className="flex h-(--tk-layout-topbar-h) shrink-0 items-center gap-3 border-b border-border bg-app px-3">
       <IconButton label="Home" onClick={() => navigate("/")}>
         <Home strokeWidth={1.75} aria-hidden />
       </IconButton>
+      <div className="flex items-center gap-1">
+        <IconButton label="Undo" shortcut="Ctrl+Z" disabled={!canUndo} onClick={() => store.getState().undo()}>
+          <Undo2 strokeWidth={1.75} aria-hidden />
+        </IconButton>
+        <IconButton label="Redo" shortcut="Ctrl+Shift+Z" disabled={!canRedo} onClick={() => store.getState().redo()}>
+          <Redo2 strokeWidth={1.75} aria-hidden />
+        </IconButton>
+      </div>
       <h1 className="min-w-0 flex-1 truncate text-center text-sm font-semibold" title={title}>
         {title}
       </h1>

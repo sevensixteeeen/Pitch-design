@@ -6,11 +6,16 @@ import { api, NotFoundError } from "../data";
 import { Button } from "../components/ui/Button";
 import { EmptyState, Skeleton, toast } from "../components/ui/feedback";
 import { NotFound } from "../pages/stubs";
+import { cn, focusRing } from "../lib/cn";
+import { BottomBar } from "./BottomBar";
 import { Canvas, type ExportPng } from "./Canvas";
+import { describeElement } from "./commands";
+import { ContextToolbar } from "./ContextToolbar";
 import { SidePanel } from "./SidePanel";
 import { SmallScreenNote, TopBar } from "./TopBar";
-import { EditorContext, createEditorStore, useEditor, type EditorStore } from "./store";
+import { EditorContext, createEditorStore, useEditor, useEditorStore, type EditorStore } from "./store";
 import { useAutosave } from "./useAutosave";
+import { useEditorKeys } from "./useEditorKeys";
 
 /** True when the window is at least layout.editor-min-w wide. */
 function useWideEnough() {
@@ -86,6 +91,7 @@ export function EditorPage() {
 
 function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => void }) {
   useAutosave(store);
+  useEditorKeys(store);
   const exportRef = useRef<ExportPng | null>(null);
   const readOnly = useEditor((s) => s.readOnly);
   const designId = useEditor((s) => s.design.id);
@@ -112,8 +118,10 @@ function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => v
       )}
       <div className="flex min-h-0 flex-1">
         <SidePanel />
-        <main className="flex min-w-0 flex-1 flex-col" aria-label="Page">
+        <main className="relative flex min-w-0 flex-1 flex-col" aria-label="Page">
+          <ContextToolbar />
           <Canvas exportRef={exportRef} />
+          <BottomBar />
           <ElementList />
         </main>
       </div>
@@ -121,25 +129,45 @@ function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => v
   );
 }
 
-/** What's on the page, for screen readers (the canvas itself is a picture to them). */
+/**
+ * What's on the page, top layer first. The canvas is a picture to screen readers and the keyboard,
+ * so this list is their way in (components.md, Canvas a11y): it stays hidden until it gets focus,
+ * Enter selects (Shift+Enter adds), then arrow keys move and Delete removes.
+ */
 function ElementList() {
+  const store = useEditorStore();
   const elements = useEditor((s) => s.content.pages[0].elements);
+  const selectedIds = useEditor((s) => s.selectedIds);
   const announcement = useEditor((s) => s.announcement);
-  const describe = (el: (typeof elements)[number]) =>
-    el.type === "text" ? `Text: ${el.text}` : el.type === "image" ? "Image" : el.kind === "ellipse" ? "Ellipse" : "Rectangle";
   return (
-    <div className="sr-only">
-      <h2>On this page</h2>
-      {elements.length === 0 ? (
-        <p>Nothing yet. Add text, a rectangle or an image from the panel.</p>
-      ) : (
-        <ul>
-          {elements.map((el) => (
-            <li key={el.id}>{describe(el)}</li>
-          ))}
-        </ul>
-      )}
-      <p aria-live="polite">{announcement}</p>
-    </div>
+    <>
+      <div className="sr-only focus-within:not-sr-only focus-within:absolute focus-within:bottom-12 focus-within:left-3 focus-within:z-10 focus-within:max-h-64 focus-within:w-72 focus-within:overflow-y-auto focus-within:rounded-lg focus-within:border focus-within:border-border focus-within:bg-app focus-within:p-2 focus-within:shadow-pop">
+        <h2 className="px-2 pb-1 text-xs font-semibold">On this page, top first</h2>
+        {elements.length === 0 ? (
+          <p className="px-2 text-sm text-muted">Nothing yet. Add text, a rectangle or an image from the panel.</p>
+        ) : (
+          <ul>
+            {[...elements].reverse().map((el) => {
+              const selected = selectedIds.includes(el.id);
+              return (
+                <li key={el.id}>
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={(e) => (e.shiftKey ? store.getState().toggleSelect(el.id) : store.getState().select([el.id]))}
+                    className={cn("w-full truncate rounded-sm px-2 py-1 text-left text-sm hover:bg-surface-hover", selected && "bg-accent-soft text-accent", focusRing)}
+                  >
+                    {describeElement(el)}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+    </>
   );
 }
