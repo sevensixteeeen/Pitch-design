@@ -10,6 +10,7 @@ import { cn, focusRing } from "../lib/cn";
 import { BottomBar } from "./BottomBar";
 import { Canvas, type ExportPng } from "./Canvas";
 import { describeElement } from "./commands";
+import { loadFonts } from "./fonts";
 import { ContextToolbar } from "./ContextToolbar";
 import { SidePanel } from "./SidePanel";
 import { SmallScreenNote, TopBar } from "./TopBar";
@@ -32,15 +33,6 @@ function useWideEnough() {
   );
 }
 
-/** Text is measured when drawn, so wait for the font first (or lines break in the wrong place). */
-async function fontsReady() {
-  const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
-  await Promise.race([
-    Promise.all([document.fonts.load('400 16px "Inter Variable"'), document.fonts.load('700 16px "Inter Variable"')]),
-    timeout,
-  ]);
-}
-
 type Load = { kind: "loading" } | { kind: "missing" } | { kind: "failed" } | { kind: "ready"; store: EditorStore };
 
 export function EditorPage() {
@@ -51,7 +43,11 @@ export function EditorPage() {
   const open = useCallback(async () => {
     setLoad({ kind: "loading" });
     try {
-      const [{ design, asset_urls }] = await Promise.all([api.getDesign(designId), fontsReady()]);
+      const { design, asset_urls } = await api.getDesign(designId);
+      // text is measured when it's drawn, so its fonts must be ready first (or lines break in the wrong
+      // place); Inter too, the font for new text
+      const families = design.content.pages.flatMap((p) => p.elements.flatMap((el) => (el.type === "text" ? [el.font_family] : [])));
+      await loadFonts(["Inter Variable", ...families]);
       setLoad({ kind: "ready", store: createEditorStore(design, asset_urls) });
     } catch (err) {
       setLoad({ kind: err instanceof NotFoundError ? "missing" : "failed" });

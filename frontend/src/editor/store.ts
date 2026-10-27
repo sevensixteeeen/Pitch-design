@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 import { createStore, useStore, type StoreApi } from "zustand";
 import type { Design } from "../data";
-import type { DesignContent, Element } from "../lib/document";
+import type { DesignContent, Element, Page } from "../lib/document";
 
 export type SaveState =
   | { kind: "saved" }
@@ -44,12 +44,17 @@ export interface EditorState {
   gestureStart: DesignContent | null;
   zoom: Zoom;
   view: View;
+  /** the text element being typed into on the canvas, if any */
+  editingId: string | null;
 
   /**
    * Change the first page's elements (milestone 2b adds pages). One undo step, unless `gesture` is
    * set: then every change until endGesture() is a single step.
    */
-  change(fn: (els: Element[]) => Element[], opts?: { gesture?: boolean; select?: string[]; announcement?: string }): void;
+  change(fn: (els: Element[]) => Element[], opts?: ChangeOptions): void;
+  /** Same, for the page itself (its background). */
+  changePage(fn: (page: Page) => Page, opts?: ChangeOptions): void;
+  setEditing(id: string | null): void;
   endGesture(): void;
   addElement(el: Element, announcement: string): void;
   undo(): void;
@@ -64,6 +69,11 @@ export interface EditorState {
 }
 
 export type EditorStore = StoreApi<EditorState>;
+export interface ChangeOptions {
+  gesture?: boolean;
+  select?: string[];
+  announcement?: string;
+}
 
 const ZOOM_STEPS = [0.1, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
@@ -75,9 +85,9 @@ export function stepZoom(view: View, direction: 1 | -1): number {
 }
 
 export function createEditorStore(design: Design, assetUrls: Record<string, string>): EditorStore {
-  const updateFirstPage = (content: DesignContent, fn: (els: Element[]) => Element[]): DesignContent => ({
+  const updateFirstPage = (content: DesignContent, fn: (page: Page) => Page): DesignContent => ({
     ...content,
-    pages: content.pages.map((page, i) => (i === 0 ? { ...page, elements: fn(page.elements) } : page)),
+    pages: content.pages.map((page, i) => (i === 0 ? fn(page) : page)),
   });
   const push = (list: DesignContent[], item: DesignContent) => [...list, item].slice(-HISTORY_MAX);
   const existing = (ids: string[], content: DesignContent) => {
@@ -100,8 +110,11 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
     gestureStart: null,
     zoom: "fit",
     view: { scale: 1, fit: 1, min: 0.1, max: 4 },
+    editingId: null,
 
-    change: (fn, opts = {}) =>
+    change: (fn, opts) => get().changePage((page) => ({ ...page, elements: fn(page.elements) }), opts),
+    setEditing: (editingId) => set({ editingId }),
+    changePage: (fn, opts = {}) =>
       set((s) => {
         if (s.readOnly) return s;
         const content = updateFirstPage(s.content, fn);

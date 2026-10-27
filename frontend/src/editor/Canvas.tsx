@@ -3,9 +3,11 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { Ellipse, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
 import type Konva from "konva";
-import type { Element, ImageElement } from "../lib/document";
+import type { Element, ImageElement, TextElement } from "../lib/document";
 import { cn } from "../lib/cn";
-import { bounds, clamp, fontStyle, intersects, measureTextHeight, round2, snapBox, union, type Box } from "./geometry";
+import { commitText } from "./commands";
+import { TextEditor } from "./TextEditor";
+import { bounds, clamp, fontStyle, intersects, keepTopLeft, measureTextHeight, round2, snapBox, union, type Box } from "./geometry";
 import { nudge, patch } from "./ops";
 import { useEditor, useEditorStore } from "./store";
 
@@ -91,10 +93,12 @@ function ImageNode({ el, url, colours }: { el: ImageElement; url: string | undef
 
 function ElementNode({ el, colours }: { el: Element; colours: Colours }) {
   const url = useEditor((s) => (el.type === "image" ? s.assetUrls[el.src.asset_id] : undefined));
+  const editing = useEditor((s) => s.editingId === el.id);
   switch (el.type) {
     case "text":
       return (
         <Text
+          visible={!editing} // the text area shows it while it's being typed
           text={el.text}
           width={el.width}
           fontFamily={el.font_family}
@@ -133,6 +137,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
   const selectedIds = useEditor((s) => s.selectedIds);
   const readOnly = useEditor((s) => s.readOnly);
   const zoom = useEditor((s) => s.zoom);
+  const editingId = useEditor((s) => s.editingId);
 
   const box = useRef<HTMLDivElement>(null);
   const { width, height } = useSize(box);
@@ -203,7 +208,8 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
   };
 
   // --- selection box with handles ---------------------------------------------------------------
-  const chosen = readOnly ? [] : page.elements.filter((el) => selectedIds.includes(el.id) && !el.locked);
+  const chosen = readOnly || editingId ? [] : page.elements.filter((el) => selectedIds.includes(el.id) && !el.locked);
+  const editing = editingId ? page.elements.find((el): el is TextElement => el.id === editingId && el.type === "text") : undefined;
   const only = chosen.length === 1 ? chosen[0] : null;
   const anchors = !only ? CORNERS : only.type === "text" ? [...CORNERS, ...SIDES_X] : only.type === "image" ? CORNERS : ALL_ANCHORS;
   const chosenKey = chosen.map((el) => el.id).join(",");
@@ -239,15 +245,9 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
         Object.assign(update, { font_size: round2(fontSize) });
       }
       // The node's position is its centre (see the element groups below). If re-wrapping changed the
-      // text's height, keep the box's top-left corner where the handles left it (also when rotated),
-      // so the text grows or shrinks downward instead of jumping.
-      const a = (node.rotation() * Math.PI) / 180;
-      const turn = (dx: number, dy: number) => ({ x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) });
-      const corner = turn(-width / 2, -transformedHeight / 2);
-      const toCentre = turn(width / 2, height / 2);
-      const cx = node.x() + corner.x + toCentre.x;
-      const cy = node.y() + corner.y + toCentre.y;
-      Object.assign(update, { x: round2(cx - width / 2), y: round2(cy - height / 2), width: round2(width), height: round2(height) });
+      // text's height, keep the box's top-left corner where the handles left it (also when rotated).
+      const { x, y } = keepTopLeft(node.x(), node.y(), width, transformedHeight, width, height, node.rotation());
+      Object.assign(update, { x, y, width: round2(width), height: round2(height) });
       node.scaleX(el.flip_x ? -1 : 1);
       node.scaleY(el.flip_y ? -1 : 1);
       // Konva can report the end of a transform once per node: only real changes count
@@ -341,7 +341,8 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
     <div
       ref={box}
       tabIndex={0}
-      aria-label="Canvas. Arrow keys move the selection, Delete removes it."
+      data-canvas
+      aria-label="Canvas. Arrow keys move the selection, Delete removes it, Enter edits selected text."
       className={cn("relative min-h-0 flex-1 overflow-auto bg-workspace outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset")}
     >
       {scale > 0 && (
@@ -389,6 +390,12 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
                       if (!readOnly) startMove(toPage(), el.id);
                     }}
                     onTap={() => store.getState().select([el.id])}
+                    onDblClick={() => {
+                      if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                    }}
+                    onDblTap={() => {
+                      if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                    }}
                   >
                     <ElementNode el={el} colours={colours} />
                   </Group>
@@ -425,6 +432,20 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
             </Layer>
           </Stage>
         </div>
+      )}
+      {editing && scale > 0 && (
+        // outside the aria-hidden picture, so screen readers reach the text area
+        <TextEditor
+          key={editing.id}
+          el={editing}
+          left={pageX + editing.x * scale}
+          top={pageY + editing.y * scale}
+          scale={scale}
+          onDone={(text) => {
+            commitText(store, editing.id, text);
+            focusCanvas();
+          }}
+        />
       )}
     </div>
   );

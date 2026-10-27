@@ -1,5 +1,7 @@
 // Commands on the current selection, shared by the toolbar, the menus and the keyboard.
-import type { Element } from "../lib/document";
+import type { DesignContent, Element, Hex, ShapeElement, TextElement } from "../lib/document";
+import { loadFonts } from "./fonts";
+import { keepTopLeft, measureTextHeight, round2 } from "./geometry";
 import { align, duplicate, nudge, patch, remove, reorder, type AlignEdge, type LayerMove } from "./ops";
 import type { EditorStore } from "./store";
 
@@ -56,4 +58,83 @@ export function setOpacity(store: EditorStore, opacity: number) {
 
 export function selectAll(store: EditorStore) {
   store.getState().select(firstPage(store).map((el) => el.id));
+}
+
+/** A text element with new settings, its height re-measured and its top-left corner kept in place. */
+function restyle(el: TextElement, change: Partial<TextElement>): Partial<TextElement> {
+  const next = { ...el, ...change };
+  const height = measureTextHeight(next);
+  const { x, y } = keepTopLeft(el.x + el.width / 2, el.y + el.height / 2, el.width, el.height, next.width, height, el.rotation);
+  return { ...change, x, y, height };
+}
+
+/**
+ * Text settings for every selected text element (font, size, colour, B/I/U, alignment, spacing).
+ * Waits for a new font to load first, so the height is measured with the real font.
+ */
+export async function styleText(
+  store: EditorStore,
+  change: Partial<TextElement> | ((el: TextElement) => Partial<TextElement>),
+  opts: { gesture?: boolean } = {},
+) {
+  if (typeof change !== "function" && change.font_family) await loadFonts([change.font_family]);
+  const s = store.getState();
+  const updates: Record<string, Partial<Element>> = {};
+  for (const el of firstPage(store)) {
+    if (el.type === "text" && s.selectedIds.includes(el.id)) updates[el.id] = restyle(el, typeof change === "function" ? change(el) : change);
+  }
+  if (Object.keys(updates).length) s.change((els) => patch(els, updates), { gesture: opts.gesture });
+}
+
+/** Finish typing on the canvas: one undo step. A text box left empty is removed. */
+export function commitText(store: EditorStore, id: string, text: string) {
+  const s = store.getState();
+  const el = firstPage(store).find((x): x is TextElement => x.id === id && x.type === "text");
+  s.setEditing(null);
+  if (!el) return;
+  if (text.trim() === "") {
+    s.change((els) => remove(els, [id]), { select: [], announcement: "Removed the empty text box" });
+  } else if (text !== el.text) {
+    const update = restyle(el, { text: text.slice(0, 10_000) });
+    s.change((els) => patch(els, { [id]: update }), { announcement: "Text updated" });
+  }
+}
+
+/** Fill, outline and outline width for every selected shape. */
+export function styleShapes(store: EditorStore, change: Partial<ShapeElement>, opts: { gesture?: boolean } = {}) {
+  const s = store.getState();
+  const updates: Record<string, Partial<Element>> = {};
+  for (const el of firstPage(store)) {
+    if (el.type === "shape" && s.selectedIds.includes(el.id)) {
+      const next = { ...change };
+      // adding an outline to a shape that had none: give it a width you can see
+      if (next.stroke && el.stroke === null && el.stroke_width === 0 && next.stroke_width === undefined) next.stroke_width = 4;
+      if (next.stroke_width !== undefined) next.stroke_width = round2(Math.min(1000, Math.max(0, next.stroke_width)));
+      updates[el.id] = next;
+    }
+  }
+  if (Object.keys(updates).length) s.change((els) => patch(els, updates), { gesture: opts.gesture });
+}
+
+export function setBackground(store: EditorStore, color: Hex, opts: { gesture?: boolean } = {}) {
+  store.getState().changePage((page) => ({ ...page, background: { color } }), { gesture: opts.gesture });
+}
+
+/** Colours already used in the design, for the top row of the colour picker (most used first). */
+export function documentColours(content: DesignContent, max = 10): Hex[] {
+  const count = new Map<string, number>();
+  const add = (c: string | null | undefined) => {
+    if (c && /^#[0-9a-f]{6}$/i.test(c)) count.set(c.toLowerCase(), (count.get(c.toLowerCase()) ?? 0) + 1);
+  };
+  for (const page of content.pages) {
+    add(page.background.color);
+    for (const el of page.elements) {
+      if (el.type === "text") add(el.color);
+      if (el.type === "shape") {
+        add(el.fill);
+        add(el.stroke);
+      }
+    }
+  }
+  return [...count.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c).slice(0, max);
 }

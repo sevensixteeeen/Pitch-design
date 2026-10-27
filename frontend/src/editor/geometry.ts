@@ -60,6 +60,21 @@ export function measureTextHeight(el: TextElement): number {
   return Math.max(1, round2(height));
 }
 
+/**
+ * New x/y for a box that changes size but keeps its top-left corner where it is on the page, also
+ * when rotated. (cx, cy) is the box's current centre; rotation turns around the centre.
+ * Used when text re-wraps: the box grows or shrinks downward instead of jumping.
+ */
+export function keepTopLeft(cx: number, cy: number, oldW: number, oldH: number, newW: number, newH: number, rotation: number) {
+  const a = (rotation * Math.PI) / 180;
+  const turn = (dx: number, dy: number) => ({ x: dx * Math.cos(a) - dy * Math.sin(a), y: dx * Math.sin(a) + dy * Math.cos(a) });
+  const corner = turn(-oldW / 2, -oldH / 2);
+  const toCentre = turn(newW / 2, newH / 2);
+  const x = cx + corner.x + toCentre.x - newW / 2;
+  const y = cy + corner.y + toCentre.y - newH / 2;
+  return { x: round2(x), y: round2(y) };
+}
+
 /** Snapping: the closest page or element line within `threshold` of the moving box's edges or centre. */
 export interface Snap {
   dx: number;

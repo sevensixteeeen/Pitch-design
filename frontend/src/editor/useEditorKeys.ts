@@ -2,7 +2,7 @@
 // Ignored while typing in a field; plain keys (arrows, Delete, Escape) are also left to menus,
 // sliders, tabs and toolbars, which use them for their own navigation.
 import { useEffect } from "react";
-import { deleteSelection, duplicateSelection, moveLayers, nudgeSelection, selectAll } from "./commands";
+import { deleteSelection, duplicateSelection, moveLayers, nudgeSelection, selectAll, styleText } from "./commands";
 import { stepZoom, type EditorStore } from "./store";
 
 const TYPING = "input, textarea, select, [contenteditable='true']";
@@ -32,6 +32,12 @@ export function useEditorKeys(store: EditorStore) {
         else if (key === "0") run(() => s.setZoom("fit"));
         else if (key === "]" || key === "}") run(() => moveLayers(store, e.shiftKey ? "front" : "forward"));
         else if (key === "[" || key === "{") run(() => moveLayers(store, e.shiftKey ? "back" : "backward"));
+        else if ((key === "b" || key === "i" || key === "u") && !e.shiftKey) {
+          // bold / italic / underline for the selected text (left to the browser when no text is selected)
+          const texts = s.content.pages[0].elements.filter((el) => el.type === "text" && s.selectedIds.includes(el.id));
+          const field = ({ b: "bold", i: "italic", u: "underline" } as const)[key];
+          if (texts.length) run(() => void styleText(store, { [field]: !texts.every((t) => t.type === "text" && t[field]) }));
+        }
         return;
       }
       if (inWidget) return;
@@ -46,6 +52,13 @@ export function useEditorKeys(store: EditorStore) {
         nudgeSelection(store, x * step, y * step);
       } else if (e.key === "Escape" && s.selectedIds.length) {
         s.select([]);
+      } else if (e.key === "Enter" && target?.closest("[data-canvas]") && s.selectedIds.length === 1 && !s.readOnly) {
+        // Enter on the canvas types into the selected text box (Enter elsewhere keeps its usual job)
+        const el = s.content.pages[0].elements.find((x) => x.id === s.selectedIds[0]);
+        if (el?.type === "text" && !el.locked) {
+          e.preventDefault();
+          s.setEditing(el.id);
+        }
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
