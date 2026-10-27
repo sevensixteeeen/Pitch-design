@@ -1,16 +1,16 @@
 feature,area,priority,original,clone,notes
-Sign up and log in with email,onboarding,must,yes,partial,S01 | backend: Supabase Auth + token check in API; live test pending (needs Supabase keys) | M1 screen works; fake data only; live Supabase pending
-Home with recent designs and empty state,home,must,yes,partial,S02 | M1 built (search; empty; loading; error states); fake data only; live Supabase pending
-Create a design from a preset size,create,must,yes,partial,S03 - presets are our own list (post / story / A4 / slide) | M1 built (5 presets of our own); fake data only; live Supabase pending
-Create a design with custom width x height,create,must,yes,partial,S03 - 40..8000 px; area cap; px/in/mm/cm units [help][api] | M1 built (px/in/mm/cm; limits checked); fake data only; live Supabase pending
+Sign up and log in with email,onboarding,must,yes,yes,S01 | backend: Supabase Auth + token check in API; live test pending (needs Supabase keys) | M1 screen works | live on Supabase 2026-10-27: sign up; confirmation email; log in
+Home with recent designs and empty state,home,must,yes,yes,S02 | M1 built (search; empty; loading; error states) | live on Supabase 2026-10-27: empty state then the new design listed
+Create a design from a preset size,create,must,yes,yes,S03 - presets are our own list (post / story / A4 / slide) | M1 built (5 presets of our own) | live on Supabase 2026-10-27: a design created (presets and custom size use the same call)
+Create a design with custom width x height,create,must,yes,yes,S03 - 40..8000 px; area cap; px/in/mm/cm units [help][api] | M1 built (px/in/mm/cm; limits checked) | live on Supabase 2026-10-27: a design created (presets and custom size use the same call)
 Editor shell with side panel and top bar,editor,must,yes,partial,S08 | M1: Home; title; save status; PNG download; Text/Elements/Uploads rail. File menu; rename; undo/redo; Share; BottomBar later
-Add text box (heading / subheading / body),text,must,yes,partial,S10 | M1 all three presets; fake data only; live Supabase pending
+Add text box (heading / subheading / body),text,must,yes,yes,S10 | M1 all three presets | live on Supabase 2026-10-27: text saved and reloaded
 Edit text in place on the canvas,text,must,yes,no,S08 - hard part 2
 Font family / size / colour / bold / italic / underline / align,text,must,yes,no,S15 S14 - Google Fonts only
-Add basic shapes and lines,elements,must,yes,partial,S09 | M1 rectangle only; ellipse/lines in M2
+Add basic shapes and lines,elements,must,yes,partial,S09 | M1 rectangle only; ellipse/lines in M2 | live on Supabase 2026-10-27: rectangle saved and reloaded
 Shape fill and stroke colour,elements,must,yes,no,S14
-Upload your own images,uploads,must,yes,partial,S11 - size and type limits; error state | backend: 3-step upload (start/complete) with type/size/quota checks done | M1 upload panel with errors; fake data only; live Supabase pending
-Place uploaded image on page,uploads,must,yes,partial,S11 -> S08 drag or click | M1 click to place; drag onto page in M2
+Upload your own images,uploads,must,yes,yes,S11 - size and type limits; error state | backend: 3-step upload (start/complete) with type/size/quota checks done | M1 upload panel with errors | live on Supabase 2026-10-27: file in the private bucket; size checked by the server
+Place uploaded image on page,uploads,must,yes,partial,S11 -> S08 drag or click | M1 click to place; drag onto page in M2 | live check pending (photo uploaded but not yet placed)
 Select / multi-select / drag-select,canvas,must,yes,partial,hard part 1 | M1 click to select one; multi/drag-select in M2
 Move resize and rotate elements,canvas,must,yes,partial,hard part 1 | M1 drag to move only; resize/rotate in M2
 Snap and smart alignment guides,canvas,must,yes,no,hard part 1
@@ -21,10 +21,10 @@ Duplicate and delete elements,arrange,must,yes,no,context toolbar + keyboard
 Transparency / opacity,elements,must,yes,no,slider [3p]
 Page background colour,pages,must,yes,no,S14
 Undo and redo,editor,must,yes,no,Ctrl+Z / Ctrl+Shift+Z - hard part 4
-Autosave with saved / saving indicator,editor,must,yes,partial,S08 states - hard part 4 | backend: PUT content with revision + 409 done | M1 all states (saving; reconnecting; other tab; gone; logged out); fake data only; live Supabase pending
+Autosave with saved / saving indicator,editor,must,yes,yes,S08 states - hard part 4 | backend: PUT content with revision + 409 done | M1 all states (saving; reconnecting; other tab; gone; logged out) | live on Supabase 2026-10-27: 9 saves; reload shows every edit
 Zoom and fit to screen,editor,must,yes,no,BottomBar
 Add / duplicate / delete pages,pages,must,yes,no,cannot delete last page
-Download as PNG,export,must,yes,partial,S20 - core loop end | M1 exact design size; photo included (fake data); live Storage tainting check pending
+Download as PNG,export,must,yes,partial,S20 - core loop end | M1 exact design size; photo included (fake data); live Storage tainting check pending | live check pending: PNG with a Storage photo (bugs.md T5)
 Download as JPG with quality slider,export,must,yes,no,S20 [help]
 Download as PDF (all or chosen pages),export,must,yes,no,S20 - hard part 3
 Projects list of all designs,projects,must,yes,no,S05 | backend: GET /api/designs done

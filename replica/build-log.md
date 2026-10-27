@@ -48,6 +48,23 @@ FastAPI serves `index.html` for app pages, the JS files, 401 on `/api/me`.
 Not checked yet: anything against live Supabase (logins, Storage, signed links, canvas tainting with
 Storage images); "Reconnecting…" (the fake layer has no network to lose).
 
+## First live run on Supabase (2026-10-27)
+
+Supabase project (eu-west-1) set up by you; migrations 0001 and 0002 applied. Read-only checks: row level
+security on for all 8 tables, `anon` / `authenticated` have no table rights, the Data API refuses the
+publishable key ("permission denied"). You clicked through with your own email:
+
+| step | result | evidence (totals only) |
+| --- | --- | --- |
+| sign up, confirmation email, log in | works | 1 account, email confirmed, profile created |
+| create a design, add text and a rectangle | works | 1 design, 2 texts, 1 rectangle |
+| autosave, then reload | works | 9 saves (all 200), reload shows everything |
+| upload a photo | works | 1 upload ready, file in `user-files`, size matches |
+| place the photo, PNG with the photo | **not done yet** | no image on any page (bugs.md T5) |
+| coming back after idle | **BUG-005** found and fixed | two 500s in the API log; test added |
+
+Features moved to `yes`: 7 (parity 16.4 → 24.6, must-haves 0 → 7 of 30).
+
 ## Notes for later
 
 - The main JS file is 484 kB (Konva). Load the editor with `lazy()` so Home and Login stay small (M2).
