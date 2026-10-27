@@ -13,8 +13,17 @@ _pool: ConnectionPool | None = None
 
 def open_pool(url: str) -> None:
     global _pool
-    # small on purpose: the Supabase free plan allows only a few connections
-    _pool = ConnectionPool(url, min_size=1, max_size=5, kwargs={"row_factory": dict_row}, open=True)
+    _pool = ConnectionPool(
+        url,
+        # small on purpose: the Supabase free plan allows only a few connections
+        min_size=1,
+        max_size=5,
+        kwargs={"row_factory": dict_row},
+        # Supabase's pooler closes connections that sit idle; test each one before a request
+        # gets it, and swap a dead one for a fresh one (BUG-005)
+        check=ConnectionPool.check_connection,
+        open=True,
+    )
 
 
 def close_pool() -> None:
