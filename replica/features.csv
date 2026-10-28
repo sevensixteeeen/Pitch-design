@@ -24,11 +24,11 @@ Undo and redo,editor,must,yes,yes,Ctrl+Z / Ctrl+Shift+Z - hard part 4 | 2a: chec
 Autosave with saved / saving indicator,editor,must,yes,yes,S08 states - hard part 4 | backend: PUT content with revision + 409 done | M1 all states (saving; reconnecting; other tab; gone; logged out) | live on Supabase 2026-10-27: 9 saves; reload shows every edit
 Zoom and fit to screen,editor,must,yes,yes,BottomBar | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): bottom bar buttons and menu; Ctrl+= / Ctrl+- / Ctrl+0; Ctrl+scroll; PNG stays at real size
 Add / duplicate / delete pages,pages,must,yes,yes,cannot delete last page | 2b-2: checked in the browser 2026-10-28 (fake data; the server accepted the exact saved JSON): pages stacked with a label and add/duplicate/delete above each; the last page can't be deleted; undo covers page changes; duplicates get new ids
-Download as PNG,export,must,yes,partial,S20 - core loop end | M1 exact design size; photo included (fake data); live Storage tainting check pending | live check pending: PNG with a Storage photo (bugs.md T5)
-Download as JPG with quality slider,export,must,yes,no,S20 [help]
-Download as PDF (all or chosen pages),export,must,yes,no,S20 - hard part 3
-Projects list of all designs,projects,must,yes,no,S05 | backend: GET /api/designs done
-Rename and delete a design,projects,must,yes,no,S05 DesignCard menu | backend: PATCH + trash routes done
+Download as PNG,export,must,yes,partial,"S20 - core loop end | M1 exact design size; photo included (fake data); live Storage tainting check pending | live check pending: PNG with a Storage photo (bugs.md T5) | 2c: from the Download panel, any page; file named '... - page N' for multi-page designs. Live Storage tainting check still pending"
+Download as JPG with quality slider,export,must,yes,yes,"S20 [help] | 2c: checked in the browser 2026-10-28 (fake data): Download panel; any page; quality 10-100 (100% made a 14,450 B file vs 7,715 B at 90%)"
+Download as PDF (all or chosen pages),export,must,yes,yes,S20 - hard part 3 | 2c: checked in the browser 2026-10-28 (fake data): all pages or a chosen set (0 pages disables Download); each page a JPEG picture at the design size (1080 px = 810 pt); pdf-lib loaded only when a PDF is made. Selectable text: milestone 4
+Projects list of all designs,projects,must,yes,yes,"S05 | backend: GET /api/designs done | 2c: checked in the browser 2026-10-28 (fake data): S05 with sort (last edited / title); loading, empty, error states; 390 px ok"
+Rename and delete a design,projects,must,yes,yes,"S05 DesignCard menu | backend: PATCH + trash routes done | 2c: checked in the browser 2026-10-28 (fake data): Rename dialog (empty title refused; keyboard focus handled) and Move to Trash with Undo, on Projects and Home"
 Lock and unlock elements,arrange,should,yes,no,Alt+Shift+L [3p]
 Layers list with drag to reorder,arrange,should,yes,no,S13 Layers tab [help][3p]
 Exact position and size inputs (X Y W H rotation),arrange,should,yes,no,S13

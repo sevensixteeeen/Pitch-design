@@ -65,6 +65,34 @@ publishable key ("permission denied"). You clicked through with your own email:
 
 Features moved to `yes`: 7 (parity 16.4 → 24.6, must-haves 0 → 7 of 30).
 
+## Milestone 2c: downloads and Projects (2026-10-28)
+
+| part | state | notes |
+| --- | --- | --- |
+| S20 Download panel | done | PNG or JPG of any page (JPG quality 10–100 %), PDF of all or chosen pages; "Preparing…" while making it; an error message if it fails; Download disabled with 0 pages chosen. Files are named after the design ("… - page 2.png" when there are several pages) |
+| PDF | done | each page a JPEG picture at the design's size (96 px = 1 inch = 72 pt), the design's title in the PDF. `pdf-lib` (MIT, 1 new package) is loaded only when a PDF is made. Real, selectable text in PDFs stays a milestone 4 item |
+| S05 Projects | done | every design, sort by last edited or title, rename, Move to Trash with Undo; loading, empty and error states. Home got Rename too (same shared actions) |
+| not in 2c | | Projects tabs (Folders, Uploads), multi-select, list view (milestone 3); export scale and transparent PNG (milestones 3–4); renaming in the editor's top bar |
+
+Found and fixed during testing:
+- **The Rename dialog's title field didn't get focus**, so typing went nowhere and Enter just closed the
+  dialog. Two causes: a dialog opened from a menu loses focus to the closing menu's button, and the dialog's
+  default focus is its first button (the ✕). Fixed by opening the dialog a moment after the menu has closed,
+  plus a new `initialFocus` option on the shared `Dialog`. After closing, focus now returns to the card's
+  "…" button. Re-tested with mouse and with keyboard only.
+
+Checked in the browser on fake data:
+- PNG of page 1 chosen from the panel: 1080 × 1080, white, `Untitled design - page 1.png`
+- JPG of page 2: yellow, 1080 × 1080; 30 % and 90 % files differ; 100 % = 14,450 bytes vs 7,715 at 90 %
+- PDF of all pages: opened with `pdf-lib`, 2 pages of 810 × 810 pt, titled after the design
+- PDF of page 2 only: 1 page; 0 pages chosen shows "Download 0 pages", disabled
+- Projects: 2 designs; rename ("Give it a name." for an empty title; renamed to "Zebra flyer"); sorted by title
+- Move to Trash and Undo; restoring from the editor's Trash banner
+- 390 px wide: no sideways scrolling on Projects or Home; no console errors
+- `npm run build` passes; `npm audit` 0 vulnerabilities
+
+Feature matrix: 4 rows to `yes`, 1 note. Parity 59.8 → 69.1; must-haves 22 → 26 of 30.
+
 ## Milestone 2b-2: shapes, lines, pages, groups (2026-10-28)
 
 | part | state | notes |
@@ -192,6 +220,8 @@ Feature matrix: 8 rows moved to `yes`, 2 to `partial`, 1 note updated. Parity 24
 
 ## Notes for later
 
-- The main JS file is 484 kB (Konva). Load the editor with `lazy()` so Home and Login stay small (M2).
+- The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.
+  (Correction: the "484 kB" noted here before was measured before the editor existed.) Load the editor with
+  `lazy()` so Home and Login stay small. `pdf-lib` is already a separate 420 kB file loaded only for PDFs.
 - Typed API: TypeScript types are still hand-written in `lib/document.ts`; generating them from the
   API (`openapi-typescript`, one dev package) is planned for M2, when groups make the type recursive.
