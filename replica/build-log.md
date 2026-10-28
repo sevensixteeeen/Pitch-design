@@ -249,6 +249,32 @@ Feature matrix: 8 rows moved to `yes`, 2 to `partial`, 1 note updated. Parity 24
 - **Learning project, never deployed:** `/replica-launch` and `/replica-deploy` are skipped. Nothing
   about hosting, custom email, a privacy policy or billing will be built.
 
+## Forgot password (2026-10-28, branch `build/forgot-password`)
+
+Asked for by you when the live photo check needed a password nobody can look up (Supabase keeps only a
+one-way hash).
+
+- **Login → "Forgot password?"** (login mode only) opens an email-only form. Sending always shows the same
+  words, whether or not the account exists, so the form can't be used to find out who has an account.
+- **The email link** (Supabase's `resetPasswordForEmail`, back to `/reset-password`) logs you in and shows
+  "Choose a new password" (8+ characters, Supabase's `updateUser`). Saving goes to Home with a "Password
+  changed" toast. Without a login (link expired, already used, typed by hand) the page says so and offers a
+  new link.
+- **If Supabase sends the link to the Site URL** instead (`/reset-password` not on its redirect list),
+  `routeResetLink()` in `lib/supabase.ts` moves a `#…type=recovery` link to `/reset-password` before the
+  router and the Supabase client start. Adding `http://localhost:5173/**` under Authentication → URL
+  Configuration → Redirect URLs avoids the detour.
+- **Fake data:** no email is sent (the form says so); `/reset-password` changes the logged-in test user's
+  password.
+- New Supabase error words: `same_password`, `weak_password`.
+
+Checked in the browser on fake data (port 5174): new-password form for the logged-in test user; a 6-character
+password refused with the message; a new one saved, then Home; logged out, `/reset-password` shows "This link
+doesn't work any more"; "Send a new link" opens the forgot form; sending shows the test-build note; "Log in"
+keeps the email; the new password logs in; a fresh load of `/#type=recovery…` lands on `/reset-password`.
+`npm run build` passes. **Not yet checked live:** the real email from Supabase (built-in mail sends only a
+few per hour).
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

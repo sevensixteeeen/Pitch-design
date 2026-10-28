@@ -62,8 +62,8 @@ Actions (3), versions list/restore (4), copy (4), changing a design's size in `P
 - **Email: Supabase Auth's built-in mail**, not Resend/Postmark. Only auth emails exist. It sends only a few
   per hour: **before friends sign up**, add custom SMTP (e.g. Resend's free tier, your own domain) under
   Authentication > Emails > SMTP, or turn off "Confirm email" for the demo.
-- **Password reset / magic link**: Supabase Auth provides both; the S01 screen has no "forgot password"
-  link yet (frontend work, `/replica-build`). `recon.md` lists only email and Google sign-in (S01), so no
+- **Password reset / magic link**: Supabase Auth provides both. S01 has "Forgot password?" (built
+  2026-10-28: email link to `/reset-password`, see build-log.md); no magic-link sign-in. `recon.md` lists only email and Google sign-in (S01), so no
   magic link.
 - **Google sign-in**: milestone 4 (could). Needs your own Google Cloud OAuth client; scopes `openid email
   profile` only, which don't need Google's long verification review.
