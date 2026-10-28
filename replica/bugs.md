@@ -1,7 +1,7 @@
 # Bugs: Canva clone
 
-Only bugs reproduced on 2026-10-27. Things that might be wrong but weren't reproduced are under
-"To check" at the end. Format: replica-test `bug-report.md`. Build: no commit yet (working tree 2026-10-27).
+Only bugs reproduced (BUG-001 to 005 on 2026-10-27; BUG-006 to 008 by the Playwright suite on 2026-10-28). Things that might be wrong but weren't reproduced are under
+"To check" at the end. Format: replica-test `bug-report.md`. Builds: working tree 2026-10-27 (BUG-001 to 005), `main` bf3b002 (BUG-006 to 008).
 
 | id | severity | title | status |
 | --- | --- | --- | --- |
@@ -10,6 +10,9 @@ Only bugs reproduced on 2026-10-27. Things that might be wrong but weren't repro
 | BUG-003 | S3 | After "delete my account", the old login token still works for up to 1 hour and recreates data | fixed in c0c21a9 |
 | BUG-004 | S3 | S24 "not found" page puts a link inside a button | fixed in 06f9fe2 |
 | BUG-005 | S3 | After the app sits idle, the first requests fail with 500 (Supabase closed the pooled connections) | fixed in db8707b |
+| BUG-006 | S3 | The editor says "Saved" for about a second after an edit, before the save has started | fixed in 27fc260 |
+| BUG-007 | S4 | Editor side panel is outside every landmark (axe `region`) | fixed in 27fc260 |
+| BUG-008 | S4 | The "Open this on a larger screen" note has no main landmark (axe `landmark-one-main`, `region`) | fixed in 27fc260 |
 
 ### BUG-001: The frontend doesn't start
 
@@ -121,6 +124,57 @@ handed a closed one to the next request.
 Status: fixed in db8707b: the pool checks each connection before a request gets it
 (`check=ConnectionPool.check_connection`) and swaps a dead one for a new one. The test failed before the fix
 with the same error and passes after; all 62 tests pass. Cost: one tiny extra round trip per request.
+
+### BUG-006: "Saved" shows while an edit is still waiting to be saved
+
+- Severity: S3 (visibly wrong; a refresh in that second loses the edit while the screen said it was safe)
+- Flow / case: F02-E10 ("Saving…" until the server answers, never "Saved" early)
+- Screen: S08 editor, top bar
+- Build: `main` bf3b002, 2026-10-28  Browser / device: Playwright Chromium 1248, 1440 × 900, fake data
+
+Steps
+1. Create a design.
+2. Click "Add a heading".
+3. Look at the save status within the next second.
+
+Expected: "Saving…" (the edit only exists in this tab until the save lands).
+Actual: "Saved" for about 1 s; the autosave waits 1 s after the last change and only then switched to "Saving…".
+Evidence: `e2e/f02-core-loop.spec.ts` F02-E10 failed ("Saved" found within 500 ms of the edit). The same bug made
+F02-E12, F02-E14, F05-H1, F05-E5 and F06-H1 read stale data, because their "wait for Saved" step passed at once.
+Cause: `useAutosave` set "saving" only when the timed save started.
+Fix: the autosave switches the status to "Saving…" as soon as an edit arrives (unless it has stopped on a
+conflict, sign-out etc.). Status: fixed in 27fc260; F02-E10 and the others pass.
+
+### BUG-007: Editor side panel is outside every landmark
+
+- Severity: S4 (screen-reader users can't jump to the panel by landmark; everything still works)
+- Flow / case: F02-H1, F04-H1 axe scans of S08
+- Screen: S08 editor, side panel (Text / Elements / Uploads)
+- Build: `main` bf3b002  Browser: Playwright Chromium, axe-core via `@axe-core/playwright`
+
+Steps
+1. Open any design in the editor.
+2. Run an axe scan.
+
+Expected: no violations.
+Actual: `region (moderate): All page content should be contained by landmarks` on the tab rail and the open panel.
+Fix: the side panel is an `<aside aria-label="Side panel">` (Radix Tabs `asChild`). Status: fixed in 27fc260.
+
+### BUG-008: The small-screen note has no main landmark
+
+- Severity: S4
+- Flow / case: F02-E13 (phone-sized window)
+- Screen: S08 editor below its minimum width
+- Build: `main` bf3b002  Browser: Playwright Chromium at 390 × 844
+
+Steps
+1. Open a design.
+2. Make the window 390 px wide.
+3. Run an axe scan.
+
+Expected: no violations.
+Actual: `landmark-one-main` and `region`: the note is a plain `<div>`.
+Fix: the note is a `<main>`. Status: fixed in 27fc260.
 
 ## To check (not reproduced, can't be yet)
 

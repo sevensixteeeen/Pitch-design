@@ -43,10 +43,22 @@ The app uses fake data whenever `.env.local` has no `VITE_SUPABASE_*` values. Th
 ```
 cd backend
 uv sync           # only the first time: creates .venv with Python 3.12 and the packages
-uv run pytest     # 62 tests, about 15 seconds; uses a throwaway Postgres in backend/.test-postgres
+uv run pytest     # 67 tests, about 20 seconds; uses a throwaway Postgres in backend/.test-postgres
 ```
 
 They never touch Supabase or your own PostgreSQL service.
+
+### End-to-end tests (the app in a real browser)
+
+```
+cd frontend
+npx playwright install chromium   # only the first time: the test browser (~150 MB)
+npm run e2e                       # 34 tests, about 1.5 minutes
+```
+
+Playwright starts its own copy of the app on port 5180 with fake data, so it never touches Supabase (a test
+fails if anything tries). Each test also fails on console errors and on accessibility problems found by axe.
+If one fails, `npx playwright show-report e2e-report` shows what happened, step by step.
 
 ## 4. Run it for real (with your Supabase project, as on this laptop)
 
