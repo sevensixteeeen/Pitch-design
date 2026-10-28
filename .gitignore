@@ -9,3 +9,5 @@ __pycache__/
 .DS_Store
 .env.local
 backend/.test-postgres/
+frontend/e2e-results/
+frontend/e2e-report/

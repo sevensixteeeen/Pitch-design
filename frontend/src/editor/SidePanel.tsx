@@ -18,34 +18,37 @@ const TABS = [
 
 export function SidePanel() {
   return (
-    <RTabs.Root defaultValue="text" orientation="vertical" className="flex shrink-0 border-r border-border bg-app">
-      <RTabs.List aria-label="Add to your design" className="flex w-(--tk-layout-rail-w) flex-col gap-1 border-r border-border p-1">
-        {TABS.map(({ value, label, icon: Icon }) => (
-          <RTabs.Trigger
-            key={value}
-            value={value}
-            className={cn(
-              "flex flex-col items-center gap-1 rounded-md py-2 text-xs text-muted hover:bg-surface-hover hover:text-fg",
-              "data-[state=active]:bg-accent-soft data-[state=active]:text-accent",
-              focusRing,
-            )}
-          >
-            <Icon className="size-5" strokeWidth={1.75} aria-hidden />
-            {label}
-          </RTabs.Trigger>
-        ))}
-      </RTabs.List>
-      <div className="w-(--tk-layout-panel-w) overflow-y-auto p-4">
-        <RTabs.Content value="text" className="outline-none">
-          <TextPanel />
-        </RTabs.Content>
-        <RTabs.Content value="elements" className="outline-none">
-          <ElementsPanel />
-        </RTabs.Content>
-        <RTabs.Content value="uploads" className="outline-none">
-          <UploadsPanel />
-        </RTabs.Content>
-      </div>
+    // an <aside>, so screen readers can jump to it like the top bar and the page (BUG-007)
+    <RTabs.Root asChild defaultValue="text" orientation="vertical" className="flex shrink-0 border-r border-border bg-app">
+      <aside aria-label="Side panel">
+        <RTabs.List aria-label="Add to your design" className="flex w-(--tk-layout-rail-w) flex-col gap-1 border-r border-border p-1">
+          {TABS.map(({ value, label, icon: Icon }) => (
+            <RTabs.Trigger
+              key={value}
+              value={value}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-md py-2 text-xs text-muted hover:bg-surface-hover hover:text-fg",
+                "data-[state=active]:bg-accent-soft data-[state=active]:text-accent",
+                focusRing,
+              )}
+            >
+              <Icon className="size-5" strokeWidth={1.75} aria-hidden />
+              {label}
+            </RTabs.Trigger>
+          ))}
+        </RTabs.List>
+        <div className="w-(--tk-layout-panel-w) overflow-y-auto p-4">
+          <RTabs.Content value="text" className="outline-none">
+            <TextPanel />
+          </RTabs.Content>
+          <RTabs.Content value="elements" className="outline-none">
+            <ElementsPanel />
+          </RTabs.Content>
+          <RTabs.Content value="uploads" className="outline-none">
+            <UploadsPanel />
+          </RTabs.Content>
+        </div>
+      </aside>
     </RTabs.Root>
   );
 }

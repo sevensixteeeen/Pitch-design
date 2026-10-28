@@ -70,7 +70,10 @@ export function useAutosave(store: EditorStore) {
     };
 
     const unsubscribe = store.subscribe((s, prev) => {
-      if (s.edits !== prev.edits && r.attempt === 0) schedule(DEBOUNCE_MS);
+      if (s.edits === prev.edits) return;
+      if (r.attempt === 0) schedule(DEBOUNCE_MS);
+      // until the save lands the edit only lives in this tab, so never show "Saved" in the meantime (BUG-006)
+      if (!r.stopped && s.save.kind === "saved") s.setSave({ kind: "saving" });
     });
 
     // "save now and wait" (e.g. before moving the design to Trash), after any save in flight

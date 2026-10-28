@@ -235,12 +235,12 @@ export function TopBar({ exportRef }: { exportRef: RefObject<ExportPage | null> 
 /** Below the editor's minimum width (layout.editor-min-w): a short note instead. */
 export function SmallScreenNote() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+    <main className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
       <h1 className="text-lg">Open this on a larger screen</h1>
       <p className="max-w-80 text-sm text-muted">The editor needs a wider window, like a laptop or desktop screen.</p>
       <Link to="/" className="text-sm font-semibold text-accent underline-offset-2 hover:underline">
         Back to Home
       </Link>
-    </div>
+    </main>
   );
 }
