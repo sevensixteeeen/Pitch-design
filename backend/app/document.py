@@ -5,6 +5,7 @@ They mirror frontend/src/lib/document.ts. When the editor gets a new element
 type or field, add it here first, or saves will be refused with 422.
 """
 
+from collections.abc import Iterator
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -16,7 +17,8 @@ Coord = Annotated[float, Field(ge=-100_000, le=100_000)]
 Length = Annotated[float, Field(gt=0, le=100_000)]
 
 MAX_ELEMENTS_PER_PAGE = 1000
-MAX_ELEMENTS_TOTAL = 5000
+MAX_ELEMENTS_TOTAL = 5000  # counting elements inside groups
+MAX_GROUP_DEPTH = 8
 
 
 class Strict(BaseModel):
@@ -54,7 +56,7 @@ class TextElement(ElementBase):
 
 class ShapeElement(ElementBase):
     type: Literal["shape"]
-    kind: Literal["rect", "ellipse"]
+    kind: Literal["rect", "ellipse", "triangle"]
     fill: Hex
     stroke: Hex | None
     stroke_width: Annotated[float, Field(ge=0, le=1000)]
@@ -72,7 +74,38 @@ class ImageElement(ElementBase):
     corner_radius: Annotated[float, Field(ge=0, le=100_000)]
 
 
-Element = Annotated[TextElement | ShapeElement | ImageElement, Field(discriminator="type")]
+class LineElement(ElementBase):
+    """A straight line across the middle of its box, from left to right; rotation turns it.
+    width = its length, height = its thickness."""
+
+    type: Literal["line"]
+    stroke: Hex
+    stroke_width: Annotated[float, Field(ge=0.5, le=1000)]
+    dash: Literal["solid", "dashed", "dotted"]
+    arrow_start: bool
+    arrow_end: bool
+
+
+class GroupElement(ElementBase):
+    """Elements moved, resized and rotated as one. Children's x / y are relative to the group's
+    top-left corner; groups can hold groups."""
+
+    type: Literal["group"]
+    children: Annotated[list["Element"], Field(min_length=1, max_length=MAX_ELEMENTS_PER_PAGE)]
+
+
+Element = Annotated[TextElement | ShapeElement | ImageElement | LineElement | GroupElement, Field(discriminator="type")]
+GroupElement.model_rebuild()
+
+
+def walk(elements: list) -> Iterator[tuple[object, int]]:
+    """Every element and its depth (1 = directly on the page), including inside groups."""
+    stack = [(el, 1) for el in elements]
+    while stack:
+        el, depth = stack.pop()
+        yield el, depth
+        if isinstance(el, GroupElement):
+            stack.extend((child, depth + 1) for child in el.children)
 
 
 class Background(Strict):
@@ -90,10 +123,14 @@ class DesignContent(Strict):
     pages: Annotated[list[Page], Field(min_length=1, max_length=200)]
 
     @model_validator(mode="after")
-    def total_elements(self) -> "DesignContent":
-        if sum(len(p.elements) for p in self.pages) > MAX_ELEMENTS_TOTAL:
+    def limits(self) -> "DesignContent":
+        found = [depth for page in self.pages for _, depth in walk(page.elements)]
+        if len(found) > MAX_ELEMENTS_TOTAL:
             raise ValueError(f"A design can hold at most {MAX_ELEMENTS_TOTAL} elements.")
+        # depth counts the element itself, so 8 groups inside each other plus their content = 9
+        if found and max(found) > MAX_GROUP_DEPTH + 1:
+            raise ValueError(f"Groups can sit inside each other at most {MAX_GROUP_DEPTH} deep.")
         return self
 
     def asset_ids(self) -> set[UUID]:
-        return {el.src.asset_id for page in self.pages for el in page.elements if isinstance(el, ImageElement)}
+        return {el.src.asset_id for page in self.pages for el, _ in walk(page.elements) if isinstance(el, ImageElement)}
