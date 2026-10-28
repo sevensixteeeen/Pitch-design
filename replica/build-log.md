@@ -65,6 +65,41 @@ publishable key ("permission denied"). You clicked through with your own email:
 
 Features moved to `yes`: 7 (parity 16.4 → 24.6, must-haves 0 → 7 of 30).
 
+## Milestone 2b-2: shapes, lines, pages, groups (2026-10-28)
+
+| part | state | notes |
+| --- | --- | --- |
+| server first | done | `document.py`: `triangle` shapes, `line` and `group` elements (groups hold groups, 8 deep), elements inside groups count towards the 5,000 limit, images inside groups get links. 5 new tests, written first: 3 failed before the change |
+| shapes and lines (S09) | done | Elements panel: rectangle, ellipse, triangle, line, arrow. Line toolbar: colour, thickness (keeps its middle), solid / dashed / dotted, arrow at either end; its side handles change the length only |
+| pages | done | each page on its own canvas, stacked, with "Page N" and add / duplicate / delete above it; one page is active (outlined) and all editing goes there; clicking another page's element moves there; the last page can't be deleted; duplicates get new ids; undo covers page changes |
+| group / ungroup | done | Ctrl+G / Ctrl+Shift+G and toolbar buttons; a group resizes evenly and everything inside scales with it; ungrouping puts each element exactly where it was shown |
+| not in 2b-2 | | editing a text box inside a group (ungroup first); the pages grid and reordering pages (S18, milestone 3); showing only the pages near the screen (every page has its own canvas, so designs with dozens of pages will be slow) |
+
+Why one canvas per page: browsers can't draw a single canvas tens of thousands of pixels tall, and it also
+makes the page labels and buttons ordinary, accessible HTML.
+
+Checked in the browser on fake data:
+- ellipse, triangle, arrow added
+- line thickness 5 → 10 with its middle kept (y 538 → 536); dashed; arrows at both ends
+- line lengthened 432 → 533 with the side handle; thickness and left end unchanged
+- triangle moved 200 px with Shift+arrows from the keyboard element list
+- triangle + ellipse grouped (box 524 × 324, children relative, layer kept)
+- group corner-resized ×1.0958, children's sizes and positions scaled
+- group rotated to exactly 90°
+- ungrouped: both shapes landed exactly where calculated (to 2 decimals), rotation 90°
+- added page 2, rectangle on page 2, duplicated it (all ids unique)
+- clicking page 1's arrow switched to page 1
+- PNG of page 1 still 1080 × 1080 with the arrow in it
+- deleted page 2, undo brought it back
+- down to 1 page: the delete button disabled ("A design needs at least one page")
+- the exact JSON the editor saved validated against the server's rules
+- reload: everything there; no console errors
+- `npm run build` passes; 67 backend tests pass
+
+Fixed during testing: the Elements buttons said "Add a ellipse" / "Add a arrow".
+
+Feature matrix: 3 rows to `yes`. Parity 53.9 → 59.8; must-haves 19 → 22 of 30.
+
 ## Milestone 2b-1: text and colour (2026-10-27)
 
 | part | state | notes |

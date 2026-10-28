@@ -129,8 +129,9 @@ with the same error and passes after; all 62 tests pass. Cost: one tiny extra ro
 - **T2 "Email already used" message.** With "Confirm email" on, Supabase hides whether an email exists
   (sign-up "succeeds" without a session), so F01-N2 will likely show "Check your inbox" instead of
   "There's already an account". That is Supabase's anti-enumeration behaviour; decide if that is fine.
-- **T3 Groups and future element types.** `backend/app/document.py` knows text, shape and image only. When
-  milestone 2 adds groups or lines, saves will be refused (422) unless the model is updated first.
+- **T3 Groups and future element types.** ✅ Done in 2b-2 (2026-10-28): `document.py` was updated first
+  (triangles, lines, groups), with tests, and the editor's saved JSON was checked against it. The rule
+  stands for any new element type.
 - **T4 Real Storage calls.** ✅ Checked 2026-10-27: a live upload went through all three steps; the file is
   in the `user-files` bucket and its size matches the row (`file_info()` works on real Storage). Thumbnail and
   delete calls still only ran against the fake.
