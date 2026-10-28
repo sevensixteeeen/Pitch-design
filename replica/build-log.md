@@ -280,6 +280,15 @@ have an eye button inside the box that shows or hides what's typed. It's a real 
 screen readers hear "Show password" with on/off (`aria-pressed`). `TextField` gained a `trailing` slot for it;
 the new `PasswordField` lives in `components/ui/inputs.tsx`. Checked on fake data: dots → text → dots.
 
+## Milestone 2 finished: live photo check (2026-10-28)
+
+You placed an uploaded photo from Supabase Storage on a page and downloaded it with Download → PNG; the photo
+is in the file. Checked by totals only: 1 design with 1 placed photo, 1 upload row, 1 upload file in the bucket.
+bugs.md T5 is closed. "Place uploaded image on page" and "Download as PNG" are now `yes`.
+
+Parity 71.5 → 73.8; **must-haves 30 of 30**. Gaps found on the way: the editor doesn't make thumbnails yet
+(0 in the bucket, Home shows grey boxes), and dragging an upload onto the page isn't built (click works).
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

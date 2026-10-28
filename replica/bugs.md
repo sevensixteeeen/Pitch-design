@@ -135,5 +135,7 @@ with the same error and passes after; all 62 tests pass. Cost: one tiny extra ro
 - **T4 Real Storage calls.** ✅ Checked 2026-10-27: a live upload went through all three steps; the file is
   in the `user-files` bucket and its size matches the row (`file_info()` works on real Storage). Thumbnail and
   delete calls still only ran against the fake.
-- **T5 Canvas tainting.** Still open: F02-E15 (PNG export including an uploaded photo) needs a photo placed on
-  a page and downloaded on the live app. The live design has no image on it yet.
+- **T5 Canvas tainting.** ✅ Checked 2026-10-28: on the live app a photo from Storage was placed on a page,
+  saved (1 design with 1 placed photo, by totals), and Download → PNG produced a file with the photo in it.
+  The signed Storage links allow the canvas to export. Thumbnails: the editor doesn't make them yet (0 in
+  the bucket); the upload call is built and tested, the editor side isn't.
