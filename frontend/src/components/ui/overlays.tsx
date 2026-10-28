@@ -66,10 +66,19 @@ const menuItem =
 export const Menu = {
   Root: DropdownMenu.Root,
   Trigger: DropdownMenu.Trigger,
-  Content({ children, align = "start" }: { children: ReactNode; align?: "start" | "end" | "center" }) {
+  Content({
+    children,
+    align = "start",
+    onCloseAutoFocus,
+  }: {
+    children: ReactNode;
+    align?: "start" | "end" | "center";
+    /** when the menu closes it gives focus back to its button; call preventDefault() to put it elsewhere */
+    onCloseAutoFocus?: (e: Event) => void;
+  }) {
     return (
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align={align} sideOffset={6} className={menuContent}>
+        <DropdownMenu.Content align={align} sideOffset={6} className={menuContent} onCloseAutoFocus={onCloseAutoFocus}>
           {children}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

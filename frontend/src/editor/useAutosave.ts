@@ -73,6 +73,16 @@ export function useAutosave(store: EditorStore) {
       if (s.edits !== prev.edits && r.attempt === 0) schedule(DEBOUNCE_MS);
     });
 
+    // "save now and wait" (e.g. before moving the design to Trash), after any save in flight
+    store.setState({
+      flush: async () => {
+        window.clearTimeout(r.timer);
+        if (r.inFlight) await r.inFlight;
+        r.attempt = 0;
+        await saveNow();
+      },
+    });
+
     const warnBeforeClose = (e: BeforeUnloadEvent) => {
       if (!r.stopped && (r.inFlight || store.getState().edits !== r.savedEdits)) e.preventDefault();
     };

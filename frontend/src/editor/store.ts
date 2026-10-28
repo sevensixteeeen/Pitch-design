@@ -57,6 +57,10 @@ export interface EditorState {
   /** Same, for the active page itself (its background). */
   changePage(fn: (page: Page) => Page, opts?: ChangeOptions): void;
   setEditing(id: string | null): void;
+  /** The design's title (saved separately from its content; not part of undo). */
+  setTitle(title: string): void;
+  /** Saves any unsaved edits now and waits for it. Set by the autosave. */
+  flush: () => Promise<void>;
   setActivePage(index: number): void;
   /** A blank page after `index`; it becomes the active page. */
   addPage(index: number): void;
@@ -135,6 +139,8 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
 
     change: (fn, opts) => get().changePage((page) => ({ ...page, elements: fn(page.elements) }), opts),
     setEditing: (editingId) => set({ editingId }),
+    setTitle: (title) => set((s) => ({ design: { ...s.design, title } })),
+    flush: async () => {},
     setActivePage: (index) =>
       set((s) => (index === s.activePage || index < 0 || index >= s.content.pages.length ? s : { activePage: index, selectedIds: [], editingId: null })),
     addPage: (index) =>

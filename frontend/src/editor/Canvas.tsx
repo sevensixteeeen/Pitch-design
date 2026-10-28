@@ -2,7 +2,7 @@
 // actions above it (components.md, Canvas + Page). One page is active: selecting, moving, resizing,
 // rotating, snapping and typing happen there. Clicking another page makes it active.
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { Arrow, Ellipse, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
+import { Arrow, Ellipse, Group, Image as KonvaImage, Label, Layer, Line, Rect, Stage, Tag, Text, Transformer } from "react-konva";
 import type Konva from "konva";
 import { Copy, Plus, Trash2 } from "lucide-react";
 import { MAX_PAGES, type Element, type ImageElement, type LineElement, type TextElement } from "../lib/document";
@@ -10,7 +10,22 @@ import { cn } from "../lib/cn";
 import { IconButton } from "../components/ui/Button";
 import { commitText } from "./commands";
 import { TextEditor } from "./TextEditor";
-import { bounds, clamp, fontStyle, intersects, keepTopLeft, measureTextHeight, round2, snapBox, union, type Box } from "./geometry";
+import {
+  bounds,
+  clamp,
+  fontStyle,
+  intersects,
+  keepTopLeft,
+  measureTextHeight,
+  nearest,
+  round2,
+  snapBox,
+  snapTargets,
+  spacingSnap,
+  union,
+  type Box,
+  type Gap,
+} from "./geometry";
 import { nudge, patch, scaleElement } from "./ops";
 import { activeElements, useEditor, useEditorStore } from "./store";
 
@@ -29,6 +44,7 @@ function tokens() {
   return {
     selection: v("--tk-color-selection"),
     guide: v("--tk-color-guide"),
+    onGuide: v("--tk-color-on-inverse"), // distance labels: text on the guide colour
     handleFill: v("--tk-color-bg"),
     placeholderFill: v("--tk-color-surface-hover"),
     placeholderLine: v("--tk-color-border-input"),
@@ -220,7 +236,10 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
   const blocks = useRef<(HTMLElement | null)[]>([]);
   const transformer = useRef<Konva.Transformer>(null);
   const [colours] = useState(tokens);
-  const [guides, setGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
+  const [guides, setGuides] = useState<{ v: number[]; h: number[]; gaps: Gap[] }>({ v: [], h: [], gaps: [] });
+  const noGuides = { v: [], h: [], gaps: [] };
+  /** lines a resize handle can snap to, worked out when a resize starts */
+  const resizeTargets = useRef<{ xs: number[]; ys: number[] } | null>(null);
   const [marquee, setMarquee] = useState<Box | null>(null);
 
   // --- view: fit one page, or a fixed zoom with scrolling ---------------------------------------
@@ -306,7 +325,46 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chosenKey, activeEls, scale, active]);
 
+  // --- snapping while resizing: the dragged handle snaps to page and element lines --------------
+  const axisAligned = chosen.every((el) => el.rotation % 360 === 0);
+  const onTransformStart = () => {
+    const s = store.getState();
+    const others = activeElements(s).filter((x) => !s.selectedIds.includes(x.id)).map(bounds);
+    resizeTargets.current = snapTargets(others, { x: 0, y: 0, width: pageW, height: pageH });
+  };
+  const snapAnchor = (pos: { x: number; y: number }, evt?: { altKey?: boolean }) => {
+    const anchor = transformer.current?.getActiveAnchor();
+    const targets = resizeTargets.current;
+    // rotated boxes and the rotate handle don't snap; Alt turns snapping off
+    if (!targets || !anchor || anchor === "rotater" || !axisAligned || evt?.altKey) {
+      setGuides(noGuides);
+      return pos;
+    }
+    const threshold = SNAP_SCREEN_PX / scale;
+    const out = { ...pos };
+    const found = { v: [] as number[], h: [] as number[], gaps: [] as Gap[] };
+    // stage position -> page units: the page is drawn at (M, M), scaled
+    if (!anchor.endsWith("center")) {
+      const x = nearest((pos.x - M) / scale, targets.xs, threshold);
+      if (x !== null) {
+        out.x = M + x * scale;
+        found.v.push(x);
+      }
+    }
+    if (!anchor.startsWith("middle")) {
+      const y = nearest((pos.y - M) / scale, targets.ys, threshold);
+      if (y !== null) {
+        out.y = M + y * scale;
+        found.h.push(y);
+      }
+    }
+    setGuides(found);
+    return out;
+  };
+
   const onTransformEnd = () => {
+    resizeTargets.current = null;
+    setGuides(noGuides);
     const tr = transformer.current;
     if (!tr) return;
     const byId = new Map(activeElements(store.getState()).map((el) => [el.id, el]));
@@ -369,12 +427,29 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
         let dy = p.y - from.y;
         if (!moved && Math.hypot(dx, dy) * scale < 3) return; // still a click
         moved = true;
-        let found = { v: [] as number[], h: [] as number[] };
+        const found = { v: [] as number[], h: [] as number[], gaps: [] as Gap[] };
         if (!evt.altKey) {
-          const snap = snapBox({ ...box0, x: box0.x + dx, y: box0.y + dy }, others, pageBox, SNAP_SCREEN_PX / scale);
+          const threshold = SNAP_SCREEN_PX / scale;
+          const snap = snapBox({ ...box0, x: box0.x + dx, y: box0.y + dy }, others, pageBox, threshold);
           dx += snap.dx;
           dy += snap.dy;
-          found = { v: snap.vertical, h: snap.horizontal };
+          found.v = snap.vertical;
+          found.h = snap.horizontal;
+          // equal spacing, on an axis where no edge or centre lined up
+          if (!snap.vertical.length) {
+            const sp = spacingSnap({ ...box0, x: box0.x + dx, y: box0.y + dy }, others, threshold).x;
+            if (sp) {
+              dx += sp.delta;
+              found.gaps.push(...sp.gaps);
+            }
+          }
+          if (!snap.horizontal.length) {
+            const sp = spacingSnap({ ...box0, x: box0.x + dx, y: box0.y + dy }, others, threshold).y;
+            if (sp) {
+              dy += sp.delta;
+              found.gaps.push(...sp.gaps);
+            }
+          }
         }
         last = { dx, dy };
         for (const [id, c] of start) nodeOn(page, id)?.position({ x: c.cx + dx, y: c.cy + dy });
@@ -383,7 +458,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
         setGuides(found);
       },
       () => {
-        setGuides({ v: [], h: [] });
+        setGuides(noGuides);
         const now = store.getState();
         if (moved) now.change((els) => nudge(els, [...start.keys()], last.dx, last.dy));
         else if (now.selectedIds.length > 1) now.select([clickedId]); // a plain click picks just this one
@@ -542,6 +617,19 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
                             {guides.h.map((y) => (
                               <Line key={`h${y}`} points={[0, y, pageW, y]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
                             ))}
+                            {guides.gaps.map((g) => {
+                              // an equal gap: a line across it and its size in px (components.md, SmartGuides)
+                              const length = Math.round(Math.hypot(g.x2 - g.x1, g.y2 - g.y1));
+                              return (
+                                <Group key={`${g.x1},${g.y1},${g.x2},${g.y2}`}>
+                                  <Line points={[g.x1, g.y1, g.x2, g.y2]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
+                                  <Label x={(g.x1 + g.x2) / 2} y={(g.y1 + g.y2) / 2} scaleX={1 / scale} scaleY={1 / scale}>
+                                    <Tag fill={colours.guide} cornerRadius={3} />
+                                    <Text text={`${length}`} fontSize={11} padding={3} fill={colours.onGuide} offsetX={8} offsetY={8} />
+                                  </Label>
+                                </Group>
+                              );
+                            })}
                             {marquee && <Rect {...marquee} stroke={colours.selection} strokeWidth={1} strokeScaleEnabled={false} dash={[4, 4]} />}
                           </Group>
                           <Transformer
@@ -558,6 +646,8 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
                             borderStrokeWidth={1.5}
                             ignoreStroke
                             boundBoxFunc={(oldBox, newBox) => (Math.max(newBox.width, newBox.height) < 5 ? oldBox : newBox)}
+                            anchorDragBoundFunc={(_old, pos, evt) => snapAnchor(pos, evt as { altKey?: boolean } | undefined)}
+                            onTransformStart={onTransformStart}
                             onTransformEnd={onTransformEnd}
                           />
                         </>

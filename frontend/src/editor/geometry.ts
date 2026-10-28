@@ -75,6 +75,76 @@ export function keepTopLeft(cx: number, cy: number, oldW: number, oldH: number, 
   return { x: round2(x), y: round2(y) };
 }
 
+/** A gap to mark on the canvas while spacing snaps: a segment from (x1, y1) to (x2, y2). */
+export interface Gap {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+/**
+ * Equal spacing along one axis. Neighbours are boxes that overlap the moving box on the other axis.
+ * Two cases snap: the moving box sits between two neighbours with (almost) equal gaps, or it repeats
+ * the gap between the two neighbours next to it on one side. Returns the move to apply and the gaps
+ * to mark, or null.
+ */
+function spacingOnAxis(m: Box, others: Box[], threshold: number, axis: "x" | "y"): { delta: number; gaps: Gap[] } | null {
+  // work in "start / size" terms so one function handles both axes
+  const s = (b: Box) => (axis === "x" ? b.x : b.y);
+  const len = (b: Box) => (axis === "x" ? b.width : b.height);
+  const cs = (b: Box) => (axis === "x" ? b.y : b.x); // cross-axis start
+  const clen = (b: Box) => (axis === "x" ? b.height : b.width);
+  const overlaps = (a: Box, b: Box) => cs(a) < cs(b) + clen(b) && cs(b) < cs(a) + clen(a);
+  const end = (b: Box) => s(b) + len(b);
+  const row = others.filter((b) => overlaps(b, m));
+  const before = row.filter((b) => end(b) <= s(m) + threshold).sort((a, b) => end(b) - end(a));
+  const after = row.filter((b) => s(b) >= end(m) - threshold).sort((a, b) => s(a) - s(b));
+  // where to draw a gap marker: the middle of the overlap with the moving box, across the axis
+  const mid = (a: Box, b: Box) => (Math.max(cs(a), cs(b)) + Math.min(cs(a) + clen(a), cs(b) + clen(b))) / 2;
+  const gap = (from: number, to: number, at: number): Gap => (axis === "x" ? { x1: from, y1: at, x2: to, y2: at } : { x1: at, y1: from, x2: at, y2: to });
+
+  const options: { delta: number; gaps: (pos: number) => Gap[] }[] = [];
+  const [L, LL] = before;
+  const [R, RR] = after;
+  if (L && R) {
+    const target = (end(L) + s(R) - len(m)) / 2; // centred between them
+    options.push({ delta: target - s(m), gaps: (p) => [gap(end(L), p, mid(L, m)), gap(p + len(m), s(R), mid(R, m))] });
+  }
+  if (L && LL && overlaps(L, LL) && end(LL) <= s(L)) {
+    const target = end(L) + (s(L) - end(LL)); // repeat the gap on the left
+    options.push({ delta: target - s(m), gaps: (p) => [gap(end(LL), s(L), mid(LL, L)), gap(end(L), p, mid(L, m))] });
+  }
+  if (R && RR && overlaps(R, RR) && s(RR) >= end(R)) {
+    const target = s(R) - (s(RR) - end(R)) - len(m); // repeat the gap on the right
+    options.push({ delta: target - s(m), gaps: (p) => [gap(p + len(m), s(R), mid(R, m)), gap(end(R), s(RR), mid(R, RR))] });
+  }
+  const best = options.filter((o) => Math.abs(o.delta) <= threshold).sort((a, b) => Math.abs(a.delta) - Math.abs(b.delta))[0];
+  return best ? { delta: best.delta, gaps: best.gaps(s(m) + best.delta) } : null;
+}
+
+export function spacingSnap(m: Box, others: Box[], threshold: number) {
+  return { x: spacingOnAxis(m, others, threshold, "x"), y: spacingOnAxis(m, others, threshold, "y") };
+}
+
+/** Lines a resize handle can snap to: page edges and centre, and other elements' edges and centres. */
+export function snapTargets(others: Box[], page: Box) {
+  const xs = [page.x, page.x + page.width / 2, page.x + page.width];
+  const ys = [page.y, page.y + page.height / 2, page.y + page.height];
+  for (const b of others) {
+    xs.push(b.x, b.x + b.width / 2, b.x + b.width);
+    ys.push(b.y, b.y + b.height / 2, b.y + b.height);
+  }
+  return { xs, ys };
+}
+
+/** The nearest target within `threshold` of `v`, or null. */
+export function nearest(v: number, targets: number[], threshold: number): number | null {
+  let best: number | null = null;
+  for (const t of targets) if (Math.abs(t - v) <= threshold && (best === null || Math.abs(t - v) < Math.abs(best - v))) best = t;
+  return best;
+}
+
 /** Snapping: the closest page or element line within `threshold` of the moving box's edges or centre. */
 export interface Snap {
   dx: number;
