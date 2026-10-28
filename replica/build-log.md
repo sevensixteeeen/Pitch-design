@@ -65,6 +65,37 @@ publishable key ("permission denied"). You clicked through with your own email:
 
 Features moved to `yes`: 7 (parity 16.4 → 24.6, must-haves 0 → 7 of 30).
 
+## Milestone 2d: top bar and snapping (2026-10-28)
+
+| part | state | notes |
+| --- | --- | --- |
+| title | done | click it to rename; Enter or clicking away saves, Escape cancels; an empty title keeps the old one; a failed save puts the old title back with a message |
+| File menu | done | Rename; Make a copy (opens the copy, made from what's on screen); Move to Trash (saves the last edits first, goes Home, Undo restores and reopens) |
+| equal spacing | done | while moving: snaps to the centre between two neighbours, or repeats the gap next to it; the gaps are marked with pink lines and their size in px; edge / centre alignment wins when both apply; Alt turns it off |
+| snapping while resizing | done | the dragged handle snaps to the page's and other elements' edges and centres, with a guide; not for rotated elements; Alt turns it off |
+| not in 2d | | Resize design (S22, milestone 4); dragging an upload onto the page (click to place works) |
+
+Found and fixed during testing:
+- **File → Rename lost the cursor at once.** The closing menu gave focus back to the File button, which
+  closed the title field again. The 2c trick (opening a moment later) wasn't enough here. Fixed the way the
+  menu library intends: the shared `Menu` now has an `onCloseAutoFocus` option, and Rename uses it to send
+  focus to the title field instead. Re-tested with real clicks.
+
+Checked in the browser on fake data (a 1920 × 1080 slide, three 324 px squares):
+- repeat-the-gap: C dropped near x 1401 snapped to 1398 (gaps 276 and 276)
+- centred: B dropped near 752 snapped to 748 (gaps 326 and 326)
+- during a scripted slow drag: two "326" labels and the guide lines on screen; gone after release
+- resize: C's right handle released 4 px short of the page edge snapped to exactly 1920
+- title click: field focused with the text selected; "Quarterly plan" shown and saved
+- File → Rename then Escape: title unchanged
+- Make a copy: "Quarterly plan (copy)" opened with the same size and content; the original untouched
+- a heading added and the design moved to Trash at once: the heading was saved (3 → 4 elements), Home
+  showed the Undo message, and Undo restored and reopened the design
+- no console errors; `npm run build` passes
+
+Feature matrix: 2 rows to `yes`. Parity 69.1 → 71.5; must-haves 26 → 28 of 30. The two left ("Place uploaded
+image on page", "Download as PNG") only need the live check with Supabase Storage.
+
 ## Milestone 2c: downloads and Projects (2026-10-28)
 
 | part | state | notes |
