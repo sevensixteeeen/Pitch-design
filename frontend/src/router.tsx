@@ -8,9 +8,14 @@ import { Home } from "./pages/Home";
 import { Projects } from "./pages/Projects";
 import { NotFound, StubPage } from "./pages/stubs";
 import { EditorPage } from "./editor/EditorPage";
+import { ResetPassword } from "./pages/ResetPassword";
+import { routeResetLink } from "./lib/supabase";
+
+routeResetLink();
 
 export const router = createBrowserRouter([
   { path: "/login", element: <Login /> }, // S01
+  { path: "/reset-password", element: <ResetPassword /> }, // S01, opened from the reset email (logs you in)
   {
     element: (
       <RequireAuth>

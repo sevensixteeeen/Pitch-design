@@ -10,6 +10,18 @@ const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 /** True once .env.local has the Supabase settings; until then the app runs on fake data. */
 export const supabaseConfigured = Boolean(url && key);
 
+/**
+ * A password-reset email link comes back as `#access_token=…&type=recovery`. If Supabase sent it to the
+ * Site URL instead of /reset-password (the address isn't on its redirect list), move it there, keeping the
+ * `#…` part. Must run before the router starts and before the client below reads and clears the `#…`.
+ */
+export function routeResetLink() {
+  const { pathname, hash } = window.location;
+  if (pathname !== "/reset-password" && new URLSearchParams(hash.slice(1)).get("type") === "recovery") {
+    window.history.replaceState(null, "", `/reset-password${hash}`);
+  }
+}
+
 let client: SupabaseClient | null = null;
 
 export function supabase(): SupabaseClient {

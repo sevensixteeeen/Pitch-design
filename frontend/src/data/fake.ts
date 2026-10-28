@@ -193,6 +193,19 @@ export const fake: DataLayer = {
     localStorage.removeItem(SESSION_KEY);
   },
 
+  async requestPasswordReset() {
+    // the test build can't send email; the screen says so
+    await wait();
+  },
+
+  async setNewPassword(password) {
+    await wait();
+    if (password.length < 8) throw new ValidationError("Use at least 8 characters for your password.");
+    const user = await me();
+    if (user.password_hash === (await hash(password))) throw new ValidationError("That's your current password. Pick a new one.");
+    await put("users", { ...user, password_hash: await hash(password) });
+  },
+
   async listDesigns(query = {}) {
     await wait();
     const user = await me();

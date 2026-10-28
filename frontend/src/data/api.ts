@@ -106,6 +106,10 @@ export interface DataLayer {
   signUp(email: string, password: string): Promise<User>;
   logIn(email: string, password: string): Promise<User>;
   logOut(): Promise<void>;
+  /** Emails a link that opens /reset-password. Never says whether the account exists. */
+  requestPasswordReset(email: string): Promise<void>;
+  /** For the logged-in user (the email link logs them in first). */
+  setNewPassword(password: string): Promise<void>;
 
   // designs
   listDesigns(query?: ListDesignsQuery): Promise<DesignSummary[]>;

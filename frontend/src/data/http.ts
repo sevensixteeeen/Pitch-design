@@ -82,6 +82,10 @@ function authMessage(error: AuthError): string {
     case "over_email_send_rate_limit":
     case "over_request_rate_limit":
       return "Too many tries. Wait a few minutes and try again.";
+    case "same_password":
+      return "That's your current password. Pick a new one.";
+    case "weak_password":
+      return "Use at least 8 characters for your password.";
     default:
       return error.message;
   }
@@ -129,6 +133,19 @@ export const http: DataLayer = {
   async logOut() {
     // "global" ends the session on every device, not only this browser
     await supabase().auth.signOut({ scope: "global" });
+  },
+
+  async requestPasswordReset(email) {
+    const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw new ValidationError(authMessage(error));
+  },
+
+  async setNewPassword(password) {
+    if (password.length < 8) throw new ValidationError("Use at least 8 characters for your password.");
+    const { error } = await supabase().auth.updateUser({ password });
+    if (error) throw new ValidationError(authMessage(error));
   },
 
   listDesigns(q = {}) {
