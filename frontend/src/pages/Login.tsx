@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from "react-router";
 import { api, usingFakeData } from "../data";
 import { useAuth } from "../auth";
 import { Button } from "../components/ui/Button";
-import { TextField } from "../components/ui/inputs";
+import { PasswordField, TextField } from "../components/ui/inputs";
 
 type Mode = "signup" | "login" | "forgot";
 
@@ -93,9 +93,8 @@ export function Login() {
         <TextField label="Email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         {mode !== "forgot" && (
           <div className="flex flex-col gap-1">
-            <TextField
+            <PasswordField
               label="Password"
-              type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               required
               hint={mode === "signup" ? "At least 8 characters." : undefined}

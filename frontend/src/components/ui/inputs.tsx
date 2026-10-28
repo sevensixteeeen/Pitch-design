@@ -1,6 +1,6 @@
-import { forwardRef, useEffect, useId, useState, type InputHTMLAttributes, type KeyboardEvent } from "react";
+import { forwardRef, useEffect, useId, useState, type InputHTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import { Checkbox as RCheckbox, Select, Slider as RSlider, Tabs as RTabs } from "radix-ui";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Eye, EyeOff, Search, X } from "lucide-react";
 import { cn, focusRing } from "../../lib/cn";
 import { Spinner } from "./feedback";
 
@@ -15,10 +15,12 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size">
   hint?: string;
   size?: "sm" | "md";
   hideLabel?: boolean;
+  /** A small button inside the box, on the right (e.g. show password). */
+  trailing?: ReactNode;
 }
 
 export const TextField = forwardRef<HTMLInputElement, FieldProps>(function TextField(
-  { label, error, hint, size = "md", hideLabel, className, id, ...rest },
+  { label, error, hint, size = "md", hideLabel, trailing, className, id, ...rest },
   ref,
 ) {
   const autoId = useId();
@@ -29,20 +31,52 @@ export const TextField = forwardRef<HTMLInputElement, FieldProps>(function TextF
       <label htmlFor={inputId} className={cn("text-xs text-fg", hideLabel && "sr-only")}>
         {label}
       </label>
-      <input
-        ref={ref}
-        id={inputId}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error || hint ? noteId : undefined}
-        className={cn(inputBase, size === "sm" ? "h-8 px-2 text-sm" : "h-10 px-3 text-sm")}
-        {...rest}
-      />
+      <div className="relative">
+        <input
+          ref={ref}
+          id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error || hint ? noteId : undefined}
+          className={cn(inputBase, size === "sm" ? "h-8 px-2 text-sm" : "h-10 px-3 text-sm", trailing ? "pr-10" : null)}
+          {...rest}
+        />
+        {trailing && <div className="absolute inset-y-0 right-1 flex items-center">{trailing}</div>}
+      </div>
       {(error || hint) && (
         <p id={noteId} className={cn("text-xs", error ? "text-danger" : "text-muted")}>
           {error || hint}
         </p>
       )}
     </div>
+  );
+});
+
+/** A password box with an eye button that shows or hides what's typed. */
+export const PasswordField = forwardRef<HTMLInputElement, Omit<FieldProps, "type" | "trailing">>(function PasswordField(props, ref) {
+  const [shown, setShown] = useState(false);
+  const Icon = shown ? EyeOff : Eye;
+  return (
+    <TextField
+      ref={ref}
+      {...props}
+      type={shown ? "text" : "password"}
+      // stops browsers from offering to autocorrect or spell-check a visible password
+      autoCapitalize="none"
+      autoCorrect="off"
+      spellCheck={false}
+      trailing={
+        <button
+          type="button"
+          aria-label="Show password"
+          aria-pressed={shown}
+          title={shown ? "Hide password" : "Show password"}
+          onClick={() => setShown(!shown)}
+          className={cn("flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface-hover hover:text-fg", focusRing)}
+        >
+          <Icon aria-hidden className="size-4" />
+        </button>
+      }
+    />
   );
 });
 

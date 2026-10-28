@@ -4,7 +4,7 @@ import { api } from "../data";
 import { useAuth } from "../auth";
 import { Button } from "../components/ui/Button";
 import { Spinner, toast } from "../components/ui/feedback";
-import { TextField } from "../components/ui/inputs";
+import { PasswordField } from "../components/ui/inputs";
 import { AuthCard } from "./Login";
 
 /**
@@ -62,9 +62,8 @@ export function ResetPassword() {
             {error}
           </p>
         )}
-        <TextField
+        <PasswordField
           label="New password"
-          type="password"
           autoComplete="new-password"
           required
           autoFocus

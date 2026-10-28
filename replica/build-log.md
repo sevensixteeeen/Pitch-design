@@ -272,8 +272,13 @@ Checked in the browser on fake data (port 5174): new-password form for the logge
 password refused with the message; a new one saved, then Home; logged out, `/reset-password` shows "This link
 doesn't work any more"; "Send a new link" opens the forgot form; sending shows the test-build note; "Log in"
 keeps the email; the new password logs in; a fresh load of `/#type=recovery…` lands on `/reset-password`.
-`npm run build` passes. **Not yet checked live:** the real email from Supabase (built-in mail sends only a
-few per hour).
+`npm run build` passes. **Checked live** by you on 2026-10-28: the real Supabase email, the link, a new
+password saved, logged in.
+
+**Show password** (branch `build/show-password`): both password boxes (log in / sign up, new password)
+have an eye button inside the box that shows or hides what's typed. It's a real button: Tab reaches it,
+screen readers hear "Show password" with on/off (`aria-pressed`). `TextField` gained a `trailing` slot for it;
+the new `PasswordField` lives in `components/ui/inputs.tsx`. Checked on fake data: dots → text → dots.
 
 ## Notes for later
 
