@@ -17,13 +17,17 @@ import {
   Check,
   Contrast,
   Copy,
+  Group,
   Italic,
   Layers,
   LetterText,
+  MoveLeft,
+  MoveRight,
   Trash2,
   Underline,
+  Ungroup,
 } from "lucide-react";
-import type { ShapeElement, TextElement } from "../lib/document";
+import type { LineElement, ShapeElement, TextElement } from "../lib/document";
 import { Button, IconButton } from "../components/ui/Button";
 import { NumberField, Slider } from "../components/ui/inputs";
 import { Menu, Popover } from "../components/ui/overlays";
@@ -33,14 +37,17 @@ import {
   deleteSelection,
   describeElement,
   duplicateSelection,
+  groupSelection,
   moveLayers,
   setBackground,
   setOpacity,
+  styleLines,
   styleShapes,
   styleText,
+  ungroupSelection,
 } from "./commands";
 import { FONTS, fontLabel } from "./fonts";
-import { useEditor, useEditorStore, type EditorStore } from "./store";
+import { activePage, useEditor, useEditorStore, type EditorStore } from "./store";
 
 /** Left / Right move between the toolbar's buttons; Tab leaves the toolbar (components.md). */
 function roving(e: KeyboardEvent<HTMLDivElement>) {
@@ -218,19 +225,81 @@ function ShapeControls({ store, shapes }: { store: EditorStore; shapes: ShapeEle
   );
 }
 
+const DASHES = [
+  { value: "solid", label: "Solid" },
+  { value: "dashed", label: "Dashed" },
+  { value: "dotted", label: "Dotted" },
+] as const;
+
+function LineControls({ store, lines }: { store: EditorStore; lines: LineElement[] }) {
+  const first = lines[0];
+  return (
+    <>
+      <ColorButton
+        label="Line colour"
+        value={first.stroke}
+        onPick={(c) => c && styleLines(store, { stroke: c })}
+        onLive={(c) => styleLines(store, { stroke: c }, { gesture: true })}
+        onLiveEnd={() => store.getState().endGesture()}
+      />
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <Button variant="ghost" size="sm" className="tabular-nums" aria-label={`Line thickness: ${first.stroke_width}. Change`}>
+            {first.stroke_width} px
+          </Button>
+        </Popover.Trigger>
+        <Popover.Content label="Line thickness" align="center" className="w-64">
+          <Slider
+            label="Thickness"
+            min={1}
+            max={60}
+            unit=" px"
+            value={Math.round(first.stroke_width)}
+            onChange={(v) => styleLines(store, { stroke_width: v }, { gesture: true })}
+            onCommit={() => store.getState().endGesture()}
+          />
+        </Popover.Content>
+      </Popover.Root>
+      <Menu.Root>
+        <Menu.Trigger asChild>
+          <Button variant="ghost" size="sm" aria-label={`Line style: ${first.dash}. Change`}>
+            {DASHES.find((d) => d.value === first.dash)?.label}
+          </Button>
+        </Menu.Trigger>
+        <Menu.Content align="center">
+          {DASHES.map((d) => (
+            <Menu.Item key={d.value} onSelect={() => styleLines(store, { dash: d.value })}>
+              <span className="w-4">{first.dash === d.value && <Check aria-hidden />}</span>
+              {d.label}
+            </Menu.Item>
+          ))}
+        </Menu.Content>
+      </Menu.Root>
+      <IconButton label="Arrow at the start" size="sm" pressed={first.arrow_start} onClick={() => styleLines(store, { arrow_start: !first.arrow_start })}>
+        <MoveLeft strokeWidth={1.75} aria-hidden />
+      </IconButton>
+      <IconButton label="Arrow at the end" size="sm" pressed={first.arrow_end} onClick={() => styleLines(store, { arrow_end: !first.arrow_end })}>
+        <MoveRight strokeWidth={1.75} aria-hidden />
+      </IconButton>
+      <Divider />
+    </>
+  );
+}
+
 export function ContextToolbar() {
   const store = useEditorStore();
   const selectedIds = useEditor((s) => s.selectedIds);
   const readOnly = useEditor((s) => s.readOnly);
   const editing = useEditor((s) => s.editingId !== null);
-  const page = useEditor((s) => s.content.pages[0]);
+  const page = useEditor(activePage);
+  const pageNumber = useEditor((s) => s.activePage + 1);
   if (readOnly || editing) return null;
 
   const chosen = page.elements.filter((el) => selectedIds.includes(el.id));
   if (chosen.length === 0) {
     return (
-      <Bar label="Page">
-        <span className="px-2 text-xs text-muted">Page</span>
+      <Bar label={`Page ${pageNumber}`}>
+        <span className="px-2 text-xs text-muted">Page {pageNumber}</span>
         <ColorButton
           label="Background colour"
           value={page.background.color}
@@ -244,6 +313,9 @@ export function ContextToolbar() {
 
   const texts = chosen.filter((el): el is TextElement => el.type === "text");
   const shapes = chosen.filter((el): el is ShapeElement => el.type === "shape");
+  const lines = chosen.filter((el): el is LineElement => el.type === "line");
+  const canGroup = chosen.filter((el) => !el.locked).length >= 2;
+  const hasGroup = chosen.some((el) => el.type === "group");
   const opacity = Math.round(chosen[0].opacity * 100);
   const name = chosen.length === 1 ? describeElement(chosen[0]) : `${chosen.length} selected`;
   const alignTo = chosen.length === 1 ? "to page" : "together";
@@ -255,6 +327,17 @@ export function ContextToolbar() {
       </span>
       {texts.length === chosen.length && <TextControls store={store} texts={texts} />}
       {shapes.length === chosen.length && <ShapeControls store={store} shapes={shapes} />}
+      {lines.length === chosen.length && <LineControls store={store} lines={lines} />}
+      {canGroup && (
+        <Button variant="ghost" size="sm" icon={<Group strokeWidth={1.75} className="size-4" aria-hidden />} onClick={() => groupSelection(store)} title="Group (Ctrl+G)">
+          Group
+        </Button>
+      )}
+      {hasGroup && (
+        <Button variant="ghost" size="sm" icon={<Ungroup strokeWidth={1.75} className="size-4" aria-hidden />} onClick={() => ungroupSelection(store)} title="Ungroup (Ctrl+Shift+G)">
+          Ungroup
+        </Button>
+      )}
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton label="Opacity" size="sm">

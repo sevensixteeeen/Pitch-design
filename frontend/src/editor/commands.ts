@@ -1,16 +1,55 @@
 // Commands on the current selection, shared by the toolbar, the menus and the keyboard.
-import type { DesignContent, Element, Hex, ShapeElement, TextElement } from "../lib/document";
+import { walk, type DesignContent, type Element, type Hex, type LineElement, type ShapeElement, type TextElement } from "../lib/document";
 import { loadFonts } from "./fonts";
 import { keepTopLeft, measureTextHeight, round2 } from "./geometry";
-import { align, duplicate, nudge, patch, remove, reorder, type AlignEdge, type LayerMove } from "./ops";
-import type { EditorStore } from "./store";
+import { align, duplicate, group, nudge, patch, remove, reorder, ungroup, type AlignEdge, type LayerMove } from "./ops";
+import { activeElements, type EditorStore } from "./store";
 
-const firstPage = (store: EditorStore) => store.getState().content.pages[0].elements;
+const firstPage = (store: EditorStore) => activeElements(store.getState());
 
 export function describeElement(el: Element): string {
-  if (el.type === "text") return `Text: ${el.text}`;
-  if (el.type === "image") return "Image";
-  return el.kind === "ellipse" ? "Ellipse" : "Rectangle";
+  switch (el.type) {
+    case "text":
+      return `Text: ${el.text}`;
+    case "image":
+      return "Image";
+    case "line":
+      return el.arrow_start || el.arrow_end ? "Arrow" : "Line";
+    case "group":
+      return `Group of ${el.children.length}`;
+    case "shape":
+      return { rect: "Rectangle", ellipse: "Ellipse", triangle: "Triangle" }[el.kind];
+  }
+}
+
+export function groupSelection(store: EditorStore) {
+  const s = store.getState();
+  // needs two or more unlocked elements (the Group button is disabled otherwise)
+  const result = group(firstPage(store), s.selectedIds);
+  if (result) s.change(() => result.els, { select: [result.id], announcement: "Grouped" });
+}
+
+export function ungroupSelection(store: EditorStore) {
+  const s = store.getState();
+  if (!firstPage(store).some((el) => el.type === "group" && s.selectedIds.includes(el.id))) return;
+  const result = ungroup(firstPage(store), s.selectedIds);
+  s.change(() => result.els, { select: result.ids, announcement: "Ungrouped" });
+}
+
+/** Colour, thickness, dashes and arrow ends for every selected line. A thicker line keeps its middle in place. */
+export function styleLines(store: EditorStore, change: Partial<LineElement>, opts: { gesture?: boolean } = {}) {
+  const s = store.getState();
+  const updates: Record<string, Partial<Element>> = {};
+  for (const el of firstPage(store)) {
+    if (el.type !== "line" || !s.selectedIds.includes(el.id)) continue;
+    const next: Partial<LineElement> = { ...change };
+    if (next.stroke_width !== undefined) {
+      const w = round2(Math.min(200, Math.max(0.5, next.stroke_width)));
+      Object.assign(next, { stroke_width: w, height: w, y: round2(el.y + el.height / 2 - w / 2) });
+    }
+    updates[el.id] = next;
+  }
+  if (Object.keys(updates).length) s.change((els) => patch(els, updates), { gesture: opts.gesture });
 }
 
 export function deleteSelection(store: EditorStore) {
@@ -128,8 +167,9 @@ export function documentColours(content: DesignContent, max = 10): Hex[] {
   };
   for (const page of content.pages) {
     add(page.background.color);
-    for (const el of page.elements) {
+    for (const el of walk(page.elements)) {
       if (el.type === "text") add(el.color);
+      if (el.type === "line") add(el.stroke);
       if (el.type === "shape") {
         add(el.fill);
         add(el.stroke);

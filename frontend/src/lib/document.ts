@@ -35,7 +35,7 @@ export interface TextElement extends ElementBase {
 
 export interface ShapeElement extends ElementBase {
   type: "shape";
-  kind: "rect" | "ellipse";
+  kind: "rect" | "ellipse" | "triangle";
   fill: Hex;
   stroke: Hex | null;
   stroke_width: number;
@@ -48,7 +48,33 @@ export interface ImageElement extends ElementBase {
   corner_radius: number;
 }
 
-export type Element = TextElement | ShapeElement | ImageElement;
+/** A straight line across the middle of its box; width = length, height = thickness. */
+export interface LineElement extends ElementBase {
+  type: "line";
+  stroke: Hex;
+  stroke_width: number;
+  dash: "solid" | "dashed" | "dotted";
+  arrow_start: boolean;
+  arrow_end: boolean;
+}
+
+/** Elements that move as one. Children's x / y are relative to the group's top-left corner. */
+export interface GroupElement extends ElementBase {
+  type: "group";
+  children: Element[];
+}
+
+export type Element = TextElement | ShapeElement | ImageElement | LineElement | GroupElement;
+
+/** Every element including those inside groups, depth first. */
+export function* walk(elements: Element[]): Generator<Element> {
+  for (const el of elements) {
+    yield el;
+    if (el.type === "group") yield* walk(el.children);
+  }
+}
+
+export const MAX_PAGES = 200;
 
 export interface Page {
   id: string;
@@ -150,11 +176,34 @@ export function makeImage(pageW: number, pageH: number, assetId: string, imgW: n
   };
 }
 
-/** Every asset id used anywhere in the document. */
+export function makeLine(pageW: number, pageH: number, arrow: boolean): LineElement {
+  const width = Math.round(Math.min(pageW, pageH) * 0.4);
+  const thickness = Math.max(2, Math.round(Math.min(pageW, pageH) / 200));
+  return {
+    ...base(Math.round((pageW - width) / 2), Math.round((pageH - thickness) / 2), width, thickness),
+    type: "line",
+    stroke: "#15181d",
+    stroke_width: thickness,
+    dash: "solid",
+    arrow_start: false,
+    arrow_end: arrow,
+  };
+}
+
+/** A copy with new ids, also for everything inside groups (two elements must never share an id). */
+export function cloneElement(el: Element): Element {
+  return el.type === "group" ? { ...el, id: newId(), children: el.children.map(cloneElement) } : { ...el, id: newId() };
+}
+
+export function blankPage(background: Hex = "#ffffff"): Page {
+  return { id: newId(), background: { color: background }, elements: [] };
+}
+
+/** Every asset id used anywhere in the document, inside groups too. */
 export function assetIds(content: DesignContent): string[] {
   const ids = new Set<string>();
   for (const page of content.pages) {
-    for (const el of page.elements) if (el.type === "image") ids.add(el.src.asset_id);
+    for (const el of walk(page.elements)) if (el.type === "image") ids.add(el.src.asset_id);
   }
   return [...ids];
 }

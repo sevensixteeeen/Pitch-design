@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Tabs as RTabs } from "radix-ui";
 import { ImageUp, RotateCw, Shapes, Type } from "lucide-react";
 import { api, UPLOAD_MAX_BYTES, UPLOAD_TYPES, type Asset } from "../data";
-import { makeImage, makeShape, makeText } from "../lib/document";
+import { makeImage, makeLine, makeShape, makeText } from "../lib/document";
 import { cn, focusRing } from "../lib/cn";
 import { Button } from "../components/ui/Button";
 import { EmptyState, Skeleton, Spinner } from "../components/ui/feedback";
@@ -82,18 +82,43 @@ function ElementsPanel() {
   const { width_px: w, height_px: h } = useEditor((s) => s.design);
   const readOnly = useEditor((s) => s.readOnly);
   const add = useEditor((s) => s.addElement);
+  // the previews are drawn with the muted text colour (a token), not the colours the shapes get
+  const items = [
+    { label: "a rectangle", make: () => makeShape(w, h, "rect"), preview: <rect x="4" y="8" width="40" height="32" rx="2" /> },
+    { label: "an ellipse", make: () => makeShape(w, h, "ellipse"), preview: <ellipse cx="24" cy="24" rx="20" ry="16" /> },
+    { label: "a triangle", make: () => makeShape(w, h, "triangle"), preview: <polygon points="24,6 44,42 4,42" /> },
+    { label: "a line", make: () => makeLine(w, h, false), preview: <line x1="4" y1="24" x2="44" y2="24" strokeWidth="3" stroke="currentColor" /> },
+    {
+      label: "an arrow",
+      make: () => makeLine(w, h, true),
+      preview: (
+        <>
+          <line x1="4" y1="24" x2="38" y2="24" strokeWidth="3" stroke="currentColor" />
+          <polygon points="44,24 34,17 34,31" />
+        </>
+      ),
+    },
+  ];
   return (
     <>
       <PanelTitle>Elements</PanelTitle>
-      <button
-        type="button"
-        disabled={readOnly}
-        onClick={() => add(makeShape(w, h, "rect"), "Added a rectangle")}
-        aria-label="Add a rectangle"
-        className={cn("flex size-20 items-center justify-center rounded-md bg-surface hover:bg-surface-hover disabled:opacity-50", focusRing)}
-      >
-        <span aria-hidden className="block size-12 rounded-sm bg-muted" />
-      </button>
+      <ul className="grid grid-cols-4 gap-2">
+        {items.map((item) => (
+          <li key={item.label}>
+            <button
+              type="button"
+              disabled={readOnly}
+              onClick={() => add(item.make(), `Added ${item.label}`)}
+              aria-label={`Add ${item.label}`}
+              className={cn("flex aspect-square w-full items-center justify-center rounded-md bg-surface text-muted hover:bg-surface-hover disabled:opacity-50", focusRing)}
+            >
+              <svg aria-hidden viewBox="0 0 48 48" className="size-10 fill-current">
+                {item.preview}
+              </svg>
+            </button>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

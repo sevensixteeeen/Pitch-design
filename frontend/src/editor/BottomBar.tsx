@@ -12,13 +12,14 @@ export function BottomBar() {
   const view = useEditor((s) => s.view);
   const zoom = useEditor((s) => s.zoom);
   const pages = useEditor((s) => s.content.pages.length);
+  const current = useEditor((s) => s.activePage + 1);
   const percent = Math.round(view.scale * 100);
   const setZoom = (z: "fit" | number) => store.getState().setZoom(z);
 
   return (
     <footer className="flex h-(--tk-layout-bottombar-h) shrink-0 items-center gap-1 border-t border-border bg-app px-3">
       <p className="mr-auto text-xs text-muted">
-        Page 1 of {pages}
+        Page {current} of {pages}
       </p>
       <IconButton label="Zoom out" shortcut="Ctrl+-" size="sm" disabled={view.scale <= view.min + 0.001} onClick={() => setZoom(stepZoom(view, -1))}>
         <Minus strokeWidth={1.75} aria-hidden />

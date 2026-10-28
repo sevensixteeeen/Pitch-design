@@ -1,25 +1,29 @@
-// S08 canvas (Konva). Draws the first page; select (click, Shift-click, drag a
-// box), move with snapping guides, resize and rotate with handles, zoom.
+// S08 canvas (Konva). Every page is drawn on its own stage, stacked vertically with a label and page
+// actions above it (components.md, Canvas + Page). One page is active: selecting, moving, resizing,
+// rotating, snapping and typing happen there. Clicking another page makes it active.
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
-import { Ellipse, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
+import { Arrow, Ellipse, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
 import type Konva from "konva";
-import type { Element, ImageElement, TextElement } from "../lib/document";
+import { Copy, Plus, Trash2 } from "lucide-react";
+import { MAX_PAGES, type Element, type ImageElement, type LineElement, type TextElement } from "../lib/document";
 import { cn } from "../lib/cn";
+import { IconButton } from "../components/ui/Button";
 import { commitText } from "./commands";
 import { TextEditor } from "./TextEditor";
 import { bounds, clamp, fontStyle, intersects, keepTopLeft, measureTextHeight, round2, snapBox, union, type Box } from "./geometry";
-import { nudge, patch } from "./ops";
-import { useEditor, useEditorStore } from "./store";
+import { nudge, patch, scaleElement } from "./ops";
+import { activeElements, useEditor, useEditorStore } from "./store";
 
 const SNAP_SCREEN_PX = 5; // components.md, SmartGuides
-const MAX_STAGE_PX = 12_000; // keep the canvas within what browsers can draw
+const MAX_STAGE_PX = 12_000; // keep each page's canvas within what browsers can draw
+const STAGE_MARGIN_PX = 40; // room around each page for the selection handles (screen px)
 const CORNERS = ["top-left", "top-right", "bottom-left", "bottom-right"];
 const SIDES_X = ["middle-left", "middle-right"];
 const ALL_ANCHORS = [...CORNERS, ...SIDES_X, "top-center", "bottom-center"];
 const ROTATION_SNAPS = [0, 45, 90, 135, 180, 225, 270, 315];
 
-/** Canvas colours come from the design tokens (components.md, ground rules). */
-function tokenColours() {
+/** Canvas colours and spacing come from the design tokens (components.md, ground rules). */
+function tokens() {
   const css = getComputedStyle(document.documentElement);
   const v = (name: string) => css.getPropertyValue(name).trim();
   return {
@@ -29,12 +33,14 @@ function tokenColours() {
     placeholderFill: v("--tk-color-surface-hover"),
     placeholderLine: v("--tk-color-border-input"),
     placeholderText: v("--tk-color-text-muted"),
-    pad: parseFloat(v("--tk-space-8")) || 0, // room around the page
+    pad: parseFloat(v("--tk-space-8")) || 0, // room around the pages
+    gap: parseFloat(v("--tk-space-7")) || 0, // between pages
+    labelH: parseFloat(v("--tk-space-7")) || 0, // the page label row
   };
 }
-type Colours = ReturnType<typeof tokenColours>;
+type Colours = ReturnType<typeof tokens>;
 
-/** Saves the page as a PNG at the design's real size. Set by <Canvas>. */
+/** Saves the active page as a PNG at the design's real size. Set by <Canvas>. */
 export type ExportPng = () => string;
 
 function useSize(ref: RefObject<HTMLDivElement | null>) {
@@ -91,6 +97,38 @@ function ImageNode({ el, url, colours }: { el: ImageElement; url: string | undef
   );
 }
 
+function LineNode({ el }: { el: LineElement }) {
+  const w = el.stroke_width;
+  const dash = el.dash === "dashed" ? [w * 3, w * 2] : el.dash === "dotted" ? [0.001, w * 2] : undefined;
+  return (
+    <Arrow
+      points={[0, el.height / 2, el.width, el.height / 2]}
+      stroke={el.stroke}
+      fill={el.stroke}
+      strokeWidth={w}
+      dash={dash}
+      lineCap={el.dash === "dotted" ? "round" : "butt"}
+      pointerAtBeginning={el.arrow_start}
+      pointerAtEnding={el.arrow_end}
+      pointerLength={w * 3 + 4}
+      pointerWidth={w * 3 + 4}
+      hitStrokeWidth={Math.max(w, 24)} // a thin line is still easy to click
+    />
+  );
+}
+
+/** Where an element sits inside its parent: by its centre, so rotation and flips turn around the middle. */
+const placement = (el: Element) => ({
+  x: el.x + el.width / 2,
+  y: el.y + el.height / 2,
+  offsetX: el.width / 2,
+  offsetY: el.height / 2,
+  rotation: el.rotation,
+  scaleX: el.flip_x ? -1 : 1,
+  scaleY: el.flip_y ? -1 : 1,
+  opacity: el.opacity,
+});
+
 function ElementNode({ el, colours }: { el: Element; colours: Colours }) {
   const url = useEditor((s) => (el.type === "image" ? s.assetUrls[el.src.asset_id] : undefined));
   const editing = useEditor((s) => s.editingId === el.id);
@@ -111,29 +149,66 @@ function ElementNode({ el, colours }: { el: Element; colours: Colours }) {
           lineHeight={el.line_height}
         />
       );
-    case "shape":
-      return el.kind === "ellipse" ? (
-        <Ellipse
-          x={el.width / 2}
-          y={el.height / 2}
-          radiusX={el.width / 2}
-          radiusY={el.height / 2}
-          fill={el.fill}
-          stroke={el.stroke ?? undefined}
-          strokeWidth={el.stroke_width}
-        />
-      ) : (
-        <Rect width={el.width} height={el.height} fill={el.fill} stroke={el.stroke ?? undefined} strokeWidth={el.stroke_width} cornerRadius={el.corner_radius} />
-      );
+    case "shape": {
+      const paint = { fill: el.fill, stroke: el.stroke ?? undefined, strokeWidth: el.stroke_width };
+      if (el.kind === "ellipse") return <Ellipse x={el.width / 2} y={el.height / 2} radiusX={el.width / 2} radiusY={el.height / 2} {...paint} />;
+      if (el.kind === "triangle") return <Line points={[el.width / 2, 0, el.width, el.height, 0, el.height]} closed {...paint} />;
+      return <Rect width={el.width} height={el.height} cornerRadius={el.corner_radius} {...paint} />;
+    }
+    case "line":
+      return <LineNode el={el} />;
     case "image":
       return <ImageNode el={el} url={url} colours={colours} />;
+    case "group":
+      // children are placed relative to the group's top-left; clicks bubble up to the group
+      return (
+        <>
+          {el.children.map((child) => (
+            <Group key={child.id} {...placement(child)}>
+              <ElementNode el={child} colours={colours} />
+            </Group>
+          ))}
+        </>
+      );
   }
+}
+
+function PageHeader({ index, count, active, readOnly, width, height }: { index: number; count: number; active: boolean; readOnly: boolean; width: number; height: number }) {
+  const store = useEditorStore();
+  const full = count >= MAX_PAGES;
+  return (
+    // above its stage's margin, but only the buttons catch the mouse (a selection's rotate handle can sit here)
+    <div className="pointer-events-none relative z-10 flex items-center gap-1" style={{ width, height }}>
+      <button
+        type="button"
+        onClick={() => store.getState().setActivePage(index)}
+        aria-current={active ? "page" : undefined}
+        className={cn("pointer-events-auto mr-auto rounded-sm px-1 text-xs", active ? "font-semibold text-fg" : "text-muted hover:text-fg")}
+      >
+        Page {index + 1}
+      </button>
+      {!readOnly && (
+        <span className="pointer-events-auto flex items-center gap-1">
+          <IconButton label={`Add a page after page ${index + 1}`} size="sm" disabled={full} onClick={() => store.getState().addPage(index)}>
+            <Plus strokeWidth={1.75} aria-hidden />
+          </IconButton>
+          <IconButton label={`Duplicate page ${index + 1}`} size="sm" disabled={full} onClick={() => store.getState().duplicatePage(index)}>
+            <Copy strokeWidth={1.75} aria-hidden />
+          </IconButton>
+          <IconButton label={count <= 1 ? "A design needs at least one page" : `Delete page ${index + 1}`} size="sm" disabled={count <= 1} onClick={() => store.getState().deletePage(index)}>
+            <Trash2 strokeWidth={1.75} aria-hidden />
+          </IconButton>
+        </span>
+      )}
+    </div>
+  );
 }
 
 export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }) {
   const store = useEditorStore();
   const design = useEditor((s) => s.design);
-  const page = useEditor((s) => s.content.pages[0]);
+  const pages = useEditor((s) => s.content.pages);
+  const active = useEditor((s) => s.activePage);
   const selectedIds = useEditor((s) => s.selectedIds);
   const readOnly = useEditor((s) => s.readOnly);
   const zoom = useEditor((s) => s.zoom);
@@ -141,35 +216,37 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
 
   const box = useRef<HTMLDivElement>(null);
   const { width, height } = useSize(box);
-  const stage = useRef<Konva.Stage>(null);
+  const stages = useRef<(Konva.Stage | null)[]>([]);
+  const blocks = useRef<(HTMLElement | null)[]>([]);
   const transformer = useRef<Konva.Transformer>(null);
-  const [colours] = useState(tokenColours);
+  const [colours] = useState(tokens);
   const [guides, setGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
   const [marquee, setMarquee] = useState<Box | null>(null);
 
-  // --- view: fit the page, or a fixed zoom with scrolling ---------------------------------------
+  // --- view: fit one page, or a fixed zoom with scrolling ---------------------------------------
   const pageW = design.width_px;
   const pageH = design.height_px;
-  const fit = width && height ? clamp(Math.min((width - 2 * colours.pad) / pageW, (height - 2 * colours.pad) / pageH), 0.01, 4) : 0;
+  const M = STAGE_MARGIN_PX;
+  const fit = width && height ? clamp(Math.min((width - 2 * colours.pad) / pageW, (height - 2 * colours.pad - colours.labelH) / pageH), 0.01, 4) : 0;
   const max = Math.max(fit, Math.min(4, MAX_STAGE_PX / Math.max(pageW, pageH)));
   const min = Math.min(fit, 0.1);
   const scale = zoom === "fit" ? fit : clamp(zoom, min, max);
-  const stageW = Math.max(width, pageW * scale + 2 * colours.pad);
-  const stageH = Math.max(height, pageH * scale + 2 * colours.pad);
-  const pageX = (stageW - pageW * scale) / 2;
-  const pageY = (stageH - pageH * scale) / 2;
+  const pw = pageW * scale;
+  const ph = pageH * scale;
 
   useEffect(() => {
     if (fit) store.getState().setView({ scale, fit, min, max });
   }, [store, scale, fit, min, max]);
 
-  // after a zoom change, show the middle of the page
+  // after a zoom change, centre the active page
   useLayoutEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
-    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2;
-  }, [scale]);
+    blocks.current[store.getState().activePage]?.scrollIntoView({ block: "center", inline: "center" });
+  }, [store, scale]);
+  // after a page was added, duplicated or deleted, bring the active page into view
+  const pageCount = pages.length;
+  useLayoutEffect(() => {
+    blocks.current[store.getState().activePage]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [store, pageCount]);
 
   // Ctrl + wheel zooms (the listener must not be passive to stop the browser's own zoom)
   useEffect(() => {
@@ -185,18 +262,19 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
     return () => el.removeEventListener("wheel", onWheel);
   }, [store]);
 
-  const nodeById = (id: string) => stage.current?.findOne((n: Konva.Node) => n.id() === id);
-  const toPage = () => {
-    const p = stage.current?.getPointerPosition() ?? { x: 0, y: 0 };
-    return { x: (p.x - pageX) / scale, y: (p.y - pageY) / scale };
+  const nodeOn = (page: number, id: string) => stages.current[page]?.findOne((n: Konva.Node) => n.id() === id);
+  /** The pointer, in the given page's units. */
+  const toPage = (page: number) => {
+    const p = stages.current[page]?.getPointerPosition() ?? { x: 0, y: 0 };
+    return { x: (p.x - M) / scale, y: (p.y - M) / scale };
   };
   const focusCanvas = () => box.current?.focus({ preventScroll: true });
 
   /** Follows the mouse until it is released, even outside the canvas. Positions are in page units. */
-  const followPointer = (onMove: (p: { x: number; y: number }, evt: MouseEvent) => void, onUp: () => void) => {
+  const followPointer = (page: number, onMove: (p: { x: number; y: number }, evt: MouseEvent) => void, onUp: () => void) => {
     const move = (evt: MouseEvent) => {
-      stage.current?.setPointersPositions(evt);
-      onMove(toPage(), evt);
+      stages.current[page]?.setPointersPositions(evt);
+      onMove(toPage(page), evt);
     };
     const up = () => {
       window.removeEventListener("mousemove", move);
@@ -207,47 +285,62 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
     window.addEventListener("mouseup", up);
   };
 
-  // --- selection box with handles ---------------------------------------------------------------
-  const chosen = readOnly || editingId ? [] : page.elements.filter((el) => selectedIds.includes(el.id) && !el.locked);
-  const editing = editingId ? page.elements.find((el): el is TextElement => el.id === editingId && el.type === "text") : undefined;
+  // --- selection box with handles (active page only) --------------------------------------------
+  const activeEls = pages[active].elements;
+  const chosen = readOnly || editingId ? [] : activeEls.filter((el) => selectedIds.includes(el.id) && !el.locked);
+  const editing = editingId ? activeEls.find((el): el is TextElement => el.id === editingId && el.type === "text") : undefined;
   const only = chosen.length === 1 ? chosen[0] : null;
-  const anchors = !only ? CORNERS : only.type === "text" ? [...CORNERS, ...SIDES_X] : only.type === "image" ? CORNERS : ALL_ANCHORS;
+  const anchors = !only
+    ? CORNERS
+    : { text: [...CORNERS, ...SIDES_X], image: CORNERS, group: CORNERS, line: SIDES_X, shape: ALL_ANCHORS }[only.type];
+  const keepRatio = !only || (only.type !== "shape" && only.type !== "line");
   const chosenKey = chosen.map((el) => el.id).join(",");
 
   useEffect(() => {
     const tr = transformer.current;
     if (!tr) return;
-    tr.nodes(chosen.map((el) => nodeById(el.id)).filter((n): n is Konva.Node => !!n));
+    tr.nodes(chosen.map((el) => nodeOn(active, el.id)).filter((n): n is Konva.Node => !!n));
     tr.forceUpdate();
     tr.getLayer()?.batchDraw();
-    // nodes are found by id after each render; page and scale change their geometry
+    // nodes are found by id after each render; the page and scale change their geometry
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chosenKey, page, scale]);
+  }, [chosenKey, activeEls, scale, active]);
 
   const onTransformEnd = () => {
     const tr = transformer.current;
     if (!tr) return;
-    const byId = new Map(store.getState().content.pages[0].elements.map((el) => [el.id, el]));
+    const byId = new Map(activeElements(store.getState()).map((el) => [el.id, el]));
     const updates: Record<string, Partial<Element>> = {};
     for (const node of tr.nodes()) {
       const el = byId.get(node.id());
       if (!el) continue;
       const sx = Math.abs(node.scaleX());
       const sy = Math.abs(node.scaleY());
-      const width = clamp(el.width * sx, 1, 100_000);
-      const transformedHeight = clamp(el.height * sy, 1, 100_000);
-      let height = transformedHeight;
-      const update: Partial<Element> = { rotation: round2(node.rotation()) };
-      if (el.type === "text") {
-        // corners scale the text; the side handles only change where it wraps
-        const fontSize = clamp(Math.abs(sx - sy) < 0.001 ? el.font_size * sx : el.font_size, 1, 800);
-        height = measureTextHeight({ ...el, width, font_size: fontSize });
-        Object.assign(update, { font_size: round2(fontSize) });
+      const rotation = round2(node.rotation());
+      let update: Partial<Element>;
+      if (el.type === "group") {
+        // groups resize evenly; everything inside grows or shrinks with them
+        const scaled = scaleElement(el, sx);
+        update = { width: scaled.width, height: scaled.height, children: (scaled as typeof el).children, rotation, x: round2(node.x() - scaled.width / 2), y: round2(node.y() - scaled.height / 2) };
+      } else if (el.type === "line") {
+        // the side handles change the length; the thickness stays
+        const length = clamp(el.width * sx, 1, 100_000);
+        update = { width: round2(length), rotation, x: round2(node.x() - length / 2), y: round2(node.y() - el.height / 2) };
+      } else {
+        const width = clamp(el.width * sx, 1, 100_000);
+        const transformedHeight = clamp(el.height * sy, 1, 100_000);
+        let height = transformedHeight;
+        update = { rotation };
+        if (el.type === "text") {
+          // corners scale the text; the side handles only change where it wraps
+          const fontSize = clamp(Math.abs(sx - sy) < 0.001 ? el.font_size * sx : el.font_size, 1, 800);
+          height = measureTextHeight({ ...el, width, font_size: fontSize });
+          Object.assign(update, { font_size: round2(fontSize) });
+        }
+        // the node's position is its centre; if re-wrapping changed the height, keep the top-left corner
+        const { x, y } = keepTopLeft(node.x(), node.y(), width, transformedHeight, width, height, node.rotation());
+        Object.assign(update, { x, y, width: round2(width), height: round2(height) });
       }
-      // The node's position is its centre (see the element groups below). If re-wrapping changed the
-      // text's height, keep the box's top-left corner where the handles left it (also when rotated).
-      const { x, y } = keepTopLeft(node.x(), node.y(), width, transformedHeight, width, height, node.rotation());
-      Object.assign(update, { x, y, width: round2(width), height: round2(height) });
       node.scaleX(el.flip_x ? -1 : 1);
       node.scaleY(el.flip_y ? -1 : 1);
       // Konva can report the end of a transform once per node: only real changes count
@@ -258,9 +351,9 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
 
   // --- moving: everything selected moves together, snapping to the page and other elements ------
   // (done by hand rather than with Konva's dragging, which moves the other selected nodes itself)
-  const startMove = (from: { x: number; y: number }, clickedId: string) => {
+  const startMove = (page: number, from: { x: number; y: number }, clickedId: string) => {
     const s = store.getState();
-    const els = s.content.pages[0].elements;
+    const els = activeElements(s);
     const moving = els.filter((x) => s.selectedIds.includes(x.id) && !x.locked);
     if (moving.length === 0) return;
     const start = new Map(moving.map((x) => [x.id, { cx: x.x + x.width / 2, cy: x.y + x.height / 2 }]));
@@ -270,6 +363,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
     let moved = false;
     let last = { dx: 0, dy: 0 };
     followPointer(
+      page,
       (p, evt) => {
         let dx = p.x - from.x;
         let dy = p.y - from.y;
@@ -283,9 +377,9 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
           found = { v: snap.vertical, h: snap.horizontal };
         }
         last = { dx, dy };
-        for (const [id, c] of start) nodeById(id)?.position({ x: c.cx + dx, y: c.cy + dy });
+        for (const [id, c] of start) nodeOn(page, id)?.position({ x: c.cx + dx, y: c.cy + dy });
         transformer.current?.forceUpdate();
-        stage.current?.batchDraw();
+        stages.current[page]?.batchDraw();
         setGuides(found);
       },
       () => {
@@ -297,10 +391,11 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
     );
   };
 
-  // --- drag a box on empty space to select ------------------------------------------------------
-  const startMarquee = (from: { x: number; y: number }, additive: boolean) => {
+  // --- drag a box on empty page space to select ---------------------------------------------------
+  const startMarquee = (page: number, from: { x: number; y: number }, additive: boolean) => {
     let current: Box | null = null;
     followPointer(
+      page,
       (p) => {
         current = { x: Math.min(from.x, p.x), y: Math.min(from.y, p.y), width: Math.abs(p.x - from.x), height: Math.abs(p.y - from.y) };
         setMarquee(current);
@@ -313,21 +408,21 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
           if (!additive) s.select([]); // a click on empty space
           return;
         }
-        const hit = s.content.pages[0].elements.filter((el) => intersects(bounds(el), b)).map((el) => el.id);
+        const hit = activeElements(s).filter((el) => intersects(bounds(el), b)).map((el) => el.id);
         s.select(additive ? [...new Set([...s.selectedIds, ...hit])] : hit);
       },
     );
   };
 
-  // --- export ---------------------------------------------------------------------------------
+  // --- export: the active page ---------------------------------------------------------------------
   useEffect(() => {
     exportRef.current = () => {
-      const s = stage.current;
+      const s = stages.current[active];
       const tr = transformer.current;
       if (!s || !scale) throw new Error("The page isn't ready yet.");
       tr?.hide(); // the selection box is not part of the design
       try {
-        return s.toDataURL({ x: pageX, y: pageY, width: pageW * scale, height: pageH * scale, pixelRatio: 1 / scale, mimeType: "image/png" });
+        return s.toDataURL({ x: M, y: M, width: pw, height: ph, pixelRatio: 1 / scale, mimeType: "image/png" });
       } finally {
         tr?.show();
       }
@@ -335,7 +430,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
     return () => {
       exportRef.current = null;
     };
-  }, [exportRef, scale, pageX, pageY, pageW, pageH]);
+  }, [exportRef, scale, active, M, pw, ph]);
 
   return (
     <div
@@ -343,109 +438,136 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
       tabIndex={0}
       data-canvas
       aria-label="Canvas. Arrow keys move the selection, Delete removes it, Enter edits selected text."
-      className={cn("relative min-h-0 flex-1 overflow-auto bg-workspace outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset")}
+      className="relative min-h-0 flex-1 overflow-auto bg-workspace outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+      onMouseDown={(e) => {
+        // a click on the grey workspace (not a page) clears the selection
+        if (e.target === e.currentTarget || (e.target as HTMLElement).dataset.workspace !== undefined) store.getState().select([]);
+      }}
     >
       {scale > 0 && (
-        // hidden from screen readers: the element list describes the page instead
-        <div aria-hidden className="relative" style={{ width: stageW, height: stageH }}>
-          {/* the page's shadow, behind the (transparent) canvas */}
-          <div className="pointer-events-none absolute shadow-page" style={{ left: pageX, top: pageY, width: pageW * scale, height: pageH * scale }} />
-          <Stage
-            ref={stage}
-            width={stageW}
-            height={stageH}
-            onMouseDown={(e) => {
-              focusCanvas();
-              if (e.evt.button !== 0) return;
-              if (e.target !== e.target.getStage() && e.target.name() !== "page") return; // elements and handles handle themselves
-              startMarquee(toPage(), e.evt.shiftKey);
-            }}
-          >
-            <Layer>
-              <Group x={pageX} y={pageY} scaleX={scale} scaleY={scale} clipX={0} clipY={0} clipWidth={pageW} clipHeight={pageH}>
-                <Rect name="page" width={pageW} height={pageH} fill={page.background.color} />
-                {page.elements.map((el) => (
-                  // positioned by its centre, so rotation and flips turn around the middle
-                  <Group
-                    key={el.id}
-                    id={el.id}
-                    x={el.x + el.width / 2}
-                    y={el.y + el.height / 2}
-                    offsetX={el.width / 2}
-                    offsetY={el.height / 2}
-                    rotation={el.rotation}
-                    scaleX={el.flip_x ? -1 : 1}
-                    scaleY={el.flip_y ? -1 : 1}
-                    opacity={el.opacity}
+        <div data-workspace className="mx-auto flex w-max flex-col" style={{ padding: colours.pad, gap: colours.gap }}>
+          {pages.map((page, i) => (
+            <section
+              key={page.id}
+              ref={(el) => {
+                blocks.current[i] = el;
+              }}
+              aria-label={`Page ${i + 1} of ${pages.length}`}
+            >
+              <PageHeader index={i} count={pages.length} active={i === active} readOnly={readOnly} width={pw} height={colours.labelH} />
+              {/* hidden from screen readers: the element list describes the page instead */}
+              <div aria-hidden className="relative" style={{ width: pw, height: ph }}>
+                {/* the page's shadow, behind the (transparent) canvas */}
+                <div className={cn("pointer-events-none absolute inset-0 shadow-page", i === active && pages.length > 1 && "ring-2 ring-accent")} />
+                {editing && i === active && (
+                  // outside Konva, so screen readers reach the text area
+                  <TextEditor
+                    key={editing.id}
+                    el={editing}
+                    left={editing.x * scale}
+                    top={editing.y * scale}
+                    scale={scale}
+                    onDone={(text) => {
+                      commitText(store, editing.id, text);
+                      focusCanvas();
+                    }}
+                  />
+                )}
+                <div className="absolute" style={{ left: -M, top: -M }}>
+                  <Stage
+                    ref={(st) => {
+                      stages.current[i] = st;
+                    }}
+                    width={pw + 2 * M}
+                    height={ph + 2 * M}
                     onMouseDown={(e) => {
-                      e.cancelBubble = true;
                       focusCanvas();
                       if (e.evt.button !== 0) return;
-                      const s = store.getState();
-                      if (e.evt.shiftKey) {
-                        s.toggleSelect(el.id); // Shift-click adds or removes; it doesn't start a move
+                      if (e.target === e.target.getStage()) {
+                        store.getState().select([]); // the margin around the page
                         return;
                       }
-                      if (!s.selectedIds.includes(el.id)) s.select([el.id]);
-                      if (!readOnly) startMove(toPage(), el.id);
-                    }}
-                    onTap={() => store.getState().select([el.id])}
-                    onDblClick={() => {
-                      if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
-                    }}
-                    onDblTap={() => {
-                      if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                      if (e.target.name() !== "page") return; // elements and handles handle themselves
+                      store.getState().setActivePage(i);
+                      startMarquee(i, toPage(i), e.evt.shiftKey);
                     }}
                   >
-                    <ElementNode el={el} colours={colours} />
-                  </Group>
-                ))}
-              </Group>
-              {/* guides and the selection box are drawn over everything, not clipped to the page */}
-              <Group x={pageX} y={pageY} scaleX={scale} scaleY={scale} listening={false}>
-                {guides.v.map((x) => (
-                  <Line key={`v${x}`} points={[x, 0, x, pageH]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
-                ))}
-                {guides.h.map((y) => (
-                  <Line key={`h${y}`} points={[0, y, pageW, y]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
-                ))}
-                {marquee && (
-                  <Rect {...marquee} stroke={colours.selection} strokeWidth={1} strokeScaleEnabled={false} dash={[4, 4]} />
-                )}
-              </Group>
-              <Transformer
-                ref={transformer}
-                enabledAnchors={anchors}
-                keepRatio={!only || only.type !== "shape"}
-                rotationSnaps={ROTATION_SNAPS}
-                rotationSnapTolerance={5}
-                rotateAnchorOffset={24}
-                anchorSize={8}
-                anchorStroke={colours.selection}
-                anchorFill={colours.handleFill}
-                borderStroke={colours.selection}
-                borderStrokeWidth={1.5}
-                ignoreStroke
-                boundBoxFunc={(oldBox, newBox) => (newBox.width < 5 || newBox.height < 5 ? oldBox : newBox)}
-                onTransformEnd={onTransformEnd}
-              />
-            </Layer>
-          </Stage>
+                    <Layer>
+                      <Group x={M} y={M} scaleX={scale} scaleY={scale} clipX={0} clipY={0} clipWidth={pageW} clipHeight={pageH}>
+                        <Rect name="page" width={pageW} height={pageH} fill={page.background.color} />
+                        {page.elements.map((el) => (
+                          <Group
+                            key={el.id}
+                            id={el.id}
+                            {...placement(el)}
+                            onMouseDown={(e) => {
+                              e.cancelBubble = true;
+                              focusCanvas();
+                              if (e.evt.button !== 0) return;
+                              const s = store.getState();
+                              if (s.activePage !== i) {
+                                s.setActivePage(i); // a click on another page's element moves there
+                                s.select([el.id]);
+                              } else if (e.evt.shiftKey) {
+                                s.toggleSelect(el.id); // Shift-click adds or removes; it doesn't start a move
+                                return;
+                              } else if (!s.selectedIds.includes(el.id)) {
+                                s.select([el.id]);
+                              }
+                              if (!readOnly) startMove(i, toPage(i), el.id);
+                            }}
+                            onTap={() => {
+                              store.getState().setActivePage(i);
+                              store.getState().select([el.id]);
+                            }}
+                            onDblClick={() => {
+                              if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                            }}
+                            onDblTap={() => {
+                              if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                            }}
+                          >
+                            <ElementNode el={el} colours={colours} />
+                          </Group>
+                        ))}
+                      </Group>
+                      {i === active && (
+                        <>
+                          {/* guides and the marquee are drawn over everything, not clipped to the page */}
+                          <Group x={M} y={M} scaleX={scale} scaleY={scale} listening={false}>
+                            {guides.v.map((x) => (
+                              <Line key={`v${x}`} points={[x, 0, x, pageH]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
+                            ))}
+                            {guides.h.map((y) => (
+                              <Line key={`h${y}`} points={[0, y, pageW, y]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
+                            ))}
+                            {marquee && <Rect {...marquee} stroke={colours.selection} strokeWidth={1} strokeScaleEnabled={false} dash={[4, 4]} />}
+                          </Group>
+                          <Transformer
+                            ref={transformer}
+                            enabledAnchors={anchors}
+                            keepRatio={keepRatio}
+                            rotationSnaps={ROTATION_SNAPS}
+                            rotationSnapTolerance={5}
+                            rotateAnchorOffset={24}
+                            anchorSize={8}
+                            anchorStroke={colours.selection}
+                            anchorFill={colours.handleFill}
+                            borderStroke={colours.selection}
+                            borderStrokeWidth={1.5}
+                            ignoreStroke
+                            boundBoxFunc={(oldBox, newBox) => (Math.max(newBox.width, newBox.height) < 5 ? oldBox : newBox)}
+                            onTransformEnd={onTransformEnd}
+                          />
+                        </>
+                      )}
+                    </Layer>
+                  </Stage>
+                </div>
+              </div>
+            </section>
+          ))}
         </div>
-      )}
-      {editing && scale > 0 && (
-        // outside the aria-hidden picture, so screen readers reach the text area
-        <TextEditor
-          key={editing.id}
-          el={editing}
-          left={pageX + editing.x * scale}
-          top={pageY + editing.y * scale}
-          scale={scale}
-          onDone={(text) => {
-            commitText(store, editing.id, text);
-            focusCanvas();
-          }}
-        />
       )}
     </div>
   );

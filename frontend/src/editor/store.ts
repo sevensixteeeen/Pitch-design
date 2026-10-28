@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 import { createStore, useStore, type StoreApi } from "zustand";
 import type { Design } from "../data";
-import type { DesignContent, Element, Page } from "../lib/document";
+import { blankPage, cloneElement, MAX_PAGES, newId, type DesignContent, type Element, type Page } from "../lib/document";
 
 export type SaveState =
   | { kind: "saved" }
@@ -46,15 +46,23 @@ export interface EditorState {
   view: View;
   /** the text element being typed into on the canvas, if any */
   editingId: string | null;
+  /** the page being edited (index into content.pages); selection is always on this page */
+  activePage: number;
 
   /**
-   * Change the first page's elements (milestone 2b adds pages). One undo step, unless `gesture` is
-   * set: then every change until endGesture() is a single step.
+   * Change the active page's elements. One undo step, unless `gesture` is set: then every change
+   * until endGesture() is a single step.
    */
   change(fn: (els: Element[]) => Element[], opts?: ChangeOptions): void;
-  /** Same, for the page itself (its background). */
+  /** Same, for the active page itself (its background). */
   changePage(fn: (page: Page) => Page, opts?: ChangeOptions): void;
   setEditing(id: string | null): void;
+  setActivePage(index: number): void;
+  /** A blank page after `index`; it becomes the active page. */
+  addPage(index: number): void;
+  duplicatePage(index: number): void;
+  /** Refused for the last remaining page (the server refuses it too). */
+  deletePage(index: number): void;
   endGesture(): void;
   addElement(el: Element, announcement: string): void;
   undo(): void;
@@ -85,14 +93,26 @@ export function stepZoom(view: View, direction: 1 | -1): number {
 }
 
 export function createEditorStore(design: Design, assetUrls: Record<string, string>): EditorStore {
-  const updateFirstPage = (content: DesignContent, fn: (page: Page) => Page): DesignContent => ({
+  const updatePage = (content: DesignContent, index: number, fn: (page: Page) => Page): DesignContent => ({
     ...content,
-    pages: content.pages.map((page, i) => (i === 0 ? fn(page) : page)),
+    pages: content.pages.map((page, i) => (i === index ? fn(page) : page)),
+  });
+  /** A whole-document change made in one go (page add / duplicate / delete): one undo step. */
+  const commit = (s: EditorState, content: DesignContent, extra: Partial<EditorState>): Partial<EditorState> => ({
+    content,
+    past: push(s.past, s.gestureStart ?? s.content),
+    gestureStart: null,
+    future: [],
+    edits: s.edits + 1,
+    editingId: null,
+    ...extra,
   });
   const push = (list: DesignContent[], item: DesignContent) => [...list, item].slice(-HISTORY_MAX);
-  const existing = (ids: string[], content: DesignContent) => {
-    const have = new Set(content.pages.flatMap((p) => p.elements.map((el) => el.id)));
-    return ids.filter((id) => have.has(id));
+  /** After undo / redo: stay on a page that still exists and keep only selected elements that are on it. */
+  const afterHistory = (s: EditorState, content: DesignContent): Partial<EditorState> => {
+    const activePage = Math.min(s.activePage, content.pages.length - 1);
+    const have = new Set(content.pages[activePage].elements.map((el) => el.id));
+    return { activePage, selectedIds: s.selectedIds.filter((id) => have.has(id)), editingId: null };
   };
 
   return createStore<EditorState>((set, get) => ({
@@ -111,13 +131,39 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
     zoom: "fit",
     view: { scale: 1, fit: 1, min: 0.1, max: 4 },
     editingId: null,
+    activePage: 0,
 
     change: (fn, opts) => get().changePage((page) => ({ ...page, elements: fn(page.elements) }), opts),
     setEditing: (editingId) => set({ editingId }),
+    setActivePage: (index) =>
+      set((s) => (index === s.activePage || index < 0 || index >= s.content.pages.length ? s : { activePage: index, selectedIds: [], editingId: null })),
+    addPage: (index) =>
+      set((s) => {
+        if (s.readOnly || s.content.pages.length >= MAX_PAGES) return s;
+        const pages = [...s.content.pages];
+        pages.splice(index + 1, 0, blankPage());
+        return commit(s, { ...s.content, pages }, { activePage: index + 1, selectedIds: [], announcement: `Added page ${index + 2}` });
+      }),
+    duplicatePage: (index) =>
+      set((s) => {
+        if (s.readOnly || s.content.pages.length >= MAX_PAGES) return s;
+        const source = s.content.pages[index];
+        const copy: Page = { ...source, id: newId(), elements: source.elements.map(cloneElement) };
+        const pages = [...s.content.pages];
+        pages.splice(index + 1, 0, copy);
+        return commit(s, { ...s.content, pages }, { activePage: index + 1, selectedIds: [], announcement: `Duplicated page ${index + 1}` });
+      }),
+    deletePage: (index) =>
+      set((s) => {
+        if (s.readOnly || s.content.pages.length <= 1) return s;
+        const pages = s.content.pages.filter((_, i) => i !== index);
+        const activePage = Math.min(s.activePage > index ? s.activePage - 1 : s.activePage, pages.length - 1);
+        return commit(s, { ...s.content, pages }, { activePage, selectedIds: [], announcement: `Deleted page ${index + 1}` });
+      }),
     changePage: (fn, opts = {}) =>
       set((s) => {
         if (s.readOnly) return s;
-        const content = updateFirstPage(s.content, fn);
+        const content = updatePage(s.content, s.activePage, fn);
         return {
           content,
           ...(opts.gesture
@@ -141,7 +187,7 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
           future: [s.content, ...s.future].slice(0, HISTORY_MAX),
           gestureStart: null,
           edits: s.edits + 1,
-          selectedIds: existing(s.selectedIds, content),
+          ...afterHistory(s, content),
           announcement: "Undone",
         };
       }),
@@ -155,7 +201,7 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
           future,
           gestureStart: null,
           edits: s.edits + 1,
-          selectedIds: existing(s.selectedIds, content),
+          ...afterHistory(s, content),
           announcement: "Redone",
         };
       }),
@@ -184,3 +230,7 @@ export function useEditorStore(): EditorStore {
 export function useEditor<T>(selector: (s: EditorState) => T): T {
   return useStore(useEditorStore(), selector);
 }
+
+/** The active page and its elements. */
+export const activePage = (s: EditorState) => s.content.pages[s.activePage];
+export const activeElements = (s: EditorState) => s.content.pages[s.activePage].elements;

@@ -2,7 +2,7 @@
 // works before the backend exists. Mirrors the API's rules (owner checks,
 // size limits, revisions, trash) so screens behave the same when http.ts
 // replaces it. NOT secure: anyone with this browser can read it.
-import { blankContent, sizeError, type DesignContent } from "../lib/document";
+import { assetIds, blankContent, sizeError, type DesignContent } from "../lib/document";
 import { seedContent } from "./seed";
 import {
   ConflictError,
@@ -246,13 +246,11 @@ export const fake: DataLayer = {
     const row = await owned<DesignRow>("designs", id);
     const user = await me();
     const asset_urls: Record<string, string> = {};
-    for (const page of row.content.pages) {
-      for (const el of page.elements) {
-        if (el.type !== "image") continue;
-        const asset = await get<AssetRow>("assets", el.src.asset_id);
-        // only your own assets get a URL; anything else renders as "missing image"
-        if (asset && asset.owner_id === user.id) asset_urls[asset.id] = urlFor(`asset:${asset.id}`, asset.blob);
-      }
+    // images inside groups too (same rule as the API)
+    for (const assetId of assetIds(row.content)) {
+      const asset = await get<AssetRow>("assets", assetId);
+      // only your own assets get a URL; anything else renders as "missing image"
+      if (asset && asset.owner_id === user.id) asset_urls[asset.id] = urlFor(`asset:${asset.id}`, asset.blob);
     }
     return { design: { ...(await summary(row)), content: row.content }, asset_urls };
   },

@@ -7,6 +7,7 @@ import { Button } from "../components/ui/Button";
 import { EmptyState, Skeleton, toast } from "../components/ui/feedback";
 import { NotFound } from "../pages/stubs";
 import { cn, focusRing } from "../lib/cn";
+import { walk } from "../lib/document";
 import { BottomBar } from "./BottomBar";
 import { Canvas, type ExportPng } from "./Canvas";
 import { describeElement } from "./commands";
@@ -14,7 +15,7 @@ import { loadFonts } from "./fonts";
 import { ContextToolbar } from "./ContextToolbar";
 import { SidePanel } from "./SidePanel";
 import { SmallScreenNote, TopBar } from "./TopBar";
-import { EditorContext, createEditorStore, useEditor, useEditorStore, type EditorStore } from "./store";
+import { EditorContext, activeElements, createEditorStore, useEditor, useEditorStore, type EditorStore } from "./store";
 import { useAutosave } from "./useAutosave";
 import { useEditorKeys } from "./useEditorKeys";
 
@@ -46,7 +47,7 @@ export function EditorPage() {
       const { design, asset_urls } = await api.getDesign(designId);
       // text is measured when it's drawn, so its fonts must be ready first (or lines break in the wrong
       // place); Inter too, the font for new text
-      const families = design.content.pages.flatMap((p) => p.elements.flatMap((el) => (el.type === "text" ? [el.font_family] : [])));
+      const families = design.content.pages.flatMap((p) => [...walk(p.elements)].flatMap((el) => (el.type === "text" ? [el.font_family] : [])));
       await loadFonts(["Inter Variable", ...families]);
       setLoad({ kind: "ready", store: createEditorStore(design, asset_urls) });
     } catch (err) {
@@ -132,13 +133,14 @@ function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => v
  */
 function ElementList() {
   const store = useEditorStore();
-  const elements = useEditor((s) => s.content.pages[0].elements);
+  const elements = useEditor(activeElements);
+  const pageNumber = useEditor((s) => s.activePage + 1);
   const selectedIds = useEditor((s) => s.selectedIds);
   const announcement = useEditor((s) => s.announcement);
   return (
     <>
       <div className="sr-only focus-within:not-sr-only focus-within:absolute focus-within:bottom-12 focus-within:left-3 focus-within:z-10 focus-within:max-h-64 focus-within:w-72 focus-within:overflow-y-auto focus-within:rounded-lg focus-within:border focus-within:border-border focus-within:bg-app focus-within:p-2 focus-within:shadow-pop">
-        <h2 className="px-2 pb-1 text-xs font-semibold">On this page, top first</h2>
+        <h2 className="px-2 pb-1 text-xs font-semibold">On page {pageNumber}, top first</h2>
         {elements.length === 0 ? (
           <p className="px-2 text-sm text-muted">Nothing yet. Add text, a rectangle or an image from the panel.</p>
         ) : (
