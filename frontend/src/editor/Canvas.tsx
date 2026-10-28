@@ -56,8 +56,11 @@ function tokens() {
 }
 type Colours = ReturnType<typeof tokens>;
 
-/** Draws one page (0-based) as an image at the design's real size; returns a data URL. Set by <Canvas>. */
-export type ExportPage = (page: number, type: "image/png" | "image/jpeg", quality?: number) => string;
+/**
+ * Draws one page (0-based) as an image at the design's real size, or smaller so its longest side is at most
+ * `maxSide` px (thumbnails); returns a data URL. Set by <Canvas>.
+ */
+export type ExportPage = (page: number, type: "image/png" | "image/jpeg", quality?: number, maxSide?: number) => string;
 
 function useSize(ref: RefObject<HTMLDivElement | null>) {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -491,14 +494,15 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
 
   // --- export: any page, at the design's real size ------------------------------------------------
   useEffect(() => {
-    exportRef.current = (page, type, quality) => {
+    exportRef.current = (page, type, quality, maxSide) => {
       const s = stages.current[page];
       if (!s || !scale) throw new Error("The page isn't ready yet.");
       // the selection box and guides are not part of the design (they only exist on the active page)
       const tr = page === active ? transformer.current : null;
+      const pixelRatio = Math.min(1 / scale, maxSide ? maxSide / Math.max(pw, ph) : Infinity);
       tr?.hide();
       try {
-        return s.toDataURL({ x: M, y: M, width: pw, height: ph, pixelRatio: 1 / scale, mimeType: type, quality });
+        return s.toDataURL({ x: M, y: M, width: pw, height: ph, pixelRatio, mimeType: type, quality });
       } finally {
         tr?.show();
       }

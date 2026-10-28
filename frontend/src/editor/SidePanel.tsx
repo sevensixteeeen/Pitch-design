@@ -73,7 +73,7 @@ function TextPanel() {
           <span className="font-normal">Add some body text</span>
         </Button>
       </div>
-      <p className="mt-4 text-xs text-muted">Editing the words on the page comes in the next milestone.</p>
+      <p className="mt-4 text-xs text-muted">Double-click text on the page (or select it and press Enter) to change the words.</p>
     </>
   );
 }

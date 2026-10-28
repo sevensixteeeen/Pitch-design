@@ -289,6 +289,25 @@ bugs.md T5 is closed. "Place uploaded image on page" and "Download as PNG" are n
 Parity 71.5 → 73.8; **must-haves 30 of 30**. Gaps found on the way: the editor doesn't make thumbnails yet
 (0 in the bucket, Home shows grey boxes), and dragging an upload onto the page isn't built (click works).
 
+## Thumbnails (2026-10-28, branch `build/thumbnails`)
+
+Home and Projects showed grey boxes: the server could hand out a thumbnail upload link, but the editor never
+made a picture. Now `editor/useThumbnail.ts` does:
+- after each successful save it draws page 1 as a PNG, longest side at most 400 px (a 1080 × 1350 poster
+  gives 320 × 400), waiting first for the page's photos to load;
+- it uploads after 3 quiet seconds, or straight away when you leave the editor;
+- a design opened without a thumbnail gets one at once, so older designs fill in when opened;
+- failures are silent and retried with the next save (a thumbnail is a nice-to-have).
+`ExportPage` takes an optional `maxSide`. Known gap: an edit made less than ~1 s before leaving is saved
+after the canvas is gone, so the picture misses it until the next save.
+
+Also fixed: the Text panel still said editing words "comes in the next milestone" (built in 2b-1); it now
+says how to edit (double-click, or select and press Enter).
+
+Checked in the browser on fake data: opening the sample poster made its thumbnail (320 × 400, shown on
+Home); adding a heading and pressing Home updated it. `npm run build` passes. Live check: open your design
+once and Home should show it.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

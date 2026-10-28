@@ -18,6 +18,7 @@ import { SmallScreenNote, TopBar } from "./TopBar";
 import { EditorContext, activeElements, createEditorStore, useEditor, useEditorStore, type EditorStore } from "./store";
 import { useAutosave } from "./useAutosave";
 import { useEditorKeys } from "./useEditorKeys";
+import { useThumbnail } from "./useThumbnail";
 
 /** True when the window is at least layout.editor-min-w wide. */
 function useWideEnough() {
@@ -90,6 +91,7 @@ function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => v
   useAutosave(store);
   useEditorKeys(store);
   const exportRef = useRef<ExportPage | null>(null);
+  useThumbnail(store, exportRef);
   const readOnly = useEditor((s) => s.readOnly);
   const designId = useEditor((s) => s.design.id);
 
