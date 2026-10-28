@@ -1,33 +1,13 @@
-// S08 TopBar (components.md). Milestone 1: Home, title, save status and a
-// PNG download. File menu, rename, Resize, undo/redo and Share (S19/S20)
-// come in later milestones.
+// S08 TopBar (components.md): Home, undo / redo, title, save status, Download (S20).
+// File menu, rename in place and Resize come in later milestones.
 import type { RefObject } from "react";
 import { Link, useNavigate } from "react-router";
-import { AlertTriangle, Check, Download, Home, Redo2, Undo2 } from "lucide-react";
+import { AlertTriangle, Check, Home, Redo2, Undo2 } from "lucide-react";
 import { Button, IconButton } from "../components/ui/Button";
-import { Spinner, toast } from "../components/ui/feedback";
-import type { ExportPng } from "./Canvas";
+import { Spinner } from "../components/ui/feedback";
+import type { ExportPage } from "./Canvas";
+import { DownloadPanel } from "./DownloadPanel";
 import { useEditor, useEditorStore, type SaveState } from "./store";
-
-/** "Spring sale: poster!" -> "Spring sale poster.png" */
-function fileName(title: string) {
-  const clean = title.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim();
-  return `${clean || "design"}.png`;
-}
-
-function download(exportPng: ExportPng | null, title: string) {
-  try {
-    if (!exportPng) throw new Error("not ready");
-    const link = document.createElement("a");
-    link.href = exportPng();
-    link.download = fileName(title);
-    link.click();
-  } catch (err) {
-    // a "tainted" canvas (an image that refused cross-site use) lands here
-    console.warn("PNG export failed", err);
-    toast("Couldn't make the PNG. Try again in a moment.", { kind: "error" });
-  }
-}
 
 function SaveStatus({ save, readOnly }: { save: SaveState; readOnly: boolean }) {
   const navigate = useNavigate();
@@ -83,7 +63,7 @@ function SaveStatus({ save, readOnly }: { save: SaveState; readOnly: boolean }) 
   );
 }
 
-export function TopBar({ exportRef }: { exportRef: RefObject<ExportPng | null> }) {
+export function TopBar({ exportRef }: { exportRef: RefObject<ExportPage | null> }) {
   const title = useEditor((s) => s.design.title);
   const save = useEditor((s) => s.save);
   const readOnly = useEditor((s) => s.readOnly);
@@ -108,9 +88,7 @@ export function TopBar({ exportRef }: { exportRef: RefObject<ExportPng | null> }
         {title}
       </h1>
       <SaveStatus save={save} readOnly={readOnly} />
-      <Button variant="primary" size="sm" icon={<Download className="size-4" aria-hidden />} onClick={() => download(exportRef.current, title)}>
-        Download PNG
-      </Button>
+      <DownloadPanel exportRef={exportRef} />
     </header>
   );
 }

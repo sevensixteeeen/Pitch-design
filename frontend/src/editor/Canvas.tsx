@@ -40,8 +40,8 @@ function tokens() {
 }
 type Colours = ReturnType<typeof tokens>;
 
-/** Saves the active page as a PNG at the design's real size. Set by <Canvas>. */
-export type ExportPng = () => string;
+/** Draws one page (0-based) as an image at the design's real size; returns a data URL. Set by <Canvas>. */
+export type ExportPage = (page: number, type: "image/png" | "image/jpeg", quality?: number) => string;
 
 function useSize(ref: RefObject<HTMLDivElement | null>) {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -204,7 +204,7 @@ function PageHeader({ index, count, active, readOnly, width, height }: { index: 
   );
 }
 
-export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }) {
+export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> }) {
   const store = useEditorStore();
   const design = useEditor((s) => s.design);
   const pages = useEditor((s) => s.content.pages);
@@ -414,15 +414,16 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPng | null> }
     );
   };
 
-  // --- export: the active page ---------------------------------------------------------------------
+  // --- export: any page, at the design's real size ------------------------------------------------
   useEffect(() => {
-    exportRef.current = () => {
-      const s = stages.current[active];
-      const tr = transformer.current;
+    exportRef.current = (page, type, quality) => {
+      const s = stages.current[page];
       if (!s || !scale) throw new Error("The page isn't ready yet.");
-      tr?.hide(); // the selection box is not part of the design
+      // the selection box and guides are not part of the design (they only exist on the active page)
+      const tr = page === active ? transformer.current : null;
+      tr?.hide();
       try {
-        return s.toDataURL({ x: M, y: M, width: pw, height: ph, pixelRatio: 1 / scale, mimeType: "image/png" });
+        return s.toDataURL({ x: M, y: M, width: pw, height: ph, pixelRatio: 1 / scale, mimeType: type, quality });
       } finally {
         tr?.show();
       }

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { Dialog as RDialog, DropdownMenu, Popover as RPopover } from "radix-ui";
 import { X } from "lucide-react";
 import { cn, focusRing } from "../../lib/cn";
@@ -11,6 +11,7 @@ export function Dialog({
   size = "sm",
   children,
   preventClose,
+  initialFocus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,12 +21,19 @@ export function Dialog({
   children: ReactNode;
   /** true while submitting: Escape and outside clicks do nothing */
   preventClose?: boolean;
+  /** what gets focus when the dialog opens (by default: its first button, the Close ✕) */
+  initialFocus?: RefObject<HTMLElement | null>;
 }) {
   return (
     <RDialog.Root open={open} onOpenChange={(o) => (preventClose && !o ? undefined : onOpenChange(o))}>
       <RDialog.Portal>
         <RDialog.Overlay className="fixed inset-0 z-40 bg-scrim" />
         <RDialog.Content
+          onOpenAutoFocus={(e) => {
+            if (!initialFocus?.current) return;
+            e.preventDefault();
+            initialFocus.current.focus();
+          }}
           className={cn(
             "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-app p-6 shadow-pop",
             size === "sm" ? "max-w-100" : "max-w-140",

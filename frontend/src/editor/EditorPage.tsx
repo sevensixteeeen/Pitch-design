@@ -9,7 +9,7 @@ import { NotFound } from "../pages/stubs";
 import { cn, focusRing } from "../lib/cn";
 import { walk } from "../lib/document";
 import { BottomBar } from "./BottomBar";
-import { Canvas, type ExportPng } from "./Canvas";
+import { Canvas, type ExportPage } from "./Canvas";
 import { describeElement } from "./commands";
 import { loadFonts } from "./fonts";
 import { ContextToolbar } from "./ContextToolbar";
@@ -89,7 +89,7 @@ export function EditorPage() {
 function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => void }) {
   useAutosave(store);
   useEditorKeys(store);
-  const exportRef = useRef<ExportPng | null>(null);
+  const exportRef = useRef<ExportPage | null>(null);
   const readOnly = useEditor((s) => s.readOnly);
   const designId = useEditor((s) => s.design.id);
 

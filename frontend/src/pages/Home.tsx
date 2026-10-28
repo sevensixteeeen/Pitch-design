@@ -5,7 +5,8 @@ import { useAuth } from "../auth";
 import { DesignCard, DesignCardSkeleton } from "../components/DesignCard";
 import { Button } from "../components/ui/Button";
 import { SearchInput } from "../components/ui/inputs";
-import { EmptyState, toast } from "../components/ui/feedback";
+import { EmptyState } from "../components/ui/feedback";
+import { useDesignActions } from "../components/designActions";
 import { CreateDesign } from "./CreateDesign";
 
 /** S02: Home. Search, create, recent designs. */
@@ -34,19 +35,7 @@ export function Home() {
     return () => clearTimeout(t);
   }, [q, load]);
 
-  const moveToTrash = async (d: DesignSummary) => {
-    await api.trashDesign(d.id);
-    setDesigns((list) => list?.filter((x) => x.id !== d.id) ?? null);
-    toast(`Moved "${d.title}" to Trash`, {
-      action: {
-        label: "Undo",
-        onClick: async () => {
-          await api.restoreDesign(d.id);
-          load(q);
-        },
-      },
-    });
-  };
+  const { actions, dialog } = useDesignActions(() => void load(q));
 
   return (
     <>
@@ -87,11 +76,12 @@ export function Home() {
         ) : (
           <Grid>
             {designs.map((d) => (
-              <DesignCard key={d.id} design={d} actions={[{ label: "Move to Trash", onSelect: () => moveToTrash(d), danger: true }]} />
+              <DesignCard key={d.id} design={d} actions={actions(d)} />
             ))}
           </Grid>
         )}
       </section>
+      {dialog}
     </>
   );
 }
