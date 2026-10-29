@@ -1,6 +1,6 @@
 # Bugs: Canva clone
 
-Only bugs reproduced (BUG-001 to 005 on 2026-10-27; BUG-006 to 009 by the Playwright suite on 2026-10-28). Things that might be wrong but weren't reproduced are under
+Only bugs reproduced (BUG-001 to 005 on 2026-10-27; BUG-006 to 009 by the Playwright suite on 2026-10-28; BUG-010 found by you on 2026-10-29). Things that might be wrong but weren't reproduced are under
 "To check" at the end. Format: replica-test `bug-report.md`. Builds: working tree 2026-10-27 (BUG-001 to 005), `main` bf3b002 (BUG-006 to 008).
 
 | id | severity | title | status |
@@ -14,6 +14,7 @@ Only bugs reproduced (BUG-001 to 005 on 2026-10-27; BUG-006 to 009 by the Playwr
 | BUG-007 | S4 | Editor side panel is outside every landmark (axe `region`) | fixed in 27fc260 |
 | BUG-008 | S4 | The "Open this on a larger screen" note has no main landmark (axe `landmark-one-main`, `region`) | fixed in 27fc260 |
 | BUG-009 | S4 | Icon buttons' tooltips repeat the name to screen readers and sit outside every landmark (axe `region`) | fixed in 5d881fb |
+| BUG-010 | S3 | With the API server down, a password-reset link says "This link doesn't work any more" and other screens send you to log in | fixed in 573cabd |
 
 ### BUG-001: The frontend doesn't start
 
@@ -196,6 +197,30 @@ read twice ("More actions for …, button, More actions for …").
 Fix: `IconButton` hides the tooltip from screen readers (`aria-hidden`), drops the `aria-describedby`, and
 announces its shortcut with `aria-keyshortcuts` (e.g. `Control+Z`) instead. Status: fixed in
 5d881fb; the F08 axe scans pass.
+
+### BUG-010: "This link doesn't work any more" when only the API server is down
+
+- Severity: S3 (misleading: the reset looks broken and logged-in people are sent to log in; workaround: start the
+  API server and reload)
+- Flow / case: F01-H2 (forgot password), live; found by you on 2026-10-29
+- Screen: S01 reset page, and every screen behind a login
+- Build: `main` 2800847  Browser: your Chrome, real Supabase; reproduced in Playwright with a made-up Supabase
+
+Steps
+1. Leave the API server off (it had been stopped for low memory); run the editor with `npm run dev`.
+2. Log in → "Forgot password?" → open the link from the email.
+
+Expected: "Choose a new password", or, if Pitch's server doesn't answer, a message saying so.
+Actual: "This link doesn't work any more". The link had worked (Supabase logged you in), but the next step asks
+Pitch's API "who is this?", the dev server answered 502, and the app treated any failure there as "not logged
+in". Logging in showed "Something went wrong on our side", and Home sent you back to log in.
+Evidence: `curl http://localhost:5173/api/me` → 502 with the API off; `e2e/real-mode/server-unreachable.spec.ts`
+failed on exactly that heading before the fix.
+Fix: a new `UnreachableError` for failed requests and 502 / 503 / 504; the login check keeps "can't reach the
+server" apart from "logged out" (`auth.tsx`), and the reset page, every screen behind a login and the login form say
+"Can't reach Pitch's server" with Try again. Status: fixed in 573cabd; both new tests pass.
+The tests run in a new "real-mode" Playwright project: the real data layer against a made-up Supabase address,
+with every Supabase and API answer acted out by the test, so nothing leaves the browser.
 
 ## To check (not reproduced, can't be yet)
 

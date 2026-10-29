@@ -14,8 +14,8 @@ them, and download the result as PNG, JPG or PDF. Built step by step with the re
 
 - **30 of 30 must-have** and **all 14 should-have** features are built (`replica/features.csv`).
 - Feature parity with the original's core editor: **93.4 / 100** (`replica-diff`).
-- Checked by **90 API tests** and **61 end-to-end tests** in a real browser (Playwright, with an axe
-  accessibility scan of every screen). Every bug found is written up in `replica/bugs.md` (9 so far, all fixed).
+- Checked by **90 API tests** and **63 end-to-end tests** in a real browser (Playwright, with an axe
+  accessibility scan of every screen). Every bug found is written up in `replica/bugs.md` (10 so far, all fixed).
 - Tried live on Supabase: sign up, password reset by email, create, autosave, upload a photo, place it and
   download the PNG.
 - Not built: the optional "could" features, such as version history, copy and resize, transparent PNG,
@@ -55,7 +55,7 @@ uv run pytest        # 90 API tests against a throwaway local Postgres
 
 cd frontend
 npx playwright install chromium   # the first time only
-npm run e2e          # 61 end-to-end tests, about 4 minutes; never touch Supabase
+npm run e2e          # 63 end-to-end tests, about 5 minutes; never touch Supabase
 ```
 
 Running it against your own Supabase project, the database migrations, the Trash clean-up and fixes for

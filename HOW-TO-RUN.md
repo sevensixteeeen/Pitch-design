@@ -53,11 +53,12 @@ They never touch Supabase or your own PostgreSQL service.
 ```
 cd frontend
 npx playwright install chromium   # only the first time: the test browser (~150 MB)
-npm run e2e                       # 61 tests, about 4 minutes
+npm run e2e                       # 63 tests, about 5 minutes
 ```
 
-Playwright starts its own copy of the app on port 5180 with fake data, so it never touches Supabase (a test
-fails if anything tries). Each test also fails on console errors and on accessibility problems found by axe.
+Playwright starts its own copies of the app: on port 5180 with fake data (almost every test), and on port 5181 with
+the real data layer pointed at a made-up Supabase address, whose answers the tests act out (`e2e/real-mode/`). Neither
+ever touches your Supabase (a test fails if anything tries). Each test also fails on console errors and on accessibility problems found by axe.
 If one fails, `npx playwright show-report e2e-report` shows what happened, step by step.
 
 ## 4. Run it for real (with your Supabase project, as on this laptop)
