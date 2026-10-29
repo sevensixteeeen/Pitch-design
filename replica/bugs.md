@@ -1,6 +1,6 @@
 # Bugs: Canva clone
 
-Only bugs reproduced (BUG-001 to 005 on 2026-10-27; BUG-006 to 008 by the Playwright suite on 2026-10-28). Things that might be wrong but weren't reproduced are under
+Only bugs reproduced (BUG-001 to 005 on 2026-10-27; BUG-006 to 009 by the Playwright suite on 2026-10-28). Things that might be wrong but weren't reproduced are under
 "To check" at the end. Format: replica-test `bug-report.md`. Builds: working tree 2026-10-27 (BUG-001 to 005), `main` bf3b002 (BUG-006 to 008).
 
 | id | severity | title | status |
@@ -13,6 +13,7 @@ Only bugs reproduced (BUG-001 to 005 on 2026-10-27; BUG-006 to 008 by the Playwr
 | BUG-006 | S3 | The editor says "Saved" for about a second after an edit, before the save has started | fixed in 27fc260 |
 | BUG-007 | S4 | Editor side panel is outside every landmark (axe `region`) | fixed in 27fc260 |
 | BUG-008 | S4 | The "Open this on a larger screen" note has no main landmark (axe `landmark-one-main`, `region`) | fixed in 27fc260 |
+| BUG-009 | S4 | Icon buttons' tooltips repeat the name to screen readers and sit outside every landmark (axe `region`) | fixed in 5d881fb |
 
 ### BUG-001: The frontend doesn't start
 
@@ -175,6 +176,26 @@ Steps
 Expected: no violations.
 Actual: `landmark-one-main` and `region`: the note is a plain `<div>`.
 Fix: the note is a `<main>`. Status: fixed in 27fc260.
+
+### BUG-009: Icon button tooltips are announced twice and sit outside the landmarks
+
+- Severity: S4 (screen readers hear each icon button's name twice; nothing is blocked)
+- Flow / case: F08-H2 axe scan, right after a dialog closed and gave focus back to a card's "…" button
+- Screen: every screen with icon buttons (all "…" buttons, the editor's top and bottom bars)
+- Build: branch `build/milestone-3a`, 2026-10-28  Browser: Playwright Chromium, axe-core
+
+Steps
+1. On Projects, open a design's "…" menu, choose "Move to folder…", then Cancel (focus returns to "…").
+2. The tooltip "More actions for …" opens on that focus.
+3. Run an axe scan.
+
+Expected: no violations; the button is announced once.
+Actual: `region (moderate)` on the tooltip (`div[data-radix-popper-content-wrapper]`). While the tooltip is
+open, Radix also points the button's `aria-describedby` at it, and it repeats the `aria-label`, so the name is
+read twice ("More actions for …, button, More actions for …").
+Fix: `IconButton` hides the tooltip from screen readers (`aria-hidden`), drops the `aria-describedby`, and
+announces its shortcut with `aria-keyshortcuts` (e.g. `Control+Z`) instead. Status: fixed in
+5d881fb; the F08 axe scans pass.
 
 ## To check (not reproduced, can't be yet)
 

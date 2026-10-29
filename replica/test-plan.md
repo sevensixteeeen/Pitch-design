@@ -128,16 +128,23 @@ in a later milestone).
 
 | case | type | steps | expected | auto | result |
 | --- | --- | --- | --- | --- | --- |
-| F08-H1 | happy | rename, move to folder, delete, restore from Trash | each change shows; restored design back | api: `test_rename_and_move`, `test_trash_restore_delete`; e2e | pass (API); rename + sort + Trash with Undo pass: e2e `f07-f08-designs`; folders and the Trash screen not built |
-| F08-E1 | edge: delete a folder with designs | delete "Clients" with 2 designs | designs move to Projects root | api: `test_folder_lifecycle_and_counts` | pass |
+| F08-H1 | happy | rename, move to folder, delete, restore from Trash | each change shows; restored design back | api: `test_rename_and_move`, `test_trash_restore_delete`; e2e | pass (API); rename + sort + Trash with Undo: e2e `f07-f08-designs`; folders + Trash screen: e2e `f08-folders-trash` (F08-H2, F08-H3) |
+| F08-E1 | edge: delete a folder with designs | delete "Clients" with 2 designs | designs move to Projects root | api: `test_folder_lifecycle_and_counts` | pass (API); UI pass: e2e `f08-folders-trash` (F08-H2, the design stays) |
 | F08-E2 | edge: restore into a deleted folder | trash design, delete its folder, restore | restored to root | api: same test | pass |
-| F08-E3 | edge: 30-day purge | design in Trash 31 days | gone, with its files | api + job | not built (milestone 3) |
+| F08-E3 | edge: 30-day purge | design in Trash 31 days | gone, with its files | api + job | pass: api `test_F08_E3_...`, `test_uploads_over_30_days...` (milestone 3a, runs at server start) + e2e `f08-folders-trash` (fake data) |
 | F08-E4 | edge: double click "Move to Trash" | trash twice | 30-day clock keeps the first time | api: `test_F08_E4_double_click_trash_keeps_first_time` | pass |
-| F08-E5 | edge: emoji and accents in names | folder `Clients 💼 — São Paulo` | kept exactly | api: `test_F08_E5_emoji_folder_name` | pass |
+| F08-E5 | edge: emoji and accents in names | folder `Clients 💼 — São Paulo` | kept exactly | api: `test_F08_E5_emoji_folder_name` | pass (API); UI pass: e2e `f08-folders-trash` (F08-H2) |
 | F08-E6 | edge: empty / very long folder name | "", spaces, 101 chars | "A folder name needs 1–100 characters." | api: `test_folder_name_rules` | pass |
 | F08-N1 | negative: delete forever outside Trash | delete a live design | "Move it to Trash first." | api: `test_trash_restore_delete` | pass |
 | F08-N2 | negative: someone else's folder | Bob renames / deletes / moves into Alice's folder | 404, nothing changed | api: `test_isolation.py` | pass |
 | F08-E7 | edge: empty title in the Rename dialog | spaces only | "Give it a name.", Save disabled | e2e `f07-f08-designs` | pass |
+| F08-H2 | happy: folders | New folder → Move to folder… → open it → rename → delete (Cancel focused first) | each step shows; the design stays in Projects | e2e `f08-folders-trash` | pass |
+| F08-H3 | happy: Trash | Move to Trash → Trash shows "Deletes in 30 days" → Restore → Trash again → Delete forever | restored, then gone; its link shows S24 | e2e `f08-folders-trash` | pass |
+| F08-E9 | edge: new folder from Move to folder | choose "New folder…", name it, Move; then back to "No folder" | folder made with the design; then empty folder state | e2e `f08-folders-trash` | pass |
+| F08-E10 | edge: 60-character folder name at 390 px | make, move into, open | no sideways scroll, name wraps / truncates | e2e `f08-folders-trash` | pass |
+| F08-E11 | edge: keyboard only | New folder, Enter, type, Enter; "…" menu → Move to folder… → pick with arrows → Move | works without a mouse; focus returns to the button that opened each dialog | e2e `f08-folders-trash` | pass |
+| F08-E12 | edge: Trash at 390 px | Trash with one design | no sideways scroll, "…" always visible | e2e `f08-folders-trash` | pass |
+| F08-N3 | negative: someone else's (or a missing) folder | open /folders/<random id> | S24 "can't find" page | e2e `f08-folders-trash` | pass |
 
 ## F09 Fix a mistake (S08)
 
@@ -184,3 +191,8 @@ Still not automated: offline / slow network (F01-E8, F02-E10 slow, F02-E11, F07-
 very long email (F01-E2), back button (F01-E5), time zones in the UI (F02-E9), images expiring after an hour (F07-E4 manual),
 the real Supabase email and live Storage (manual, done 2026-10-27/28). Features of milestone 3+ (templates, folders, Trash
 screen, lock, crop, page grid) are still "not built".
+
+## Totals (2026-10-28, after milestone 3a)
+
+Automated: 73 API tests (**73 passed**), 42 end-to-end tests (**42 passed**, two full runs). New: 6 API tests for the
+30-day clean-up, 8 end-to-end tests for folders and Trash. Found BUG-009 (S4, fixed).

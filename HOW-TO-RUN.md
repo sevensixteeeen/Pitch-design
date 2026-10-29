@@ -43,7 +43,7 @@ The app uses fake data whenever `.env.local` has no `VITE_SUPABASE_*` values. Th
 ```
 cd backend
 uv sync           # only the first time: creates .venv with Python 3.12 and the packages
-uv run pytest     # 67 tests, about 20 seconds; uses a throwaway Postgres in backend/.test-postgres
+uv run pytest     # 73 tests, about 20 seconds; uses a throwaway Postgres in backend/.test-postgres
 ```
 
 They never touch Supabase or your own PostgreSQL service.
@@ -53,7 +53,7 @@ They never touch Supabase or your own PostgreSQL service.
 ```
 cd frontend
 npx playwright install chromium   # only the first time: the test browser (~150 MB)
-npm run e2e                       # 34 tests, about 1.5 minutes
+npm run e2e                       # 42 tests, about 1.5 minutes
 ```
 
 Playwright starts its own copy of the app on port 5180 with fake data, so it never touches Supabase (a test
@@ -76,6 +76,11 @@ npm run dev
 ```
 
 API docs while it runs: http://127.0.0.1:8000/docs
+
+Each time the API starts, it also empties old Trash in the background: designs and uploads that have been
+in Trash for over 30 days are deleted for good, with their files. The terminal shows a line like
+`Trash clean-up: deleted for good 0 design(s) ...`. To run it by hand: `uv run --env-file ../.env.local python -m app.purge`.
+To turn it off, add `PURGE_ON_START=0` to `.env.local`.
 
 ## If something goes wrong
 

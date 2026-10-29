@@ -178,6 +178,7 @@ Webhooks in: none. Webhooks out: none.
 
 Jobs:
 - **purge**: daily 03:00 UTC via GitHub Actions → `POST /api/cron/purge`. It permanently deletes designs and assets with `deleted_at` older than 30 days (rows + Storage files), `pending` uploads older than 24 h, and thumbnails of purged designs.
+  **Changed 2026-10-28 (milestone 3a, your decision):** the app is never deployed, so GitHub can't reach it. The same clean-up runs in the background each time the API server starts (`PURGE_ON_START=0` turns it off) and by hand with `uv run --env-file ../.env.local python -m app.purge`. No `cron.py`, no `CRON_SECRET`, no `purge.yml`.
 - **version snapshots**: no job. Inside `PUT …/content`, if the design's newest version is older than 10 minutes, the previous content is saved as a version first, and versions beyond 1,000 per design are deleted.
 
 ## The parts that bite

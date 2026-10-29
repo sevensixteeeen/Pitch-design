@@ -308,6 +308,35 @@ Checked in the browser on fake data: opening the sample poster made its thumbnai
 Home); adding a heading and pressing Home updated it. `npm run build` passes. Live check: open your design
 once and Home should show it.
 
+## Milestone 3a: folders and Trash (2026-10-28, branch `build/milestone-3a`)
+
+Milestone 3 is split into 5 parts (your OK): 3a folders + Trash, 3b position panel, 3c editor extras,
+3d templates, 3e crop + text effects. Each gets its own branch and your yes.
+
+| screen | status | what's in it | missing / harder than expected |
+| --- | --- | --- | --- |
+| S05 Projects | done for 3a | Folders section (count, cards with rename / delete), "New folder"; every design card's "…" has "Move to folder…" | Uploads tab, multi-select and list view aren't in the feature list |
+| S06 Folder | done | breadcrumb, name, design count, Rename, Delete folder (designs stay in Projects), its designs; empty, loading, error, not found | the API answers `[]` for someone else's folder, so "not found" comes from your own folder list |
+| S07 Trash | done | designs in Trash, newest first, days left on each card ("Deletes tomorrow" etc.), Restore, Delete forever with a confirm (focus starts on Cancel); empty, loading, error | uploads can't be put in Trash from the app yet (not a "should"; noted as a gap) |
+| purge | done | `backend/app/purge.py`: designs and uploads in Trash for 30+ days, and uploads unfinished after 24 h, deleted with their files; rows locked first so a Restore at the same moment can't bring back a design without its files | your decision: runs at API start (background, `PURGE_ON_START=0` turns it off) and by hand, not a GitHub cron (the app is never deployed) |
+
+Shared pieces: `components/dialogs.tsx` (a name dialog, an "are you sure?" dialog, and `useDialogState`, which
+gives focus back to the button that opened a dialog), `components/folders.tsx`, `CardMenu` and `CardGrid` in
+`DesignCard.tsx`. The old Rename dialog now uses the shared name dialog. Dialogs now wait for the list to
+reload before closing, so the screen never shows the old name for a moment.
+
+Found and fixed on the way: BUG-009 (S4), icon button tooltips announced twice and outside landmarks. Not
+bugs: the first runs of the new tests had 4 mistakes of mine (a 59-character "60-character" name, a loose
+name match, two steps that didn't wait for the screen), fixed in the specs.
+
+Checks: 73 API tests (6 new for the clean-up), 42 end-to-end tests (8 new in `e2e/f08-folders-trash.spec.ts`,
+fake data, each with axe scans, 390 px and 60-character cases, keyboard only), twice with no flaky test;
+`npm run build`, ruff. Screenshots for a visual check were taken with Playwright (the Chrome extension wasn't
+connected); `replica/clone-screens/` is still skipped on purpose (no Canva screenshots to compare with).
+
+Feature matrix: "Folders and move design to folder" and "Trash with restore and 30-day purge" → yes.
+Parity 73.8 → 77.0. Not checked live on Supabase yet (the servers were stopped for low memory).
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.
