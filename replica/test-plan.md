@@ -96,13 +96,17 @@ in a later milestone).
 
 | case | type | steps | expected | auto | result |
 | --- | --- | --- | --- | --- | --- |
-| F05-H1 | happy | shift-click 3 → align left → Group → Forward → Lock | arranged, grouped, locked; survives reload | e2e | group / ungroup pass: e2e `f05-f09-editing`; lock not built (milestone 3) |
+| F05-H1 | happy | shift-click 3 → align left → Group → Forward → Lock | arranged, grouped, locked; survives reload | e2e | group / ungroup pass: e2e `f05-f09-editing`; lock pass: e2e `f05-position` |
 | F05-E1 | edge: group across locked items | include a locked item | clear rule (refuse or skip locked) | e2e | not built |
-| F05-E2 | edge: move a locked element | drag it | does not move | e2e | not built |
+| F05-E2 | edge: move a locked element | drag it | does not move | e2e | pass: e2e `f05-position` (locked: no move, no delete; unlock, then both work) |
 | F05-E3 | edge: ungroup one item | take one out of a group | others stay grouped | e2e | not built |
 | F05-E4 | edge: snapping with rotated items | rotate 30°, drag near another | guides use the rotated box | e2e | not built |
 | F05-E5 | edge: keyboard only | arrow keys nudge, Shift+arrow 10 px | moves, undoable | e2e | pass: e2e `f05-f09-editing` |
 | F05-E6 | edge: delete and undo | Delete key, then Ctrl+Z | removed, then back | e2e `f05-f09-editing` | pass |
+| F05-H2 | happy: Position panel | type X, Y, width, height, rotation 405; flip; undo twice | 100, 50, 300 × 200, 45°; flipped; undo takes back flip, then rotation | e2e `f05-position` | pass |
+| F05-H3 | happy: Layers | three shapes → Layers tab; click a row; Alt+↑; lock a row; drag the top row to the bottom; undo | list top first; selected; order changes (and doesn't nudge); locked; reordered; back | e2e `f05-position` | pass |
+| F05-E7 | edge: typed size rules | photo width 150 → height 100; text: height box disabled, narrower width → taller | proportions kept; text re-wraps | e2e `f05-position` | pass |
+| F05-E8 | edge: tab through the boxes without typing | Tab × 5, Escape | nothing saved, no extra undo step | e2e `f05-position` | pass |
 
 ## F06 Multi-page design to PDF (S08, S18, S20)
 
@@ -196,3 +200,8 @@ screen, lock, crop, page grid) are still "not built".
 
 Automated: 73 API tests (**73 passed**), 42 end-to-end tests (**42 passed**, two full runs). New: 6 API tests for the
 30-day clean-up, 8 end-to-end tests for folders and Trash. Found BUG-009 (S4, fixed).
+
+## Totals (2026-10-29, after milestone 3b)
+
+Automated: 73 API tests, 47 end-to-end tests (**47 passed**, two full runs). New: 5 end-to-end tests for the Position
+panel, lock and Layers.

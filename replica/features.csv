@@ -29,11 +29,11 @@ Download as JPG with quality slider,export,must,yes,yes,"S20 [help] | 2c: checke
 Download as PDF (all or chosen pages),export,must,yes,yes,S20 - hard part 3 | 2c: checked in the browser 2026-10-28 (fake data): all pages or a chosen set (0 pages disables Download); each page a JPEG picture at the design size (1080 px = 810 pt); pdf-lib loaded only when a PDF is made. Selectable text: milestone 4
 Projects list of all designs,projects,must,yes,yes,"S05 | backend: GET /api/designs done | 2c: checked in the browser 2026-10-28 (fake data): S05 with sort (last edited / title); loading, empty, error states; 390 px ok"
 Rename and delete a design,projects,must,yes,yes,"S05 DesignCard menu | backend: PATCH + trash routes done | 2c: checked in the browser 2026-10-28 (fake data): Rename dialog (empty title refused; keyboard focus handled) and Move to Trash with Undo, on Projects and Home"
-Lock and unlock elements,arrange,should,yes,no,Alt+Shift+L [3p]
-Layers list with drag to reorder,arrange,should,yes,no,S13 Layers tab [help][3p]
-Exact position and size inputs (X Y W H rotation),arrange,should,yes,no,S13
+Lock and unlock elements,arrange,should,yes,yes,"Alt+Shift+L [3p] | 3b 2026-10-29: Lock button in the toolbar and on each layer; locked = can't move, resize, align, nudge or delete (Duplicate still works); dashed outline when selected; e2e f05-position (fake data)"
+Layers list with drag to reorder,arrange,should,yes,yes,"S13 Layers tab [help][3p] | 3b 2026-10-29: Layers tab in the side panel, top first; click selects (Shift adds); drag a row or Alt+Up/Down; a group is one row (no expand yet); e2e f05-position"
+Exact position and size inputs (X Y W H rotation),arrange,should,yes,yes,"S13 | 3b 2026-10-29: Position panel from the toolbar: X, Y, width, height, rotation; photos and groups keep proportions; text height follows the text; one undo per box; e2e f05-position"
 Crop an image,uploads,should,yes,no,S17
-Flip horizontal / vertical,elements,should,yes,no,[3p]
+Flip horizontal / vertical,elements,should,yes,yes,[3p] | 3b 2026-10-29: Flip horizontal / vertical in the Position panel; e2e f05-position
 Text effects (shadow / outline),text,should,yes,no,S16 [3p]
 Letter spacing and line height,text,should,yes,yes,[3p] | 2b-1: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Spacing popover; letter spacing in thousandths of the font size
 Start from a template (our own set),templates,should,yes,no,S04 S12 - write 10-20 of our own

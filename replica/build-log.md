@@ -337,6 +337,22 @@ connected); `replica/clone-screens/` is still skipped on purpose (no Canva scree
 Feature matrix: "Folders and move design to folder" and "Trash with restore and 30-day purge" → yes.
 Parity 73.8 → 77.0. Not checked live on Supabase yet (the servers were stopped for low memory).
 
+## Milestone 3b: position panel, lock, layers (2026-10-29, branch `build/milestone-3b`)
+
+| piece | status | what's in it | missing / harder than expected |
+| --- | --- | --- | --- |
+| S13 Arrange (toolbar "Position") | done | layer order (4 buttons), align (6), flip horizontal / vertical, and for one element X / Y / width / height / rotation boxes | photos and groups keep proportions; a text box's height follows its text, a line's height is its thickness (those boxes are disabled with a note) |
+| Lock | done | toolbar Lock / Unlock (pressed when locked), lock on each layer row; a locked element can't move, resize, align, nudge, group or be deleted (Delete leaves it and says why to screen readers); the toolbar then shows only "Locked", Unlock and Duplicate; a dashed outline marks it on the canvas | the outline is hidden in downloads like the selection box |
+| S13 Layers (side-panel tab) | done | every element of the page, top first, with an icon, its name and its lock; click selects (Shift adds); drag a row, or Alt+↑ / Alt+↓ on it (Alt+arrows don't nudge) | a group is one row: opening a group to see its children isn't built |
+
+Also: a number box no longer saves (and adds an undo step) when you only tab through it.
+
+Checks: 47 end-to-end tests (5 new in `e2e/f05-position.spec.ts`: typed values and undo, proportions, tabbing
+through, lock rules, Layers select / Alt+↑ / lock / drag), run twice with no flaky test; axe on the panel, the
+Layers tab and the locked toolbar; `npm run build`. No server change. Screenshots looked at with Playwright.
+
+Feature matrix: lock, Layers, X/Y/W/H inputs and flip → yes.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.
