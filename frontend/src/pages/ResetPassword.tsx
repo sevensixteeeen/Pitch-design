@@ -12,7 +12,7 @@ import { AuthCard } from "./Login";
  * (link expired, already used, or opened by hand) it offers a new link instead.
  */
 export function ResetPassword() {
-  const { user, loading } = useAuth();
+  const { user, loading, unreachable, retry } = useAuth();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +25,21 @@ export function ResetPassword() {
         <Spinner className="size-6" />
         <span className="sr-only">Loading</span>
       </div>
+    );
+  }
+
+  // the link may well have worked: only Pitch's server didn't answer, so don't call it expired (BUG-010)
+  if (unreachable) {
+    return (
+      <AuthCard heading="Can't reach Pitch's server">
+        <p className="mt-2 text-sm text-muted">
+          Your link was fine, but Pitch's server didn't answer. Check your internet connection. If Pitch runs on this computer, check that the API
+          server is running, then try again.
+        </p>
+        <Button variant="primary" className="mt-6 w-full" onClick={retry}>
+          Try again
+        </Button>
+      </AuthCard>
     );
   }
 

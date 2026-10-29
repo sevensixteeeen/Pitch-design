@@ -7,6 +7,7 @@ import {
   ConflictError,
   NotFoundError,
   SignedOutError,
+  UnreachableError,
   UPLOAD_TYPES,
   ValidationError,
   type Asset,
@@ -37,7 +38,7 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   try {
     res = await fetch(`/api${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   } catch {
-    throw new Error("Can't reach the server. Check your connection and try again.");
+    throw new UnreachableError();
   }
   if (res.ok) return (res.status === 204 ? undefined : await res.json()) as T;
   const detail: unknown = await res
@@ -57,6 +58,11 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
       throw new ValidationError(message ?? "Some of that isn't allowed.");
     case 429:
       throw new Error(message ?? "Too many requests. Wait a moment and try again.");
+    case 502:
+    case 503:
+    case 504:
+      // the dev server's answer when the API server isn't running (BUG-010)
+      throw new UnreachableError();
     default:
       throw new Error("Something went wrong on our side. Try again.");
   }

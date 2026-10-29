@@ -88,6 +88,17 @@ export class SignedOutError extends Error {
   }
 }
 
+/**
+ * Pitch's own server didn't answer: no connection, or (on this computer) the API server isn't running.
+ * HTTP 502 / 503 / 504 from the dev server, or a failed request. Not the same as being logged out.
+ */
+export class UnreachableError extends Error {
+  constructor() {
+    super("Can't reach Pitch's server. Check your connection (or that the API server is running) and try again.");
+    this.name = "UnreachableError";
+  }
+}
+
 /** Input the server refuses (size, file type, quota). HTTP 422. */
 export class ValidationError extends Error {
   constructor(message: string) {
