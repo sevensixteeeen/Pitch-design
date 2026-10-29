@@ -14,6 +14,7 @@ from psycopg import errors
 
 from .config import get_settings
 from .db import close_pool, open_pool
+from .purge import purge_in_background
 from .routes import assets, designs, folders, me
 
 MAX_BODY_BYTES = 3 * 1024 * 1024  # a design's content is capped at 2 MB
@@ -22,7 +23,10 @@ FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    open_pool(get_settings().database_url)
+    settings = get_settings()
+    open_pool(settings.database_url)
+    if settings.purge_on_start:
+        purge_in_background()  # Trash older than 30 days; replaces the planned cron job
     yield
     close_pool()
 

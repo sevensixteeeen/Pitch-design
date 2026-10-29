@@ -13,6 +13,7 @@ class Settings:
     supabase_url: str  # https://<project-ref>.supabase.co
     supabase_secret_key: str  # server only, never sent to the browser
     storage_bucket: str = "user-files"
+    purge_on_start: bool = True  # the Trash clean-up when the server starts (app/purge.py)
 
     @property
     def token_issuer(self) -> str:
@@ -30,4 +31,5 @@ def get_settings() -> Settings:
         database_url=os.environ["DATABASE_URL"],
         supabase_url=os.environ["SUPABASE_URL"].rstrip("/"),
         supabase_secret_key=os.environ["SUPABASE_SECRET_KEY"],
+        purge_on_start=os.environ.get("PURGE_ON_START", "1").strip().lower() not in ("0", "false", "no"),
     )

@@ -114,6 +114,50 @@ export async function stored(page: Page, id: string): Promise<StoredDesign | und
   }, id);
 }
 
+/** Pretends a design was moved to Trash `days` ago (fake data), to test the 30-day clean-up. */
+export async function backdateTrash(page: Page, id: string, days: number) {
+  await page.evaluate(
+    async ([id, days]) => {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const req = indexedDB.open("canva-clone-fake");
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      try {
+        const store = db.transaction("designs", "readwrite").objectStore("designs");
+        const row = await new Promise<Record<string, unknown>>((resolve, reject) => {
+          const req = store.get(id as string);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        row.deleted_at = new Date(Date.now() - (days as number) * 86_400_000).toISOString();
+        await new Promise<void>((resolve, reject) => {
+          const req = store.put(row);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      } finally {
+        db.close();
+      }
+    },
+    [id, days] as const,
+  );
+}
+
+/** The id of a design, from its card's link on Home, Projects or a folder. */
+export async function cardDesignId(page: Page, title: string) {
+  const href = await page.getByRole("link", { name: `Open ${title}`, exact: true }).getAttribute("href");
+  const m = href?.match(/^\/design\/([^/]+)\/edit$/);
+  if (!m) throw new Error(`no card for "${title}"`);
+  return m[1];
+}
+
+/** No sideways scrolling at the current width. */
+export async function expectNoSidewaysScroll(page: Page) {
+  const extra = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(extra, "page scrolls sideways").toBe(0);
+}
+
 /** Width and height of a PNG file, from its header. */
 export function pngSize(bytes: Buffer) {
   expect(bytes.subarray(1, 4).toString("ascii")).toBe("PNG");

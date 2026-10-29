@@ -1,10 +1,11 @@
-// S05 Projects: every design, sorted, with rename and move to Trash.
-// Folders, Uploads tab, multi-select and the list view come with milestone 3 (S06, S07).
+// S05 Projects: your folders, then every design (sorted), each with its "…" actions.
+// The Uploads tab, multi-select and the list view aren't built (not in the feature list).
 import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, RotateCw } from "lucide-react";
-import { api, type DesignSummary } from "../data";
-import { DesignCard, DesignCardSkeleton } from "../components/DesignCard";
+import { FolderPlus, LayoutGrid, RotateCw } from "lucide-react";
+import { api, type DesignSummary, type Folder } from "../data";
+import { CardGrid, DesignCard, DesignCardSkeleton } from "../components/DesignCard";
 import { useDesignActions } from "../components/designActions";
+import { FolderCard, FolderCardSkeleton, useFolderActions } from "../components/folders";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/feedback";
 import { SelectField } from "../components/ui/inputs";
@@ -19,12 +20,15 @@ const SORTS: { value: Sort; label: string }[] = [
 export function Projects() {
   const [sort, setSort] = useState<Sort>("updated");
   const [designs, setDesigns] = useState<DesignSummary[] | null>(null);
+  const [folders, setFolders] = useState<Folder[] | null>(null);
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
     setFailed(false);
     try {
-      setDesigns(await api.listDesigns({ sort }));
+      const [d, f] = await Promise.all([api.listDesigns({ sort }), api.listFolders()]);
+      setDesigns(d);
+      setFolders(f);
     } catch {
       setFailed(true);
     }
@@ -33,52 +37,81 @@ export function Projects() {
     void load();
   }, [load]);
 
-  const { actions, dialog } = useDesignActions(load);
+  const designActions = useDesignActions(load);
+  const folderActions = useFolderActions(load);
+
+  if (failed) {
+    return (
+      <>
+        <h1 className="text-xl">Projects</h1>
+        <EmptyState
+          icon={<RotateCw />}
+          title="Couldn't load your designs"
+          body="Check your connection and try again."
+          action={<Button onClick={load}>Try again</Button>}
+        />
+      </>
+    );
+  }
 
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
         <h1 className="text-xl">Projects</h1>
-        <div className="flex flex-1 items-end gap-3 sm:justify-end">
+        <div className="flex flex-1 flex-wrap items-end gap-3 sm:justify-end">
           <div className="w-44">
             <SelectField label="Sort by" value={sort} options={SORTS} onChange={setSort} size="sm" />
           </div>
+          <Button icon={<FolderPlus className="size-4" aria-hidden />} onClick={folderActions.newFolder}>
+            New folder
+          </Button>
           <CreateDesign />
         </div>
       </div>
+
+      <section aria-labelledby="folders" aria-busy={folders === null} className="mt-8">
+        <h2 id="folders" className="text-lg">
+          Folders{folders && folders.length > 0 ? ` (${folders.length})` : ""}
+        </h2>
+        {folders === null ? (
+          <CardGrid wide>
+            {Array.from({ length: 3 }, (_, i) => (
+              <FolderCardSkeleton key={i} />
+            ))}
+          </CardGrid>
+        ) : folders.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">No folders yet. Make one with "New folder", then use "Move to folder…" on a design.</p>
+        ) : (
+          <CardGrid wide>
+            {folders.map((f) => (
+              <FolderCard key={f.id} folder={f} actions={folderActions.actions(f)} />
+            ))}
+          </CardGrid>
+        )}
+      </section>
 
       <section aria-labelledby="all-designs" aria-busy={designs === null} className="mt-8">
         <h2 id="all-designs" className="text-lg">
           All designs{designs && designs.length > 0 ? ` (${designs.length})` : ""}
         </h2>
-        {failed ? (
-          <EmptyState
-            icon={<RotateCw />}
-            title="Couldn't load your designs"
-            body="Check your connection and try again."
-            action={<Button onClick={load}>Try again</Button>}
-          />
-        ) : designs === null ? (
-          <Grid>
+        {designs === null ? (
+          <CardGrid>
             {Array.from({ length: 8 }, (_, i) => (
               <DesignCardSkeleton key={i} />
             ))}
-          </Grid>
+          </CardGrid>
         ) : designs.length === 0 ? (
           <EmptyState icon={<LayoutGrid />} title="No designs yet" body="Everything you make shows up here." action={<CreateDesign />} />
         ) : (
-          <Grid>
+          <CardGrid>
             {designs.map((d) => (
-              <DesignCard key={d.id} design={d} actions={actions(d)} />
+              <DesignCard key={d.id} design={d} actions={designActions.actions(d)} />
             ))}
-          </Grid>
+          </CardGrid>
         )}
       </section>
-      {dialog}
+      {designActions.dialog}
+      {folderActions.dialog}
     </>
   );
-}
-
-function Grid({ children }: { children: React.ReactNode }) {
-  return <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">{children}</div>;
 }

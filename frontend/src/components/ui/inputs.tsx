@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useId, useState, type InputHTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
+import { forwardRef, useEffect, useId, useState, type InputHTMLAttributes, type KeyboardEvent, type ReactNode, type Ref } from "react";
 import { Checkbox as RCheckbox, Select, Slider as RSlider, Tabs as RTabs } from "radix-ui";
 import { Check, ChevronDown, Eye, EyeOff, Search, X } from "lucide-react";
 import { cn, focusRing } from "../../lib/cn";
@@ -214,6 +214,7 @@ export function SelectField<T extends string>({
   onChange,
   size = "md",
   hideLabel,
+  triggerRef,
 }: {
   label: string;
   value: T;
@@ -221,6 +222,8 @@ export function SelectField<T extends string>({
   onChange: (v: T) => void;
   size?: "sm" | "md";
   hideLabel?: boolean;
+  /** e.g. for a dialog that should open with this field focused */
+  triggerRef?: Ref<HTMLButtonElement>;
 }) {
   const id = useId();
   return (
@@ -230,16 +233,23 @@ export function SelectField<T extends string>({
       </label>
       <Select.Root value={value} onValueChange={(v) => onChange(v as T)}>
         <Select.Trigger
+          ref={triggerRef}
           aria-labelledby={id}
           className={cn(inputBase, "inline-flex items-center justify-between gap-2", size === "sm" ? "h-8 px-2 text-sm" : "h-10 px-3 text-sm")}
         >
-          <Select.Value />
+          <span className="min-w-0 truncate">
+            <Select.Value />
+          </span>
           <Select.Icon>
             <ChevronDown className="size-4 text-muted" aria-hidden />
           </Select.Icon>
         </Select.Trigger>
         <Select.Portal>
-          <Select.Content position="popper" sideOffset={4} className="z-50 min-w-(--radix-select-trigger-width) rounded-lg border border-border bg-app p-1 shadow-pop">
+          <Select.Content
+            position="popper"
+            sideOffset={4}
+            className="z-50 max-w-(--radix-select-content-available-width) min-w-(--radix-select-trigger-width) rounded-lg border border-border bg-app p-1 shadow-pop"
+          >
             <Select.Viewport>
               {options.map((o) => (
                 <Select.Item
@@ -247,7 +257,9 @@ export function SelectField<T extends string>({
                   value={o.value}
                   className="flex h-8 cursor-default items-center justify-between gap-4 rounded-sm px-2 text-sm outline-none select-none data-highlighted:bg-surface-hover"
                 >
-                  <Select.ItemText>{o.label}</Select.ItemText>
+                  <span className="min-w-0 truncate">
+                    <Select.ItemText>{o.label}</Select.ItemText>
+                  </span>
                   <Select.ItemIndicator>
                     <Check className="size-4 text-accent" aria-hidden />
                   </Select.ItemIndicator>

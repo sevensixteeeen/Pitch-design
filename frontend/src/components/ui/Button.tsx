@@ -64,7 +64,11 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   children: ReactNode;
 }
 
-/** Icon-only button. The label is both the accessible name and the tooltip. */
+/**
+ * Icon-only button. The label is both the accessible name and the tooltip. The tooltip only shows
+ * the name on screen, so it's hidden from screen readers (they'd hear the name twice) and its
+ * shortcut is announced through aria-keyshortcuts instead (BUG-009).
+ */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
   { label, shortcut, size = "md", pressed, className, children, type = "button", ...rest },
   ref,
@@ -76,6 +80,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
           ref={ref}
           type={type}
           aria-label={label}
+          aria-keyshortcuts={shortcut?.replaceAll("Ctrl", "Control")}
+          // Radix points this at the open tooltip, which repeats the label
+          aria-describedby={undefined}
           aria-pressed={pressed}
           className={cn(
             "inline-flex shrink-0 items-center justify-center rounded-md text-fg transition-colors duration-[var(--tk-motion-fast)]",
@@ -92,6 +99,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content
+          aria-hidden
           sideOffset={6}
           className="z-50 rounded-sm bg-inverse px-2 py-1 text-xs text-on-inverse shadow-pop"
         >

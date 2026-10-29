@@ -131,6 +131,7 @@ test.describe("F01 account", () => {
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
     await page.getByRole("button", { name: "Log in" }).click();
+    await expect(page.getByRole("heading", { name: /What will you make\?/ })).toBeVisible(); // logged in
     await page.goto("/reset-password");
     await page.getByLabel("New password", { exact: true }).fill("short");
     await page.getByRole("button", { name: "Save new password" }).click();

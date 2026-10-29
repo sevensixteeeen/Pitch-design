@@ -144,6 +144,26 @@ function checkContent(content: DesignContent) {
   }
 }
 
+const TRASH_DAYS = 30;
+
+/** The server's Trash clean-up (backend/app/purge.py), run here whenever Trash is listed. */
+async function purgeOldTrash(ownerId: string) {
+  const cutoff = new Date(Date.now() - TRASH_DAYS * 86_400_000).toISOString();
+  for (const d of await all<DesignRow>("designs")) {
+    if (d.owner_id === ownerId && d.deleted_at !== null && d.deleted_at < cutoff) {
+      await remove("designs", d.id);
+      await remove("thumbnails", d.id);
+      dropUrl(`thumb:${d.id}`);
+    }
+  }
+  for (const a of await all<AssetRow>("assets")) {
+    if (a.owner_id === ownerId && a.deleted_at !== null && a.deleted_at < cutoff) {
+      await remove("assets", a.id);
+      dropUrl(`asset:${a.id}`);
+    }
+  }
+}
+
 export const fake: DataLayer = {
   async getUser() {
     const id = sessionUserId();
@@ -209,6 +229,7 @@ export const fake: DataLayer = {
   async listDesigns(query = {}) {
     await wait();
     const user = await me();
+    if (query.in_trash) await purgeOldTrash(user.id);
     const q = query.q?.trim().toLowerCase();
     const rows = (await all<DesignRow>("designs"))
       .filter((d) => d.owner_id === user.id)
@@ -389,6 +410,7 @@ export const fake: DataLayer = {
   async listAssets(query = {}) {
     await wait();
     const user = await me();
+    if (query.in_trash) await purgeOldTrash(user.id);
     return (await all<AssetRow>("assets"))
       .filter((a) => a.owner_id === user.id && (query.in_trash ? a.deleted_at !== null : a.deleted_at === null))
       .sort((a, b) => b.created_at.localeCompare(a.created_at))

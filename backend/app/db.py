@@ -1,6 +1,7 @@
 """The Postgres connection pool. Each request borrows one connection."""
 
 from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Annotated, Any
 
 from fastapi import Depends
@@ -31,6 +32,15 @@ def close_pool() -> None:
     if _pool is not None:
         _pool.close()
         _pool = None
+
+
+@contextmanager
+def connection() -> Iterator[Connection[dict[str, Any]]]:
+    """A pooled connection outside a request (the startup Trash clean-up)."""
+    if _pool is None:
+        raise RuntimeError("The database pool is not open.")
+    with _pool.connection() as conn:
+        yield conn
 
 
 def get_conn() -> Iterator[Connection[dict[str, Any]]]:

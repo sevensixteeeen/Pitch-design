@@ -18,6 +18,8 @@ from psycopg.conninfo import make_conninfo
 TEST_SUPABASE_URL = "https://test-project.supabase.co"
 os.environ["SUPABASE_URL"] = TEST_SUPABASE_URL
 os.environ["SUPABASE_SECRET_KEY"] = "test-secret-not-real"
+# the startup Trash clean-up would talk to real Storage; tests call purge() themselves
+os.environ["PURGE_ON_START"] = "0"
 ISSUER = f"{TEST_SUPABASE_URL}/auth/v1"
 
 # A small Postgres that lives only on this computer, in a folder git ignores.

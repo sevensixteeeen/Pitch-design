@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { MoreHorizontal } from "lucide-react";
 import type { DesignSummary } from "../data";
@@ -17,13 +18,19 @@ export function timeAgo(iso: string): string {
   return d === 1 ? "yesterday" : `${d} days ago`;
 }
 
+/** "Deletes in 12 days" under a design in Trash (30 days after it was moved there). */
+export function deletesIn(days: number): string {
+  if (days <= 0) return "Deletes today";
+  return days === 1 ? "Deletes tomorrow" : `Deletes in ${days} days`;
+}
+
 export interface CardAction {
   label: string;
   onSelect: () => void;
   danger?: boolean;
 }
 
-export function DesignCard({ design, actions = [] }: { design: DesignSummary; actions?: CardAction[] }) {
+export function DesignCard({ design, actions = [], menuAlwaysVisible }: { design: DesignSummary; actions?: CardAction[]; menuAlwaysVisible?: boolean }) {
   const trashed = design.deleted_at !== null;
   const daysLeft = trashed ? Math.max(0, 30 - Math.floor((Date.now() - new Date(design.deleted_at!).getTime()) / 86_400_000)) : 0;
   const thumb = (
@@ -55,27 +62,40 @@ export function DesignCard({ design, actions = [] }: { design: DesignSummary; ac
             {design.title}
           </p>
           <p className="text-xs text-muted">
-            {trashed ? `Deletes in ${daysLeft} days` : `Edited ${timeAgo(design.updated_at)}`}
+            {trashed ? deletesIn(daysLeft) : `Edited ${timeAgo(design.updated_at)}`}
           </p>
         </div>
-        {actions.length > 0 && (
-          <Menu.Root>
-            <Menu.Trigger asChild>
-              <IconButton label={`More actions for ${design.title}`} size="sm" className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 data-[state=open]:opacity-100">
-                <MoreHorizontal aria-hidden />
-              </IconButton>
-            </Menu.Trigger>
-            <Menu.Content align="end">
-              {actions.map((a) => (
-                <Menu.Item key={a.label} onSelect={a.onSelect} danger={a.danger}>
-                  {a.label}
-                </Menu.Item>
-              ))}
-            </Menu.Content>
-          </Menu.Root>
-        )}
+        <CardMenu label={`More actions for ${design.title}`} actions={actions} alwaysVisible={menuAlwaysVisible} />
       </div>
     </div>
+  );
+}
+
+/** The "…" button of a card (designs, folders). On wide screens it shows on hover or keyboard focus, unless `alwaysVisible`. */
+export function CardMenu({ label, actions, alwaysVisible }: { label: string; actions: CardAction[]; alwaysVisible?: boolean }) {
+  if (actions.length === 0) return null;
+  return (
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <IconButton
+          label={label}
+          size="sm"
+          className={cn(
+            "relative z-10",
+            !alwaysVisible && "md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100 data-[state=open]:opacity-100",
+          )}
+        >
+          <MoreHorizontal aria-hidden />
+        </IconButton>
+      </Menu.Trigger>
+      <Menu.Content align="end">
+        {actions.map((a) => (
+          <Menu.Item key={a.label} onSelect={a.onSelect} danger={a.danger}>
+            {a.label}
+          </Menu.Item>
+        ))}
+      </Menu.Content>
+    </Menu.Root>
   );
 }
 
@@ -85,6 +105,15 @@ export function DesignCardSkeleton() {
       <Skeleton className="aspect-4/3" />
       <Skeleton className="mt-2 h-4 w-3/4" />
       <Skeleton className="mt-1 h-3 w-1/2" />
+    </div>
+  );
+}
+
+/** The grid of cards on Projects, a folder and Trash; `wide` for folder cards. */
+export function CardGrid({ children, wide }: { children: ReactNode; wide?: boolean }) {
+  return (
+    <div className={wide ? "mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"}>
+      {children}
     </div>
   );
 }
