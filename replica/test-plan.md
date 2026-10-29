@@ -107,6 +107,9 @@ in a later milestone).
 | F05-H3 | happy: Layers | three shapes → Layers tab; click a row; Alt+↑; lock a row; drag the top row to the bottom; undo | list top first; selected; order changes (and doesn't nudge); locked; reordered; back | e2e `f05-position` | pass |
 | F05-E7 | edge: typed size rules | photo width 150 → height 100; text: height box disabled, narrower width → taller | proportions kept; text re-wraps | e2e `f05-position` | pass |
 | F05-E8 | edge: tab through the boxes without typing | Tab × 5, Escape | nothing saved, no extra undo step | e2e `f05-position` | pass |
+| F05-E9 | edge: copy / cut / paste | Ctrl+C, Ctrl+V twice, Ctrl+X, Ctrl+V | copies with new ids, +20 px each; cut and paste back | e2e `editor-extras` | pass |
+| F05-E10 | edge: paste into another design | copy a photo, open another design, Ctrl+V, download | same place; the photo is in the PNG (red pixel) | e2e `editor-extras` | pass |
+| S08-E1 | edge: right-click menu | right-click an element, Duplicate; Lock from the menu; Delete disabled when locked; right-click empty space, Select all | selects first; actions work; Paste disabled until something is copied | e2e `editor-extras` | pass |
 
 ## F06 Multi-page design to PDF (S08, S18, S20)
 
@@ -116,6 +119,8 @@ in a later milestone).
 | F06-E1 | edge: delete the last page | delete page 1 of 1 | blocked in UI; server refuses `pages: []` | api: `test_autosave_validates_the_document`; e2e | pass (API); UI pass: e2e `f05-f09-editing` (delete disabled on the last page) |
 | F06-E2 | edge: many pages | 200 pages, then 201 | 200 saves, 201 refused | api: `test_F06_E2_many_pages` | pass |
 | F06-E3 | edge: page range | download pages 2–3 | PDF has 2 pages | e2e | pass: e2e `f05-f09-editing` (one chosen page) |
+| F06-E4 | edge: pages grid view | open grid, Alt+← on page 3, drag page 1 to the end, add, delete, click a page, Escape | order saved each time; focus on the edited page, then back on the button | e2e `editor-extras` | pass |
+| S20-E1 | edge: download size | 1080 × 1080 at 3×; an 8000 × 3000 design | 3240 × 3240 PNG; only 1× offered, with a note | e2e `editor-extras` | pass |
 
 ## F07 Come back later (S02 / S05 → S08)
 
@@ -205,3 +210,8 @@ Automated: 73 API tests (**73 passed**), 42 end-to-end tests (**42 passed**, two
 
 Automated: 73 API tests, 47 end-to-end tests (**47 passed**, two full runs). New: 5 end-to-end tests for the Position
 panel, lock and Layers.
+
+## Totals (2026-10-29, after milestone 3c)
+
+Automated: 73 API tests, 53 end-to-end tests (**53 passed**, two full runs). New: 6 end-to-end tests for copy and
+paste, the right-click menu, download sizes and the pages grid.

@@ -53,7 +53,7 @@ They never touch Supabase or your own PostgreSQL service.
 ```
 cd frontend
 npx playwright install chromium   # only the first time: the test browser (~150 MB)
-npm run e2e                       # 47 tests, about 2 minutes
+npm run e2e                       # 53 tests, about 3 minutes
 ```
 
 Playwright starts its own copy of the app on port 5180 with fake data, so it never touches Supabase (a test

@@ -353,6 +353,23 @@ Layers tab and the locked toolbar; `npm run build`. No server change. Screenshot
 
 Feature matrix: lock, Layers, X/Y/W/H inputs and flip → yes.
 
+## Milestone 3c: editor extras (2026-10-29, branch `build/milestone-3c`)
+
+| piece | status | what's in it | missing / harder than expected |
+| --- | --- | --- | --- |
+| Copy / cut / paste | done | Ctrl+C / X / V on the canvas; the clipboard is shared by every design opened in this tab, so you can paste into another design, and photos bring their links (they show at once and in downloads); pasting back on the same page lands 20 px further each time; cut leaves locked elements, like Delete | not shared between tabs or with other apps (that would need the system clipboard) |
+| Right-click menu (S08) | done | right-click selects what's under the pointer, then copy, cut, paste, duplicate, delete, layer order, group / ungroup, lock / unlock; on empty space paste and select all; off while typing in a text box (the browser's own menu is the useful one there); the menu key or Shift+F10 opens it too | with the menu open, the menu library hides the rest of the page from screen readers on purpose, so its axe scan covers the menu only |
+| Download sizes (S20) | done | Size 1× / 2× / 3× for PNG and JPG, with the pixel size shown; sizes over 16,000 px a side or 40 million px aren't offered ("This design is too large for bigger sizes.") | PDF stays at 1× |
+| Pages grid view (S18) | done | a bottom-bar button shows every page as a picture; click one to edit it, duplicate / delete / add pages, drag a page or Alt+← / Alt+→ to reorder (undo works), Escape goes back with focus on the button | the canvas stays underneath (`inert`) because the pictures are drawn from it |
+
+Checks: 53 end-to-end tests (6 new in `e2e/editor-extras.spec.ts`: copy / cut / paste, paste into another
+design with a photo checked by pixel in the download, the right-click menu, PNG at 3× = 3240 × 3240, a large
+design offering only 1×, the grid view), run twice with no flaky test; `npm run build`. My own test mistakes on
+the first run (a miscalculated photo position, loose name matches, a page scan with the menu open) are fixed in
+the specs. No server change.
+
+Feature matrix: shortcuts (copy / paste), right-click menu, export scale and pages grid → yes.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

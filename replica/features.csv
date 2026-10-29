@@ -37,12 +37,12 @@ Flip horizontal / vertical,elements,should,yes,yes,[3p] | 3b 2026-10-29: Flip ho
 Text effects (shadow / outline),text,should,yes,no,S16 [3p]
 Letter spacing and line height,text,should,yes,yes,[3p] | 2b-1: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): Spacing popover; letter spacing in thousandths of the font size
 Start from a template (our own set),templates,should,yes,no,S04 S12 - write 10-20 of our own
-Pages grid view with drag reorder,pages,should,yes,no,S18
+Pages grid view with drag reorder,pages,should,yes,yes,"S18 | 3c 2026-10-29: Grid view button in the bottom bar: pictures of every page, click to edit one, duplicate / delete / add, drag or Alt+arrows to reorder, Escape goes back; e2e editor-extras"
 Folders and move design to folder,projects,should,yes,yes,"S05 S06 | backend: folder routes done | 3a 2026-10-28: Projects has a Folders section (New folder; rename / delete from the card); S06 folder page with breadcrumb; ""Move to folder…"" on every design card (can make a new folder); deleting a folder keeps its designs; e2e f08-folders-trash (fake data)"
 Trash with restore and 30-day purge,projects,should,yes,yes,S07 [help] | backend: trash/restore/delete done; purge job pending | 3a 2026-10-28: S07 Trash screen (Restore; Delete forever with a confirm; days left on each card); the 30-day clean-up runs when the API server starts and by hand (python -m app.purge) instead of a GitHub cron (the app only runs on your laptop); 6 API tests + e2e (fake data)
-Keyboard shortcuts (copy paste nudge delete),editor,should,yes,partial,[3p] list - verify | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): nudge (Shift = 10 px); delete; duplicate; select all; undo; zoom; layers; Escape. Copy/paste not yet | 2b-1 adds Enter to edit text and Ctrl+B / Ctrl+I / Ctrl+U. Copy/paste not yet
-Right-click context menu,editor,should,yes,no,S08
-Export scale (1x 2x 3x),export,should,yes,no,S20 [help] - paid in original
+Keyboard shortcuts (copy paste nudge delete),editor,should,yes,yes,"[3p] list - verify | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): nudge (Shift = 10 px); delete; duplicate; select all; undo; zoom; layers; Escape. Copy/paste not yet | 2b-1 adds Enter to edit text and Ctrl+B / Ctrl+I / Ctrl+U. Copy/paste not yet | 3c 2026-10-29: Ctrl+C / Ctrl+X / Ctrl+V added (a clipboard shared by every design in the tab, photos included); e2e editor-extras"
+Right-click context menu,editor,should,yes,yes,"S08 | 3c 2026-10-29: right-click selects what's under the pointer; copy, cut, paste, duplicate, delete, layer order, group / ungroup, lock; on empty space paste and select all; e2e editor-extras"
+Export scale (1x 2x 3x),export,should,yes,yes,"S20 [help] - paid in original | 3c 2026-10-29: Size 1x / 2x / 3x for PNG and JPG; sizes past 16,000 px a side or 40 million px aren't offered, with a note; e2e editor-extras (3240 x 3240 PNG)"
 Not found / no access page,editor,should,yes,partial,S24 - deleted design or someone else's design | M1 S24 for unknown pages and missing designs; fake data only; live Supabase pending
 Sign in with Google,onboarding,could,yes,no,OAuth
 Transparent PNG export,export,could,yes,no,[help] paid in original
