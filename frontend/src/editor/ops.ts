@@ -1,6 +1,6 @@
 // Editing operations on a page's elements. Pure functions: they return a new
 // array and never change the one they're given. Locked elements don't move.
-import { cloneElement, newId, type Element, type GroupElement } from "../lib/document";
+import { cloneElement, newId, type Element, type GroupElement, type ImageElement } from "../lib/document";
 import { bounds, round2, union, type Box } from "./geometry";
 
 export type LayerMove = "forward" | "backward" | "front" | "back";
@@ -140,8 +140,24 @@ export function scaleElement(el: Element, s: number): Element {
   switch (el.type) {
     case "group":
       return { ...el, ...size, children: el.children.map(inner) };
-    case "text":
-      return { ...el, ...size, font_size: round2(Math.min(800, Math.max(1, el.font_size * s))), letter_spacing: round2(el.letter_spacing * s) };
+    case "text": {
+      // effects grow with the text (limits as in app/document.py)
+      const shadow = el.shadow && {
+        ...el.shadow,
+        blur: round2(Math.min(200, el.shadow.blur * s)),
+        offset_x: round2(Math.max(-1000, Math.min(1000, el.shadow.offset_x * s))),
+        offset_y: round2(Math.max(-1000, Math.min(1000, el.shadow.offset_y * s))),
+      };
+      const outline = el.outline && { ...el.outline, width: round2(Math.min(100, Math.max(0.01, el.outline.width * s))) };
+      return {
+        ...el,
+        ...size,
+        font_size: round2(Math.min(800, Math.max(1, el.font_size * s))),
+        letter_spacing: round2(el.letter_spacing * s),
+        ...(el.shadow !== undefined && { shadow }),
+        ...(el.outline !== undefined && { outline }),
+      };
+    }
     case "shape":
       return { ...el, ...size, stroke_width: round2(Math.min(1000, el.stroke_width * s)), corner_radius: round2(el.corner_radius * s) };
     case "line":
@@ -222,4 +238,58 @@ export function nudge(els: Element[], ids: string[], dx: number, dy: number): El
   const updates: Record<string, Partial<Element>> = {};
   for (const el of els) if (ids.includes(el.id) && !el.locked) updates[el.id] = { x: pos(el.x + dx), y: pos(el.y + dy) };
   return patch(els, updates);
+}
+
+// --- S17 crop: the frame is drawn in the photo element's own (unrotated, unflipped) box -----------
+
+/** The whole photo, in the element's own box: where it is when the visible part fills the box. */
+export function wholePhotoBox(el: ImageElement): Box {
+  const c = el.crop ?? { x: 0, y: 0, width: 1, height: 1 };
+  const width = el.width / c.width;
+  const height = el.height / c.height;
+  return { x: -c.x * width, y: -c.y * height, width, height };
+}
+
+/**
+ * The element after cropping to `frame` (in its own box): the frame becomes the new box, at the same
+ * place on the page (also when rotated or flipped), and the crop says which part of the photo shows.
+ * A frame over the whole photo removes the crop.
+ */
+export function applyCrop(el: ImageElement, frame: Box): Partial<ImageElement> {
+  const photo = wholePhotoBox(el);
+  const clampTo = (v: number) => Math.min(1, Math.max(0, v));
+  const crop = {
+    x: clampTo((frame.x - photo.x) / photo.width),
+    y: clampTo((frame.y - photo.y) / photo.height),
+    width: clampTo(frame.width / photo.width),
+    height: clampTo(frame.height / photo.height),
+  };
+  crop.width = Math.min(crop.width, 1 - crop.x);
+  crop.height = Math.min(crop.height, 1 - crop.y);
+  const whole = crop.x < 0.0005 && crop.y < 0.0005 && crop.width > 0.9995 && crop.height > 0.9995;
+  // the frame's centre, from the box's centre, turned the way the element is flipped and rotated
+  let dx = frame.x + frame.width / 2 - el.width / 2;
+  let dy = frame.y + frame.height / 2 - el.height / 2;
+  if (el.flip_x) dx = -dx;
+  if (el.flip_y) dy = -dy;
+  const a = (el.rotation * Math.PI) / 180;
+  const cx = el.x + el.width / 2 + dx * Math.cos(a) - dy * Math.sin(a);
+  const cy = el.y + el.height / 2 + dx * Math.sin(a) + dy * Math.cos(a);
+  const r6 = (v: number) => Math.round(v * 1e6) / 1e6;
+  return {
+    x: pos(cx - frame.width / 2),
+    y: pos(cy - frame.height / 2),
+    width: round2(frame.width),
+    height: round2(frame.height),
+    crop: whole ? null : { x: r6(crop.x), y: r6(crop.y), width: r6(crop.width), height: r6(crop.height) },
+  };
+}
+
+/** A frame moved or resized by hand, kept on the photo and at least `min` px each way. */
+export function keepFrameOnPhoto(frame: Box, photo: Box, min = 8): Box {
+  const width = Math.min(photo.width, Math.max(min, frame.width));
+  const height = Math.min(photo.height, Math.max(min, frame.height));
+  const x = Math.min(photo.x + photo.width - width, Math.max(photo.x, frame.x));
+  const y = Math.min(photo.y + photo.height - height, Math.max(photo.y, frame.y));
+  return { x, y, width, height };
 }

@@ -27,7 +27,7 @@ import {
   type Box,
   type Gap,
 } from "./geometry";
-import { nudge, patch, scaleElement } from "./ops";
+import { keepFrameOnPhoto, nudge, patch, scaleElement, wholePhotoBox } from "./ops";
 import { activeElements, useEditor, useEditorStore } from "./store";
 
 const SNAP_SCREEN_PX = 5; // components.md, SmartGuides
@@ -98,7 +98,12 @@ function useImage(url: string | undefined) {
 
 function ImageNode({ el, url, colours }: { el: ImageElement; url: string | undefined; colours: Colours }) {
   const { img, failed } = useImage(url);
-  if (img) return <KonvaImage image={img} width={el.width} height={el.height} cornerRadius={el.corner_radius} />;
+  if (img) {
+    // a crop is stored as fractions of the photo; Konva wants the photo's own pixels
+    const c = el.crop;
+    const crop = c ? { x: c.x * img.naturalWidth, y: c.y * img.naturalHeight, width: c.width * img.naturalWidth, height: c.height * img.naturalHeight } : undefined;
+    return <KonvaImage image={img} width={el.width} height={el.height} cornerRadius={el.corner_radius} crop={crop} />;
+  }
   // no link (deleted, or not yours) or failed to load: a placeholder of the same size
   return (
     <>
@@ -116,6 +121,83 @@ function ImageNode({ el, url, colours }: { el: ImageElement; url: string | undef
       )}
     </>
   );
+}
+
+/**
+ * S17 crop mode: the whole photo, faded, with the part inside the frame at full strength, and a frame
+ * that can be moved and resized (it stays on the photo). Not clipped to the page, so the parts of the
+ * photo that are cut off now can be seen. Drawn in the photo element's own box (rotated and flipped
+ * like it); the store turns the frame into the new crop when it's kept.
+ */
+function CropOverlay({ el, M, scale, colours }: { el: ImageElement; M: number; scale: number; colours: Colours }) {
+  const store = useEditorStore();
+  const frame = useEditor((s) => s.cropping?.frame);
+  const url = useEditor((s) => s.assetUrls[el.src.asset_id]);
+  const { img } = useImage(url);
+  const rect = useRef<Konva.Rect>(null);
+  const tr = useRef<Konva.Transformer>(null);
+  useEffect(() => {
+    if (!rect.current || !tr.current) return;
+    tr.current.nodes([rect.current]);
+    tr.current.getLayer()?.batchDraw();
+  }, [img, frame]);
+  if (!frame || !img) return null;
+
+  const photo = wholePhotoBox(el);
+  const { opacity: _opacity, ...place } = placement(el);
+  const save = (node: Konva.Node) => {
+    const next = keepFrameOnPhoto({ x: node.x(), y: node.y(), width: node.width() * node.scaleX(), height: node.height() * node.scaleY() }, photo);
+    node.setAttrs({ ...next, scaleX: 1, scaleY: 1 });
+    store.getState().setCropFrame(next);
+  };
+  return (
+    <>
+      <Group x={M} y={M} scaleX={scale} scaleY={scale}>
+        <Group {...place} onMouseDown={(e) => (e.cancelBubble = true)}>
+          <KonvaImage image={img} {...photo} opacity={0.35} />
+          <Group clipX={frame.x} clipY={frame.y} clipWidth={frame.width} clipHeight={frame.height} listening={false}>
+            <KonvaImage image={img} {...photo} />
+          </Group>
+          <Rect
+            ref={rect}
+            name="crop-frame"
+            {...frame}
+            fill="rgba(0,0,0,0)" // invisible, but it can be grabbed anywhere inside
+            draggable
+            onDragMove={(e) => {
+              const n = e.target;
+              const kept = keepFrameOnPhoto({ x: n.x(), y: n.y(), width: frame.width, height: frame.height }, photo);
+              n.position({ x: kept.x, y: kept.y });
+            }}
+            onDragEnd={(e) => save(e.target)}
+            onTransformEnd={(e) => save(e.target)}
+          />
+        </Group>
+      </Group>
+      <Transformer
+        ref={tr}
+        rotateEnabled={false}
+        flipEnabled={false}
+        keepRatio={false}
+        anchorSize={10}
+        anchorStroke={colours.selection}
+        anchorFill={colours.handleFill}
+        borderStroke={colours.selection}
+        borderStrokeWidth={2}
+        ignoreStroke
+        boundBoxFunc={(oldBox, newBox) => (Math.min(Math.abs(newBox.width), Math.abs(newBox.height)) < 8 ? oldBox : newBox)}
+      />
+    </>
+  );
+}
+
+/** S16 shadow and outline as Konva text settings (the outline is drawn under the letters' fill). */
+function textEffects(el: TextElement) {
+  const { shadow: sh, outline: ol } = el;
+  return {
+    ...(sh && { shadowColor: sh.color, shadowBlur: sh.blur, shadowOffsetX: sh.offset_x, shadowOffsetY: sh.offset_y, shadowOpacity: sh.opacity, shadowEnabled: true }),
+    ...(ol && { stroke: ol.color, strokeWidth: ol.width, fillAfterStrokeEnabled: true }),
+  };
 }
 
 function LineNode({ el }: { el: LineElement }) {
@@ -168,6 +250,7 @@ function ElementNode({ el, colours }: { el: Element; colours: Colours }) {
           align={el.align}
           letterSpacing={el.letter_spacing}
           lineHeight={el.line_height}
+          {...textEffects(el)}
         />
       );
     case "shape": {
@@ -257,6 +340,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
   const readOnly = useEditor((s) => s.readOnly);
   const zoom = useEditor((s) => s.zoom);
   const editingId = useEditor((s) => s.editingId);
+  const cropping = useEditor((s) => s.cropping);
 
   const box = useRef<HTMLDivElement>(null);
   const { width, height } = useSize(box);
@@ -337,7 +421,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
 
   // --- selection box with handles (active page only) --------------------------------------------
   const activeEls = pages[active].elements;
-  const chosen = readOnly || editingId ? [] : activeEls.filter((el) => selectedIds.includes(el.id) && !el.locked);
+  const chosen = readOnly || editingId || cropping ? [] : activeEls.filter((el) => selectedIds.includes(el.id) && !el.locked);
   const editing = editingId ? activeEls.find((el): el is TextElement => el.id === editingId && el.type === "text") : undefined;
   const only = chosen.length === 1 ? chosen[0] : null;
   const anchors = !only
@@ -345,7 +429,8 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
     : { text: [...CORNERS, ...SIDES_X], image: CORNERS, group: CORNERS, line: SIDES_X, shape: ALL_ANCHORS }[only.type];
   const keepRatio = !only || (only.type !== "shape" && only.type !== "line");
   const chosenKey = chosen.map((el) => el.id).join(",");
-  const lockedChosen = readOnly || editingId ? [] : activeEls.filter((el) => selectedIds.includes(el.id) && el.locked);
+  const lockedChosen = readOnly || editingId || cropping ? [] : activeEls.filter((el) => selectedIds.includes(el.id) && el.locked);
+  const cropped = cropping ? activeEls.find((el): el is ImageElement => el.id === cropping.id && el.type === "image") : undefined;
   const lockedKey = lockedChosen.map((el) => el.id).join(",");
 
   useEffect(() => {
@@ -625,6 +710,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
                               key={el.id}
                               id={el.id}
                               {...placement(el)}
+                              visible={el.id !== cropped?.id} // the crop overlay draws it while it's being cropped
                               onMouseDown={(e) => {
                                 e.cancelBubble = true;
                                 focusCanvas();
@@ -653,16 +739,21 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
                                 store.getState().select([el.id]);
                               }}
                               onDblClick={() => {
-                                if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                                if (readOnly || el.locked) return;
+                                if (el.type === "text") store.getState().setEditing(el.id);
+                                else if (el.type === "image") store.getState().startCrop(el.id); // S17
                               }}
                               onDblTap={() => {
-                                if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                                if (readOnly || el.locked) return;
+                                if (el.type === "text") store.getState().setEditing(el.id);
+                                else if (el.type === "image") store.getState().startCrop(el.id);
                               }}
                             >
                               <ElementNode el={el} colours={colours} />
                             </Group>
                           ))}
                         </Group>
+                        {i === active && cropped && <CropOverlay el={cropped} M={M} scale={scale} colours={colours} />}
                         {i === active && (
                           <>
                             {/* guides and the marquee are drawn over everything, not clipped to the page */}

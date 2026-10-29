@@ -4,6 +4,10 @@ import { createContext, useContext } from "react";
 import { createStore, useStore, type StoreApi } from "zustand";
 import type { Design } from "../data";
 import { blankPage, cloneElement, MAX_PAGES, newId, type DesignContent, type Element, type Page } from "../lib/document";
+import type { Box } from "./geometry";
+import { applyCrop, wholePhotoBox } from "./ops";
+
+const activePageOf = (s: { content: DesignContent; activePage: number }) => s.content.pages[s.activePage];
 
 export type SaveState =
   | { kind: "saved" }
@@ -50,6 +54,8 @@ export interface EditorState {
   activePage: number;
   /** the pages grid view (S18) is showing instead of the canvas */
   pageGrid: boolean;
+  /** S17 crop mode: the photo being cropped and the frame so far, in the photo's own box */
+  cropping: { id: string; frame: Box } | null;
 
   /**
    * Change the active page's elements. One undo step, unless `gesture` is set: then every change
@@ -72,6 +78,13 @@ export interface EditorState {
   /** Moves a page to position `to`; the page being edited stays the one being edited. */
   movePage(from: number, to: number): void;
   setPageGrid(open: boolean): void;
+  /** Crop mode for a photo on the active page (not locked). */
+  startCrop(id: string): void;
+  setCropFrame(frame: Box): void;
+  /** The frame back over the whole photo (Done then removes the crop). */
+  resetCrop(): void;
+  /** Leaves crop mode, keeping the new crop (one undo step) or not. */
+  finishCrop(keep: boolean): void;
   endGesture(): void;
   addElement(el: Element, announcement: string): void;
   /** Something to tell screen readers when nothing changed (e.g. "That element is locked"). */
@@ -111,6 +124,7 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
   /** A whole-document change made in one go (page add / duplicate / delete): one undo step. */
   const commit = (s: EditorState, content: DesignContent, extra: Partial<EditorState>): Partial<EditorState> => ({
     content,
+    cropping: null,
     past: push(s.past, s.gestureStart ?? s.content),
     gestureStart: null,
     future: [],
@@ -144,13 +158,16 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
     editingId: null,
     activePage: 0,
     pageGrid: false,
+    cropping: null,
 
     change: (fn, opts) => get().changePage((page) => ({ ...page, elements: fn(page.elements) }), opts),
     setEditing: (editingId) => set({ editingId }),
     setTitle: (title) => set((s) => ({ design: { ...s.design, title } })),
     flush: async () => {},
-    setActivePage: (index) =>
-      set((s) => (index === s.activePage || index < 0 || index >= s.content.pages.length ? s : { activePage: index, selectedIds: [], editingId: null })),
+    setActivePage: (index) => {
+      if (get().cropping && index !== get().activePage) get().finishCrop(true);
+      set((s) => (index === s.activePage || index < 0 || index >= s.content.pages.length ? s : { activePage: index, selectedIds: [], editingId: null }));
+    },
     addPage: (index, page, announcement) =>
       set((s) => {
         if (s.readOnly || s.content.pages.length >= MAX_PAGES) return s;
@@ -188,7 +205,10 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
         });
       }),
     // opening the grid drops the selection: the canvas's keys and toolbar don't apply there
-    setPageGrid: (pageGrid) => set(pageGrid ? { pageGrid, selectedIds: [], editingId: null } : { pageGrid }),
+    setPageGrid: (pageGrid) => {
+      if (pageGrid) get().finishCrop(true);
+      set(pageGrid ? { pageGrid, selectedIds: [], editingId: null } : { pageGrid });
+    },
     changePage: (fn, opts = {}) =>
       set((s) => {
         if (s.readOnly) return s;
@@ -212,6 +232,7 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
         const content = s.past[s.past.length - 1];
         return {
           content,
+          cropping: null,
           past: s.past.slice(0, -1),
           future: [s.content, ...s.future].slice(0, HISTORY_MAX),
           gestureStart: null,
@@ -226,6 +247,7 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
         const [content, ...future] = s.future;
         return {
           content,
+          cropping: null,
           past: push(s.past, s.content),
           future,
           gestureStart: null,
@@ -235,7 +257,34 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
         };
       }),
     setAnnouncement: (announcement) => set({ announcement }),
-    select: (selectedIds) => set({ selectedIds }),
+    select: (selectedIds) => {
+      const c = get().cropping;
+      if (c && (selectedIds.length !== 1 || selectedIds[0] !== c.id)) get().finishCrop(true); // clicking away keeps the crop
+      set({ selectedIds });
+    },
+    startCrop: (id) =>
+      set((s) => {
+        const el = s.content.pages[s.activePage].elements.find((x) => x.id === id);
+        if (s.readOnly || !el || el.type !== "image" || el.locked) return s;
+        return { cropping: { id, frame: { x: 0, y: 0, width: el.width, height: el.height } }, selectedIds: [id], editingId: null, announcement: "Cropping. Drag the frame or its handles; Enter keeps the crop, Escape cancels." };
+      }),
+    setCropFrame: (frame) => set((s) => (s.cropping ? { cropping: { ...s.cropping, frame } } : s)),
+    resetCrop: () =>
+      set((s) => {
+        const el = s.cropping && s.content.pages[s.activePage].elements.find((x) => x.id === s.cropping!.id);
+        return el && el.type === "image" ? { cropping: { id: el.id, frame: wholePhotoBox(el) } } : s;
+      }),
+    finishCrop: (keep) => {
+      const s = get();
+      const c = s.cropping;
+      if (!c) return;
+      set({ cropping: null });
+      const el = activePageOf(s).elements.find((x) => x.id === c.id);
+      if (keep && el?.type === "image") {
+        const update = applyCrop(el, c.frame);
+        s.change((els) => els.map((x) => (x.id === el.id ? ({ ...x, ...update } as Element) : x)), { announcement: "Cropped" });
+      }
+    },
     toggleSelect: (id) =>
       set((s) => ({ selectedIds: s.selectedIds.includes(id) ? s.selectedIds.filter((x) => x !== id) : [...s.selectedIds, id] })),
     addAssetUrl: (id, url) => set((s) => ({ assetUrls: { ...s.assetUrls, [id]: url } })),

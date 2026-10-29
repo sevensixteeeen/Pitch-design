@@ -19,6 +19,17 @@ export function useEditorKeys(store: EditorStore) {
       const s = store.getState();
       const key = e.key.toLowerCase();
 
+      // crop mode (S17): Enter keeps the crop, Escape cancels; other shortcuts wait until it's over
+      if (s.cropping) {
+        // (inside a menu or the toolbar these keys keep their own job; the toolbar has Done and Cancel)
+        if ((e.key === "Enter" || e.key === "Escape") && !inWidget) {
+          e.preventDefault();
+          s.finishCrop(e.key === "Enter");
+          return;
+        }
+        if (!inWidget) return;
+      }
+
       if (e.ctrlKey || e.metaKey) {
         const run = (fn: () => void) => {
           e.preventDefault();

@@ -7,7 +7,7 @@ import { Checkbox, SelectField, Slider } from "../components/ui/inputs";
 import { Popover } from "../components/ui/overlays";
 import type { ExportPage } from "./Canvas";
 import { buildPdf, fileName, saveFile, sizesFor, type FileType } from "./exportFile";
-import { useEditor } from "./store";
+import { useEditor, useEditorStore } from "./store";
 
 const TYPES: { value: FileType; label: string }[] = [
   { value: "png", label: "PNG (sharp, good for graphics)" },
@@ -16,6 +16,7 @@ const TYPES: { value: FileType; label: string }[] = [
 ];
 
 export function DownloadPanel({ exportRef }: { exportRef: RefObject<ExportPage | null> }) {
+  const store = useEditorStore();
   const design = useEditor((s) => s.design);
   const pageCount = useEditor((s) => s.content.pages.length);
   const activePage = useEditor((s) => s.activePage);
@@ -37,6 +38,7 @@ export function DownloadPanel({ exportRef }: { exportRef: RefObject<ExportPage |
   const onOpenChange = (next: boolean) => {
     if (busy) return; // stays open while the file is being made
     if (next) {
+      store.getState().finishCrop(true); // the crop overlay must not end up in the file
       setPage(activePage); // start from the page being edited
       setError(null);
     }

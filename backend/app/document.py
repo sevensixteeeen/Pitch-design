@@ -40,6 +40,19 @@ class ElementBase(Strict):
     name: Annotated[str, StringConstraints(max_length=100)] | None = None
 
 
+class TextShadow(Strict):
+    color: Hex
+    blur: Annotated[float, Field(ge=0, le=200)]
+    offset_x: Annotated[float, Field(ge=-1000, le=1000)]
+    offset_y: Annotated[float, Field(ge=-1000, le=1000)]
+    opacity: Annotated[float, Field(ge=0, le=1)]
+
+
+class TextOutline(Strict):
+    color: Hex
+    width: Annotated[float, Field(gt=0, le=100)]
+
+
 class TextElement(ElementBase):
     type: Literal["text"]
     text: Annotated[str, StringConstraints(max_length=10_000)]
@@ -52,6 +65,9 @@ class TextElement(ElementBase):
     align: Literal["left", "center", "right", "justify"]
     letter_spacing: Annotated[float, Field(ge=-1000, le=1000)]
     line_height: Annotated[float, Field(ge=0.5, le=3)]
+    # milestone 3e (S16 effects); optional, so older designs stay valid
+    shadow: TextShadow | None = None
+    outline: TextOutline | None = None
 
 
 class ShapeElement(ElementBase):
@@ -68,10 +84,30 @@ class AssetSource(Strict):
     asset_id: UUID
 
 
+Fraction = Annotated[float, Field(ge=0, le=1)]
+
+
+class Crop(Strict):
+    """The part of the photo that shows, as fractions of the photo's own width and height."""
+
+    x: Fraction
+    y: Fraction
+    width: Annotated[float, Field(gt=0, le=1)]
+    height: Annotated[float, Field(gt=0, le=1)]
+
+    @model_validator(mode="after")
+    def inside_the_photo(self) -> "Crop":
+        # a little room for rounding in the browser
+        if self.x + self.width > 1.000001 or self.y + self.height > 1.000001:
+            raise ValueError("A crop must stay inside the photo.")
+        return self
+
+
 class ImageElement(ElementBase):
     type: Literal["image"]
     src: AssetSource
     corner_radius: Annotated[float, Field(ge=0, le=100_000)]
+    crop: Crop | None = None  # milestone 3e (S17); none = the whole photo
 
 
 class LineElement(ElementBase):

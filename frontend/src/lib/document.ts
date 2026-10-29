@@ -19,6 +19,19 @@ interface ElementBase {
   name?: string;
 }
 
+/** S16 text effects (milestone 3e). Offsets and blur are in px of the design. */
+export interface TextShadow {
+  color: Hex;
+  blur: number; // 0–200
+  offset_x: number;
+  offset_y: number;
+  opacity: number; // 0–1
+}
+export interface TextOutline {
+  color: Hex;
+  width: number; // > 0 – 100
+}
+
 export interface TextElement extends ElementBase {
   type: "text";
   text: string;
@@ -31,6 +44,8 @@ export interface TextElement extends ElementBase {
   align: "left" | "center" | "right" | "justify";
   letter_spacing: number;
   line_height: number;
+  shadow?: TextShadow | null;
+  outline?: TextOutline | null;
 }
 
 export interface ShapeElement extends ElementBase {
@@ -42,10 +57,19 @@ export interface ShapeElement extends ElementBase {
   corner_radius: number;
 }
 
+/** S17: the part of the photo that shows, as fractions (0–1) of the photo's own width and height. */
+export interface Crop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface ImageElement extends ElementBase {
   type: "image";
   src: { kind: "asset"; asset_id: string };
   corner_radius: number;
+  crop?: Crop | null; // none: the whole photo
 }
 
 /** A straight line across the middle of its box; width = length, height = thickness. */

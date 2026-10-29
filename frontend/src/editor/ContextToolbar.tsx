@@ -11,6 +11,7 @@ import {
   Check,
   Contrast,
   Copy,
+  Crop,
   Group,
   Italic,
   LetterText,
@@ -41,6 +42,7 @@ import {
   ungroupSelection,
 } from "./commands";
 import { FONTS, fontLabel } from "./fonts";
+import { EffectsButton } from "./EffectsPanel";
 import { PositionButton } from "./PositionPanel";
 import { activePage, useEditor, useEditorStore, type EditorStore } from "./store";
 
@@ -170,6 +172,7 @@ function TextControls({ store, texts }: { store: EditorStore; texts: TextElement
           />
         </Popover.Content>
       </Popover.Root>
+      <EffectsButton store={store} texts={texts} />
       <Divider />
     </>
   );
@@ -288,7 +291,30 @@ export function ContextToolbar() {
   const editing = useEditor((s) => s.editingId !== null);
   const page = useEditor(activePage);
   const pageNumber = useEditor((s) => s.activePage + 1);
+  const cropping = useEditor((s) => s.cropping !== null);
+  // the one selected photo has loaded (a missing photo can't be cropped)
+  const photoReady = useEditor((s) => {
+    const el = s.selectedIds.length === 1 ? s.content.pages[s.activePage].elements.find((x) => x.id === s.selectedIds[0]) : undefined;
+    return el?.type === "image" && !!s.assetUrls[el.src.asset_id];
+  });
   if (readOnly || editing) return null;
+
+  if (cropping) {
+    return (
+      <Bar label="Crop">
+        <span className="px-2 text-xs text-muted">Drag the frame or its handles</span>
+        <Button variant="ghost" size="sm" onClick={() => store.getState().resetCrop()}>
+          Reset
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => store.getState().finishCrop(false)}>
+          Cancel
+        </Button>
+        <Button variant="primary" size="sm" onClick={() => store.getState().finishCrop(true)}>
+          Done
+        </Button>
+      </Bar>
+    );
+  }
 
   const chosen = page.elements.filter((el) => selectedIds.includes(el.id));
   if (chosen.length === 0) {
@@ -339,6 +365,18 @@ export function ContextToolbar() {
       {texts.length === chosen.length && <TextControls store={store} texts={texts} />}
       {shapes.length === chosen.length && <ShapeControls store={store} shapes={shapes} />}
       {lines.length === chosen.length && <LineControls store={store} lines={lines} />}
+      {chosen.length === 1 && chosen[0].type === "image" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<Crop strokeWidth={1.75} className="size-4" aria-hidden />}
+          disabled={!photoReady}
+          title="Crop (or double-click the photo)"
+          onClick={() => store.getState().startCrop(chosen[0].id)}
+        >
+          Crop
+        </Button>
+      )}
       {canGroup && (
         <Button variant="ghost" size="sm" icon={<Group strokeWidth={1.75} className="size-4" aria-hidden />} onClick={() => groupSelection(store)} title="Group (Ctrl+G)">
           Group
