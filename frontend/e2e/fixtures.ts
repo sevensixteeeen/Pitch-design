@@ -31,9 +31,14 @@ export const test = base.extend<{ problems: string[] }>({
 
 export { expect };
 
-/** axe scan of what's on screen now; lists each rule broken and where. */
-export async function expectAccessible(page: Page) {
-  const { violations } = await new AxeBuilder({ page }).analyze();
+/**
+ * axe scan of what's on screen now; lists each rule broken and where. `only` scans one part (e.g. an
+ * open menu) without the page-level rules, which don't apply to a floating part on its own.
+ */
+export async function expectAccessible(page: Page, only?: string) {
+  let axe = new AxeBuilder({ page });
+  if (only) axe = axe.include(only).disableRules(["region", "page-has-heading-one", "landmark-one-main"]);
+  const { violations } = await axe.analyze();
   const found = violations.map((v) => `${v.id} (${v.impact}): ${v.help} @ ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(" | ")}`);
   expect(found, "axe accessibility violations").toEqual([]);
 }
@@ -193,4 +198,22 @@ export async function redPng(page: Page, width = 300, height = 200) {
     [width, height],
   );
   return Buffer.from(base64, "base64");
+}
+
+/** The colour at (x, y) of a PNG file, read back by the browser. */
+export async function pixel(page: Page, png: Buffer, x: number, y: number) {
+  return page.evaluate(
+    async ([b64, x, y]) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const c = document.createElement("canvas");
+      c.width = img.width;
+      c.height = img.height;
+      const ctx = c.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      return [...ctx.getImageData(Number(x), Number(y), 1, 1).data.slice(0, 3)];
+    },
+    [png.toString("base64"), x, y] as const,
+  );
 }

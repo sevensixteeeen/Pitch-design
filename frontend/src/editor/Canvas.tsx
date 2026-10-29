@@ -9,6 +9,7 @@ import { MAX_PAGES, type Element, type ImageElement, type LineElement, type Text
 import { cn } from "../lib/cn";
 import { IconButton } from "../components/ui/Button";
 import { commitText } from "./commands";
+import { CanvasMenu } from "./CanvasMenu";
 import { TextEditor } from "./TextEditor";
 import {
   bounds,
@@ -57,10 +58,11 @@ function tokens() {
 type Colours = ReturnType<typeof tokens>;
 
 /**
- * Draws one page (0-based) as an image at the design's real size, or smaller so its longest side is at most
- * `maxSide` px (thumbnails); returns a data URL. Set by <Canvas>.
+ * Draws one page (0-based) as an image at the design's real size, `times` bigger (the Download panel's
+ * 2× / 3×), or smaller so its longest side is at most `maxSide` px (thumbnails); returns a data URL.
+ * Set by <Canvas>.
  */
-export type ExportPage = (page: number, type: "image/png" | "image/jpeg", quality?: number, maxSide?: number) => string;
+export type ExportPage = (page: number, type: "image/png" | "image/jpeg", quality?: number, maxSide?: number, times?: number) => string;
 
 function useSize(ref: RefObject<HTMLDivElement | null>) {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -265,11 +267,13 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
   useLayoutEffect(() => {
     blocks.current[store.getState().activePage]?.scrollIntoView({ block: "center", inline: "center" });
   }, [store, scale]);
-  // after a page was added, duplicated or deleted, bring the active page into view
+  // after a page was added, duplicated or deleted, or a page was picked in the grid view, bring the
+  // active page into view
   const pageCount = pages.length;
+  const gridOpen = useEditor((s) => s.pageGrid);
   useLayoutEffect(() => {
-    blocks.current[store.getState().activePage]?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [store, pageCount]);
+    if (!gridOpen) blocks.current[store.getState().activePage]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [store, pageCount, gridOpen]);
 
   // Ctrl + wheel zooms (the listener must not be passive to stop the browser's own zoom)
   useEffect(() => {
@@ -505,12 +509,12 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
 
   // --- export: any page, at the design's real size ------------------------------------------------
   useEffect(() => {
-    exportRef.current = (page, type, quality, maxSide) => {
+    exportRef.current = (page, type, quality, maxSide, times = 1) => {
       const s = stages.current[page];
       if (!s || !scale) throw new Error("The page isn't ready yet.");
       // the selection box and guides are not part of the design (they only exist on the active page)
       const boxes = page === active ? [transformer.current, lockedBox.current] : [];
-      const pixelRatio = Math.min(1 / scale, maxSide ? maxSide / Math.max(pw, ph) : Infinity);
+      const pixelRatio = Math.min(times / scale, maxSide ? maxSide / Math.max(pw, ph) : Infinity);
       boxes.forEach((b) => b?.hide());
       try {
         return s.toDataURL({ x: M, y: M, width: pw, height: ph, pixelRatio, mimeType: type, quality });
@@ -524,168 +528,183 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
   }, [exportRef, scale, active, M, pw, ph]);
 
   return (
-    <div
-      ref={box}
-      tabIndex={0}
-      data-canvas
-      aria-label="Canvas. Arrow keys move the selection, Delete removes it, Enter edits selected text."
-      className="relative min-h-0 flex-1 overflow-auto bg-workspace outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
-      onMouseDown={(e) => {
-        // a click on the grey workspace (not a page) clears the selection
-        if (e.target === e.currentTarget || (e.target as HTMLElement).dataset.workspace !== undefined) store.getState().select([]);
-      }}
-    >
-      {scale > 0 && (
-        <div data-workspace className="mx-auto flex w-max flex-col" style={{ padding: colours.pad, gap: colours.gap }}>
-          {pages.map((page, i) => (
-            <section
-              key={page.id}
-              ref={(el) => {
-                blocks.current[i] = el;
-              }}
-              aria-label={`Page ${i + 1} of ${pages.length}`}
-            >
-              <PageHeader index={i} count={pages.length} active={i === active} readOnly={readOnly} width={pw} height={colours.labelH} />
-              {/* hidden from screen readers: the element list describes the page instead */}
-              <div aria-hidden className="relative" style={{ width: pw, height: ph }}>
-                {/* the page's shadow, behind the (transparent) canvas */}
-                <div className={cn("pointer-events-none absolute inset-0 shadow-page", i === active && pages.length > 1 && "ring-2 ring-accent")} />
-                {editing && i === active && (
-                  // outside Konva, so screen readers reach the text area
-                  <TextEditor
-                    key={editing.id}
-                    el={editing}
-                    left={editing.x * scale}
-                    top={editing.y * scale}
-                    scale={scale}
-                    onDone={(text) => {
-                      commitText(store, editing.id, text);
-                      focusCanvas();
-                    }}
-                  />
-                )}
-                <div className="absolute" style={{ left: -M, top: -M }}>
-                  <Stage
-                    ref={(st) => {
-                      stages.current[i] = st;
-                    }}
-                    width={pw + 2 * M}
-                    height={ph + 2 * M}
-                    onMouseDown={(e) => {
-                      focusCanvas();
-                      if (e.evt.button !== 0) return;
-                      if (e.target === e.target.getStage()) {
-                        store.getState().select([]); // the margin around the page
-                        return;
-                      }
-                      if (e.target.name() !== "page") return; // elements and handles handle themselves
-                      store.getState().setActivePage(i);
-                      startMarquee(i, toPage(i), e.evt.shiftKey);
-                    }}
-                  >
-                    <Layer>
-                      <Group x={M} y={M} scaleX={scale} scaleY={scale} clipX={0} clipY={0} clipWidth={pageW} clipHeight={pageH}>
-                        <Rect name="page" width={pageW} height={pageH} fill={page.background.color} />
-                        {page.elements.map((el) => (
-                          <Group
-                            key={el.id}
-                            id={el.id}
-                            {...placement(el)}
-                            onMouseDown={(e) => {
-                              e.cancelBubble = true;
-                              focusCanvas();
-                              if (e.evt.button !== 0) return;
-                              const s = store.getState();
-                              if (s.activePage !== i) {
-                                s.setActivePage(i); // a click on another page's element moves there
-                                s.select([el.id]);
-                              } else if (e.evt.shiftKey) {
-                                s.toggleSelect(el.id); // Shift-click adds or removes; it doesn't start a move
-                                return;
-                              } else if (!s.selectedIds.includes(el.id)) {
-                                s.select([el.id]);
-                              }
-                              if (!readOnly) startMove(i, toPage(i), el.id);
-                            }}
-                            onTap={() => {
-                              store.getState().setActivePage(i);
-                              store.getState().select([el.id]);
-                            }}
-                            onDblClick={() => {
-                              if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
-                            }}
-                            onDblTap={() => {
-                              if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
-                            }}
-                          >
-                            <ElementNode el={el} colours={colours} />
-                          </Group>
-                        ))}
-                      </Group>
-                      {i === active && (
-                        <>
-                          {/* guides and the marquee are drawn over everything, not clipped to the page */}
-                          <Group x={M} y={M} scaleX={scale} scaleY={scale} listening={false}>
-                            {guides.v.map((x) => (
-                              <Line key={`v${x}`} points={[x, 0, x, pageH]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
-                            ))}
-                            {guides.h.map((y) => (
-                              <Line key={`h${y}`} points={[0, y, pageW, y]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
-                            ))}
-                            {guides.gaps.map((g) => {
-                              // an equal gap: a line across it and its size in px (components.md, SmartGuides)
-                              const length = Math.round(Math.hypot(g.x2 - g.x1, g.y2 - g.y1));
-                              return (
-                                <Group key={`${g.x1},${g.y1},${g.x2},${g.y2}`}>
-                                  <Line points={[g.x1, g.y1, g.x2, g.y2]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
-                                  <Label x={(g.x1 + g.x2) / 2} y={(g.y1 + g.y2) / 2} scaleX={1 / scale} scaleY={1 / scale}>
-                                    <Tag fill={colours.guide} cornerRadius={3} />
-                                    <Text text={`${length}`} fontSize={11} padding={3} fill={colours.onGuide} offsetX={8} offsetY={8} />
-                                  </Label>
-                                </Group>
-                              );
-                            })}
-                            {marquee && <Rect {...marquee} stroke={colours.selection} strokeWidth={1} strokeScaleEnabled={false} dash={[4, 4]} />}
-                          </Group>
-                          <Transformer
-                            ref={lockedBox}
-                            enabledAnchors={[]}
-                            rotateEnabled={false}
-                            resizeEnabled={false}
-                            borderStroke={colours.selection}
-                            borderStrokeWidth={1.5}
-                            borderDash={[4, 3]}
-                            ignoreStroke
-                            listening={false}
-                          />
-                          <Transformer
-                            ref={transformer}
-                            enabledAnchors={anchors}
-                            keepRatio={keepRatio}
-                            rotationSnaps={ROTATION_SNAPS}
-                            rotationSnapTolerance={5}
-                            rotateAnchorOffset={24}
-                            anchorSize={8}
-                            anchorStroke={colours.selection}
-                            anchorFill={colours.handleFill}
-                            borderStroke={colours.selection}
-                            borderStrokeWidth={1.5}
-                            ignoreStroke
-                            boundBoxFunc={(oldBox, newBox) => (Math.max(newBox.width, newBox.height) < 5 ? oldBox : newBox)}
-                            anchorDragBoundFunc={(_old, pos, evt) => snapAnchor(pos, evt as { altKey?: boolean } | undefined)}
-                            onTransformStart={onTransformStart}
-                            onTransformEnd={onTransformEnd}
-                          />
-                        </>
-                      )}
-                    </Layer>
-                  </Stage>
+    <CanvasMenu>
+      <div
+        ref={box}
+        tabIndex={0}
+        data-canvas
+        aria-label="Canvas. Arrow keys move the selection, Delete removes it, Enter edits selected text."
+        className="relative min-h-0 flex-1 overflow-auto bg-workspace outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+        onMouseDown={(e) => {
+          // a click on the grey workspace (not a page) clears the selection
+          if (e.target === e.currentTarget || (e.target as HTMLElement).dataset.workspace !== undefined) store.getState().select([]);
+        }}
+      >
+        {scale > 0 && (
+          <div data-workspace className="mx-auto flex w-max flex-col" style={{ padding: colours.pad, gap: colours.gap }}>
+            {pages.map((page, i) => (
+              <section
+                key={page.id}
+                ref={(el) => {
+                  blocks.current[i] = el;
+                }}
+                aria-label={`Page ${i + 1} of ${pages.length}`}
+              >
+                <PageHeader index={i} count={pages.length} active={i === active} readOnly={readOnly} width={pw} height={colours.labelH} />
+                {/* hidden from screen readers: the element list describes the page instead */}
+                <div aria-hidden className="relative" style={{ width: pw, height: ph }}>
+                  {/* the page's shadow, behind the (transparent) canvas */}
+                  <div className={cn("pointer-events-none absolute inset-0 shadow-page", i === active && pages.length > 1 && "ring-2 ring-accent")} />
+                  {editing && i === active && (
+                    // outside Konva, so screen readers reach the text area
+                    <TextEditor
+                      key={editing.id}
+                      el={editing}
+                      left={editing.x * scale}
+                      top={editing.y * scale}
+                      scale={scale}
+                      onDone={(text) => {
+                        commitText(store, editing.id, text);
+                        focusCanvas();
+                      }}
+                    />
+                  )}
+                  <div className="absolute" style={{ left: -M, top: -M }}>
+                    <Stage
+                      ref={(st) => {
+                        stages.current[i] = st;
+                      }}
+                      width={pw + 2 * M}
+                      height={ph + 2 * M}
+                      onMouseDown={(e) => {
+                        focusCanvas();
+                        if (e.evt.button !== 0) return;
+                        if (e.target === e.target.getStage()) {
+                          store.getState().select([]); // the margin around the page
+                          return;
+                        }
+                        if (e.target.name() !== "page") return; // elements and handles handle themselves
+                        store.getState().setActivePage(i);
+                        startMarquee(i, toPage(i), e.evt.shiftKey);
+                      }}
+                      onContextMenu={(e) => {
+                        // right-click on the page or its margin: nothing selected, so the menu offers paste
+                        if (e.target !== e.target.getStage() && e.target.name() !== "page") return;
+                        store.getState().setActivePage(i);
+                        store.getState().select([]);
+                      }}
+                    >
+                      <Layer>
+                        <Group x={M} y={M} scaleX={scale} scaleY={scale} clipX={0} clipY={0} clipWidth={pageW} clipHeight={pageH}>
+                          <Rect name="page" width={pageW} height={pageH} fill={page.background.color} />
+                          {page.elements.map((el) => (
+                            <Group
+                              key={el.id}
+                              id={el.id}
+                              {...placement(el)}
+                              onMouseDown={(e) => {
+                                e.cancelBubble = true;
+                                focusCanvas();
+                                if (e.evt.button !== 0) return;
+                                const s = store.getState();
+                                if (s.activePage !== i) {
+                                  s.setActivePage(i); // a click on another page's element moves there
+                                  s.select([el.id]);
+                                } else if (e.evt.shiftKey) {
+                                  s.toggleSelect(el.id); // Shift-click adds or removes; it doesn't start a move
+                                  return;
+                                } else if (!s.selectedIds.includes(el.id)) {
+                                  s.select([el.id]);
+                                }
+                                if (!readOnly) startMove(i, toPage(i), el.id);
+                              }}
+                              onContextMenu={(e) => {
+                                // right-click selects what's under the pointer (keeping a selection it's part of)
+                                e.cancelBubble = true;
+                                const s = store.getState();
+                                if (s.activePage !== i) s.setActivePage(i);
+                                if (!store.getState().selectedIds.includes(el.id)) store.getState().select([el.id]);
+                              }}
+                              onTap={() => {
+                                store.getState().setActivePage(i);
+                                store.getState().select([el.id]);
+                              }}
+                              onDblClick={() => {
+                                if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                              }}
+                              onDblTap={() => {
+                                if (el.type === "text" && !readOnly && !el.locked) store.getState().setEditing(el.id);
+                              }}
+                            >
+                              <ElementNode el={el} colours={colours} />
+                            </Group>
+                          ))}
+                        </Group>
+                        {i === active && (
+                          <>
+                            {/* guides and the marquee are drawn over everything, not clipped to the page */}
+                            <Group x={M} y={M} scaleX={scale} scaleY={scale} listening={false}>
+                              {guides.v.map((x) => (
+                                <Line key={`v${x}`} points={[x, 0, x, pageH]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
+                              ))}
+                              {guides.h.map((y) => (
+                                <Line key={`h${y}`} points={[0, y, pageW, y]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
+                              ))}
+                              {guides.gaps.map((g) => {
+                                // an equal gap: a line across it and its size in px (components.md, SmartGuides)
+                                const length = Math.round(Math.hypot(g.x2 - g.x1, g.y2 - g.y1));
+                                return (
+                                  <Group key={`${g.x1},${g.y1},${g.x2},${g.y2}`}>
+                                    <Line points={[g.x1, g.y1, g.x2, g.y2]} stroke={colours.guide} strokeWidth={1} strokeScaleEnabled={false} />
+                                    <Label x={(g.x1 + g.x2) / 2} y={(g.y1 + g.y2) / 2} scaleX={1 / scale} scaleY={1 / scale}>
+                                      <Tag fill={colours.guide} cornerRadius={3} />
+                                      <Text text={`${length}`} fontSize={11} padding={3} fill={colours.onGuide} offsetX={8} offsetY={8} />
+                                    </Label>
+                                  </Group>
+                                );
+                              })}
+                              {marquee && <Rect {...marquee} stroke={colours.selection} strokeWidth={1} strokeScaleEnabled={false} dash={[4, 4]} />}
+                            </Group>
+                            <Transformer
+                              ref={lockedBox}
+                              enabledAnchors={[]}
+                              rotateEnabled={false}
+                              resizeEnabled={false}
+                              borderStroke={colours.selection}
+                              borderStrokeWidth={1.5}
+                              borderDash={[4, 3]}
+                              ignoreStroke
+                              listening={false}
+                            />
+                            <Transformer
+                              ref={transformer}
+                              enabledAnchors={anchors}
+                              keepRatio={keepRatio}
+                              rotationSnaps={ROTATION_SNAPS}
+                              rotationSnapTolerance={5}
+                              rotateAnchorOffset={24}
+                              anchorSize={8}
+                              anchorStroke={colours.selection}
+                              anchorFill={colours.handleFill}
+                              borderStroke={colours.selection}
+                              borderStrokeWidth={1.5}
+                              ignoreStroke
+                              boundBoxFunc={(oldBox, newBox) => (Math.max(newBox.width, newBox.height) < 5 ? oldBox : newBox)}
+                              anchorDragBoundFunc={(_old, pos, evt) => snapAnchor(pos, evt as { altKey?: boolean } | undefined)}
+                              onTransformStart={onTransformStart}
+                              onTransformEnd={onTransformEnd}
+                            />
+                          </>
+                        )}
+                      </Layer>
+                    </Stage>
+                  </div>
                 </div>
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
-    </div>
+              </section>
+            ))}
+          </div>
+        )}
+      </div>
+    </CanvasMenu>
   );
 }

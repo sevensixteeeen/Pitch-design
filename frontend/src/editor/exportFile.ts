@@ -10,6 +10,16 @@ export function fileName(title: string, type: FileType, page?: number) {
   return `${clean}${page === undefined ? "" : ` - page ${page}`}.${type}`;
 }
 
+// Bigger images need a lot of memory while they're made (4 bytes a pixel, several copies), and browsers
+// refuse canvases past about 16,000 px a side. Sizes over these limits aren't offered.
+const MAX_SIDE = 16_000;
+const MAX_PIXELS = 40_000_000;
+
+/** The sizes this design can be downloaded at. 1× is always there (a design is at most 25 million px). */
+export function sizesFor(width: number, height: number): number[] {
+  return [1, 2, 3].filter((t) => t === 1 || (Math.max(width, height) * t <= MAX_SIDE && width * height * t * t <= MAX_PIXELS));
+}
+
 export function saveFile(url: string, name: string) {
   const link = document.createElement("a");
   link.href = url;

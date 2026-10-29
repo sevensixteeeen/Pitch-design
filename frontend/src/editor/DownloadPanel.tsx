@@ -1,4 +1,4 @@
-// S20 Download panel (components.md, Popover): file type, page or pages, JPG quality.
+// S20 Download panel (components.md, Popover): file type, page or pages, size (1× / 2× / 3×), JPG quality.
 // States: default, preparing, failed. Done closes the panel.
 import { useState, type RefObject } from "react";
 import { Download } from "lucide-react";
@@ -6,7 +6,7 @@ import { Button } from "../components/ui/Button";
 import { Checkbox, SelectField, Slider } from "../components/ui/inputs";
 import { Popover } from "../components/ui/overlays";
 import type { ExportPage } from "./Canvas";
-import { buildPdf, fileName, saveFile, type FileType } from "./exportFile";
+import { buildPdf, fileName, saveFile, sizesFor, type FileType } from "./exportFile";
 import { useEditor } from "./store";
 
 const TYPES: { value: FileType; label: string }[] = [
@@ -23,6 +23,7 @@ export function DownloadPanel({ exportRef }: { exportRef: RefObject<ExportPage |
   const [type, setType] = useState<FileType>("png");
   const [page, setPage] = useState(activePage);
   const [quality, setQuality] = useState(90);
+  const [times, setTimes] = useState(1);
   const [chosen, setChosen] = useState<number[] | null>(null); // null = all pages
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +31,8 @@ export function DownloadPanel({ exportRef }: { exportRef: RefObject<ExportPage |
   const all = Array.from({ length: pageCount }, (_, i) => i);
   const pdfPages = (chosen ?? all).filter((i) => i < pageCount);
   const multi = pageCount > 1;
+  const sizes = sizesFor(design.width_px, design.height_px);
+  const size = sizes.includes(times) ? times : 1;
 
   const onOpenChange = (next: boolean) => {
     if (busy) return; // stays open while the file is being made
@@ -52,7 +55,7 @@ export function DownloadPanel({ exportRef }: { exportRef: RefObject<ExportPage |
         saveFile(url, fileName(design.title, "pdf"));
         setTimeout(() => URL.revokeObjectURL(url), 10_000);
       } else {
-        const url = exportPage(page, type === "png" ? "image/png" : "image/jpeg", quality / 100);
+        const url = exportPage(page, type === "png" ? "image/png" : "image/jpeg", quality / 100, undefined, size);
         saveFile(url, fileName(design.title, type, multi ? page + 1 : undefined));
       }
       setOpen(false);
@@ -84,6 +87,19 @@ export function DownloadPanel({ exportRef }: { exportRef: RefObject<ExportPage |
             onChange={(v) => setPage(Number(v))}
             size="sm"
           />
+        )}
+
+        {type !== "pdf" && (
+          <div className="flex flex-col gap-1">
+            <SelectField
+              label="Size"
+              value={String(size)}
+              options={sizes.map((t) => ({ value: String(t), label: `${t}× (${design.width_px * t} × ${design.height_px * t} px)` }))}
+              onChange={(v) => setTimes(Number(v))}
+              size="sm"
+            />
+            {sizes.length < 3 && <p className="text-xs text-muted">This design is too large for bigger sizes.</p>}
+          </div>
         )}
 
         {type === "jpg" && <Slider label="Quality" min={10} max={100} step={5} unit="%" value={quality} onChange={setQuality} />}

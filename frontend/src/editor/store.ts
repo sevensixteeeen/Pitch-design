@@ -48,6 +48,8 @@ export interface EditorState {
   editingId: string | null;
   /** the page being edited (index into content.pages); selection is always on this page */
   activePage: number;
+  /** the pages grid view (S18) is showing instead of the canvas */
+  pageGrid: boolean;
 
   /**
    * Change the active page's elements. One undo step, unless `gesture` is set: then every change
@@ -67,6 +69,9 @@ export interface EditorState {
   duplicatePage(index: number): void;
   /** Refused for the last remaining page (the server refuses it too). */
   deletePage(index: number): void;
+  /** Moves a page to position `to`; the page being edited stays the one being edited. */
+  movePage(from: number, to: number): void;
+  setPageGrid(open: boolean): void;
   endGesture(): void;
   addElement(el: Element, announcement: string): void;
   /** Something to tell screen readers when nothing changed (e.g. "That element is locked"). */
@@ -138,6 +143,7 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
     view: { scale: 1, fit: 1, min: 0.1, max: 4 },
     editingId: null,
     activePage: 0,
+    pageGrid: false,
 
     change: (fn, opts) => get().changePage((page) => ({ ...page, elements: fn(page.elements) }), opts),
     setEditing: (editingId) => set({ editingId }),
@@ -168,6 +174,21 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
         const activePage = Math.min(s.activePage > index ? s.activePage - 1 : s.activePage, pages.length - 1);
         return commit(s, { ...s.content, pages }, { activePage, selectedIds: [], announcement: `Deleted page ${index + 1}` });
       }),
+    movePage: (from, to) =>
+      set((s) => {
+        const n = s.content.pages.length;
+        if (s.readOnly || from === to || from < 0 || from >= n || to < 0 || to >= n) return s;
+        const pages = [...s.content.pages];
+        const [moved] = pages.splice(from, 1);
+        pages.splice(to, 0, moved);
+        const activeId = s.content.pages[s.activePage].id;
+        return commit(s, { ...s.content, pages }, {
+          activePage: pages.findIndex((p) => p.id === activeId),
+          announcement: `Moved page ${from + 1} to position ${to + 1}`,
+        });
+      }),
+    // opening the grid drops the selection: the canvas's keys and toolbar don't apply there
+    setPageGrid: (pageGrid) => set(pageGrid ? { pageGrid, selectedIds: [], editingId: null } : { pageGrid }),
     changePage: (fn, opts = {}) =>
       set((s) => {
         if (s.readOnly) return s;

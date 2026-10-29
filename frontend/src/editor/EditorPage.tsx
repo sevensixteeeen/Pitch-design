@@ -13,6 +13,7 @@ import { Canvas, type ExportPage } from "./Canvas";
 import { describeElement } from "./commands";
 import { loadFonts } from "./fonts";
 import { ContextToolbar } from "./ContextToolbar";
+import { PageGrid } from "./PageGrid";
 import { SidePanel } from "./SidePanel";
 import { SmallScreenNote, TopBar } from "./TopBar";
 import { EditorContext, activeElements, createEditorStore, useEditor, useEditorStore, type EditorStore } from "./store";
@@ -94,6 +95,7 @@ function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => v
   useThumbnail(store, exportRef);
   const readOnly = useEditor((s) => s.readOnly);
   const designId = useEditor((s) => s.design.id);
+  const pageGrid = useEditor((s) => s.pageGrid);
 
   const restore = async () => {
     try {
@@ -118,8 +120,14 @@ function Editor({ store, onRestored }: { store: EditorStore; onRestored: () => v
       <div className="flex min-h-0 flex-1">
         <SidePanel />
         <main className="relative flex min-w-0 flex-1 flex-col" aria-label="Page">
-          <ContextToolbar />
-          <Canvas exportRef={exportRef} />
+          {!pageGrid && <ContextToolbar />}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            {/* under the grid the canvas stays (its pages draw the grid's pictures) but can't be reached */}
+            <div className="flex min-h-0 flex-1 flex-col" inert={pageGrid}>
+              <Canvas exportRef={exportRef} />
+            </div>
+            {pageGrid && <PageGrid exportRef={exportRef} />}
+          </div>
           <BottomBar />
           <ElementList />
         </main>

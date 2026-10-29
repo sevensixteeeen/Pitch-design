@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from "react";
-import { Dialog as RDialog, DropdownMenu, Popover as RPopover } from "radix-ui";
+import { ContextMenu as RContextMenu, Dialog as RDialog, DropdownMenu, Popover as RPopover } from "radix-ui";
 import { X } from "lucide-react";
 import { cn, focusRing } from "../../lib/cn";
 
@@ -106,6 +106,32 @@ export const Menu = {
   },
   Separator() {
     return <DropdownMenu.Separator className="my-1 h-px bg-border" />;
+  },
+};
+
+/** The right-click menu: same look as Menu, opened where the pointer is. */
+export const ContextMenu = {
+  Root: RContextMenu.Root,
+  Trigger: RContextMenu.Trigger,
+  Content({ children, label }: { children: ReactNode; label: string }) {
+    return (
+      <RContextMenu.Portal>
+        <RContextMenu.Content aria-label={label} className={menuContent}>
+          {children}
+        </RContextMenu.Content>
+      </RContextMenu.Portal>
+    );
+  },
+  Item({ children, onSelect, shortcut, danger, disabled }: { children: ReactNode; onSelect?: () => void; shortcut?: string; danger?: boolean; disabled?: boolean }) {
+    return (
+      <RContextMenu.Item onSelect={onSelect} disabled={disabled} className={cn(menuItem, danger && "text-danger")}>
+        {children}
+        {shortcut && <span className="ml-auto pl-4 text-xs text-muted">{shortcut}</span>}
+      </RContextMenu.Item>
+    );
+  },
+  Separator() {
+    return <RContextMenu.Separator className="my-1 h-px bg-border" />;
   },
 };
 

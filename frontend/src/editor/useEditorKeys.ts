@@ -3,6 +3,7 @@
 // sliders, tabs and toolbars, which use them for their own navigation.
 import { useEffect } from "react";
 import { deleteSelection, duplicateSelection, groupSelection, moveLayers, nudgeSelection, selectAll, styleText, ungroupSelection } from "./commands";
+import { copySelection, cutSelection, hasClipboard, paste } from "./clipboard";
 import { activeElements, stepZoom, type EditorStore } from "./store";
 
 const TYPING = "input, textarea, select, [contenteditable='true']";
@@ -27,6 +28,11 @@ export function useEditorKeys(store: EditorStore) {
         else if ((key === "z" && e.shiftKey) || key === "y") run(s.redo);
         else if (key === "d") run(() => duplicateSelection(store));
         else if (key === "a" && !inWidget) run(() => selectAll(store));
+        // copy / cut / paste only take over when there's something of ours to act on;
+        // otherwise the browser keeps its usual job
+        else if (key === "c" && !inWidget && s.selectedIds.length) run(() => copySelection(store));
+        else if (key === "x" && !inWidget && s.selectedIds.length && !s.readOnly) run(() => cutSelection(store));
+        else if (key === "v" && !inWidget && hasClipboard() && !s.readOnly) run(() => paste(store));
         else if (key === "=" || key === "+") run(() => s.setZoom(stepZoom(s.view, 1)));
         else if (key === "-") run(() => s.setZoom(stepZoom(s.view, -1)));
         else if (key === "0") run(() => s.setZoom("fit"));
