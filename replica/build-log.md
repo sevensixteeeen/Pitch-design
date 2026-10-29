@@ -416,6 +416,19 @@ Supabase (open the link of a design deleted forever). Parity 71.5 → 93.4 over 
 rows (milestone 4). Note: "Search your own designs" is still `no` in the matrix, but Home has had a working search
 box since milestone 1; worth a check and an update.
 
+## Live check after milestone 3 (2026-10-29)
+
+You ran it on your real Supabase with both servers up: log in with the new password; a design from a template,
+reloaded; a photo cropped and a text shadow, saved and reloaded; a folder with a design in it; a design deleted
+forever, whose old link showed "We can't find that page"; Home search. All worked. You then deleted the test
+designs and folders, so a totals check afterwards finds none of them (only one template design left in Trash).
+
+Found on the way: BUG-010 (fixed in 573cabd). The API's startup Trash clean-up ran on the live database and
+deleted nothing, as expected.
+
+Feature matrix: "Not found / no access page" and "Search your own designs" → yes (search had worked since
+milestone 1; its row was never updated).
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

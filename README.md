@@ -13,7 +13,7 @@ them, and download the result as PNG, JPG or PDF. Built step by step with the re
 ## Status: milestones 1–3 done (2026-10-29)
 
 - **30 of 30 must-have** and **all 14 should-have** features are built (`replica/features.csv`).
-- Feature parity with the original's core editor: **93.4 / 100** (`replica-diff`).
+- Feature parity with the original's core editor: **94.9 / 100** (`replica-diff`).
 - Checked by **90 API tests** and **63 end-to-end tests** in a real browser (Playwright, with an axe
   accessibility scan of every screen). Every bug found is written up in `replica/bugs.md` (10 so far, all fixed).
 - Tried live on Supabase: sign up, password reset by email, create, autosave, upload a photo, place it and

@@ -43,14 +43,14 @@ Trash with restore and 30-day purge,projects,should,yes,yes,S07 [help] | backend
 Keyboard shortcuts (copy paste nudge delete),editor,should,yes,yes,"[3p] list - verify | 2a: checked in the browser 2026-10-27 (fake data; saving uses the live-verified autosave): nudge (Shift = 10 px); delete; duplicate; select all; undo; zoom; layers; Escape. Copy/paste not yet | 2b-1 adds Enter to edit text and Ctrl+B / Ctrl+I / Ctrl+U. Copy/paste not yet | 3c 2026-10-29: Ctrl+C / Ctrl+X / Ctrl+V added (a clipboard shared by every design in the tab, photos included); e2e editor-extras"
 Right-click context menu,editor,should,yes,yes,"S08 | 3c 2026-10-29: right-click selects what's under the pointer; copy, cut, paste, duplicate, delete, layer order, group / ungroup, lock; on empty space paste and select all; e2e editor-extras"
 Export scale (1x 2x 3x),export,should,yes,yes,"S20 [help] - paid in original | 3c 2026-10-29: Size 1x / 2x / 3x for PNG and JPG; sizes past 16,000 px a side or 40 million px aren't offered, with a note; e2e editor-extras (3240 x 3240 PNG)"
-Not found / no access page,editor,should,yes,partial,S24 - deleted design or someone else's design | M1 S24 for unknown pages and missing designs; fake data only; live Supabase pending
+Not found / no access page,editor,should,yes,yes,"S24 - deleted design or someone else's design | M1 S24 for unknown pages and missing designs; fake data only; live Supabase pending | live on Supabase 2026-10-29 (checked by you): a design deleted forever, its old link shows ""We can't find that page"""
 Sign in with Google,onboarding,could,yes,no,OAuth
 Transparent PNG export,export,could,yes,no,[help] paid in original
 Version history and restore,editor,could,yes,no,S21 [help] paid in original
 Resize design to another size (copy and resize),editor,could,yes,no,S22 - paid Magic Resize in original
 Curved text,text,could,yes,no,S16 [3p]
 Image corner radius and border,uploads,could,yes,no,[3p]
-Search your own designs,projects,could,yes,no,S02 SearchInput | backend: q= title search (ilike) done
+Search your own designs,projects,could,yes,yes,S02 SearchInput | backend: q= title search (ilike) done | Home has had title search since M1 (fake data and live); live on Supabase 2026-10-29 (checked by you)
 Account settings and delete account,account,could,yes,partial,S23 | backend: DELETE /api/me done and tested; S23 screen pending
 Canva template library,templates,skip,yes,skip,owned by Canva and its creators - use our own templates
 Stock photos / graphics / video / audio,elements,skip,yes,skip,licensed content - optional later via Unsplash/Pexels API under their terms
