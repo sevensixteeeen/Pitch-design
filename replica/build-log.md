@@ -429,6 +429,21 @@ deleted nothing, as expected.
 Feature matrix: "Not found / no access page" and "Search your own designs" → yes (search had worked since
 milestone 1; its row was never updated).
 
+## Pitch's own identity (2026-10-29, branch `build/brand-ember`)
+
+You asked for Pitch to have its own soul. Two directions were drawn (`brand/preview.png`); you chose **Ember**.
+Everything is in `replica/brand.md`: the P-and-spark logo, the palette (ember, paper, ink, marigold; danger moved to
+crimson-rose so it can't be mixed up with ember; the canvas selection stays blue), Space Grotesk headings, the voice.
+
+In the app: new token values (28 pairs, 0 failing AA after one fix: the first blush was too dark for ember text), the
+favicon, the wordmark in the sidebar (a link to Home named "Pitch"), the mark as the editor's Home button, a brand panel
+with our own illustration and the tagline on the login screen (wide screens), the paper background behind the main
+screens (secondary buttons became white so they don't vanish into it), Space Grotesk loaded app-wide. No new packages.
+
+Checks: build; 63 end-to-end tests (one test confused the new logo link, first named "Pitch, Home", with the Home
+link: renamed "Pitch"); two load timeouts on a busy laptop passed 3 out of 3 when rerun. Screenshots looked at (login,
+Home, editor, a 390 px phone). Brand sweep: no leftovers that users can see (details in `brand.md`).
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

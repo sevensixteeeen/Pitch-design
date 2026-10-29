@@ -1,0 +1,6 @@
+{
+  "name": "Pitch",
+  "avoid": ["Canva"],
+  "domains": ["canva.com"],
+  "colors": ["#8b3dff", "#7d2ae8", "#00c4cc"]
+}

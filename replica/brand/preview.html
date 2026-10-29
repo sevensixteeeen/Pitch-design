@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pitch identity: two directions</title>
+<style>
+  @font-face { font-family: "Space Grotesk"; src: url("../../frontend/node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 300 700; }
+  @font-face { font-family: "Inter"; src: url("../../frontend/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: "Inter", sans-serif; background: #ece9e4; color: #1f1b16; padding: 32px; }
+  h1 { font: 700 26px "Space Grotesk"; margin-bottom: 4px; }
+  .lead { color: #665e55; margin-bottom: 24px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .dir { border-radius: 16px; padding: 24px; background: var(--paper); }
+  .dir h2 { font: 700 20px "Space Grotesk"; } .dir .tag { color: var(--muted); font-size: 14px; margin: 4px 0 20px; }
+  .lockup { display: flex; align-items: center; gap: 14px; }
+  .lockup img { width: 56px; height: 56px; }
+  .word { font: 700 48px/1 "Space Grotesk"; letter-spacing: -0.03em; color: var(--text); }
+  .word b { color: var(--accent); font-weight: 700; }
+  .sizes { display: flex; align-items: end; gap: 16px; margin: 20px 0; color: var(--muted); font-size: 12px; }
+  .sizes div { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .swatches { display: flex; gap: 8px; margin-bottom: 20px; }
+  .sw { width: 92px; } .sw i { display: block; height: 44px; border-radius: 8px; border: 1px solid rgba(0,0,0,.08); }
+  .sw span { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .mock { display: grid; grid-template-columns: 170px 1fr; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #fff; height: 330px; }
+  .side { background: #fff; border-right: 1px solid var(--border); padding: 14px 10px; }
+  .side .brand { display: flex; align-items: center; gap: 8px; font: 700 20px "Space Grotesk"; letter-spacing: -0.02em; padding: 0 6px 14px; }
+  .side .brand img { width: 26px; height: 26px; }
+  .nav { padding: 8px 10px; border-radius: 8px; font-size: 13px; margin-bottom: 2px; }
+  .nav.on { background: var(--soft); color: var(--accent); font-weight: 600; }
+  .main { background: var(--surface); padding: 18px; }
+  .main h3 { font: 700 22px "Space Grotesk"; letter-spacing: -0.02em; display: flex; justify-content: space-between; align-items: center; }
+  .btn { font: 600 13px "Inter"; background: var(--btn); color: #fff; padding: 9px 14px; border-radius: 8px; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+  .thumb { height: 120px; border-radius: 6px; background: var(--workspace); display: flex; align-items: center; justify-content: center; }
+  .page { width: 70px; height: 92px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.12); position: relative; overflow: hidden; }
+  .card b { display: block; font-size: 12px; margin-top: 8px; } .card small { color: var(--muted); font-size: 11px; }
+  .ember { --paper: #faf7f2; --surface: #f6f2ec; --workspace: #ede8e0; --border: #e5dfd6; --text: #1f1b16; --muted: #665e55; --accent: #c8401a; --btn: #c8401a; --soft: #fbe9e2; }
+  .ink { --paper: #f7f7fa; --surface: #f3f3f7; --workspace: #e7e7ee; --border: #dedee8; --text: #1d1b2f; --muted: #5b5a6e; --accent: #1d1b2f; --btn: #1d1b2f; --soft: #fdf1d6; }
+</style>
+</head>
+<body>
+  <h1>Pitch: two identity directions</h1>
+  <p class="lead">Same logo idea (a bold P with a spark: an idea being pitched), two colour moods. Neither uses purple, turquoise, gradients or script lettering.</p>
+  <div class="cols">
+    <section class="dir ember">
+      <h2>A · Ember (recommended)</h2>
+      <p class="tag">Warm and confident: ember red-orange, paper neutrals, ink text, a marigold spark.</p>
+      <div class="lockup"><img src="logo-mark-ember.svg" alt=""><span class="word">pitch</span></div>
+      <div class="sizes"><div><img src="logo-mark-ember.svg" width="16" alt="">16 px</div><div><img src="logo-mark-ember.svg" width="32" alt="">32 px</div><div><img src="logo-mark-ember.svg" width="64" alt="">64 px</div></div>
+      <div class="swatches">
+        <div class="sw"><i style="background:#c8401a"></i><span>Ember #c8401a</span></div>
+        <div class="sw"><i style="background:#1f1b16"></i><span>Ink #1f1b16</span></div>
+        <div class="sw"><i style="background:#f2a900"></i><span>Marigold #f2a900</span></div>
+        <div class="sw"><i style="background:#f6f2ec"></i><span>Paper #f6f2ec</span></div>
+        <div class="sw"><i style="background:#fbe9e2"></i><span>Blush #fbe9e2</span></div>
+      </div>
+      <div class="mock">
+        <div class="side"><div class="brand"><img src="logo-mark-ember.svg" alt="">pitch</div><div class="nav on">Home</div><div class="nav">Projects</div><div class="nav">Templates</div><div class="nav">Trash</div></div>
+        <div class="main"><h3>Hi! What will you make? <span class="btn">+ Create a design</span></h3>
+          <div class="cards">
+            <div class="card"><div class="thumb"><div class="page" style="background:#fff4d6"><div style="position:absolute;right:-12px;top:-12px;width:44px;height:44px;border-radius:50%;background:#ffb703"></div><div style="position:absolute;left:6px;top:30px;font:700 15px 'Space Grotesk';color:#e63946">BIG<br>SALE</div></div></div><b>Weekend sale</b><small>Edited just now</small></div>
+            <div class="card"><div class="thumb"><div class="page" style="background:#264653"><div style="position:absolute;inset:16px;border-radius:50%;background:#2a9d8f"></div></div></div><b>Grand opening</b><small>Edited yesterday</small></div>
+            <div class="card"><div class="thumb"><div class="page"></div></div><b>Untitled design</b><small>Edited 2 days ago</small></div>
+          </div></div>
+      </div>
+    </section>
+    <section class="dir ink">
+      <h2>B · Ink</h2>
+      <p class="tag">Calm and serious: deep ink buttons, cool neutrals, marigold highlights.</p>
+      <div class="lockup"><img src="logo-mark-ink.svg" alt=""><span class="word">pitch</span></div>
+      <div class="sizes"><div><img src="logo-mark-ink.svg" width="16" alt="">16 px</div><div><img src="logo-mark-ink.svg" width="32" alt="">32 px</div><div><img src="logo-mark-ink.svg" width="64" alt="">64 px</div></div>
+      <div class="swatches">
+        <div class="sw"><i style="background:#1d1b2f"></i><span>Ink #1d1b2f</span></div>
+        <div class="sw"><i style="background:#f2a900"></i><span>Marigold #f2a900</span></div>
+        <div class="sw"><i style="background:#5b5a6e"></i><span>Slate #5b5a6e</span></div>
+        <div class="sw"><i style="background:#f3f3f7"></i><span>Mist #f3f3f7</span></div>
+        <div class="sw"><i style="background:#fdf1d6"></i><span>Cream #fdf1d6</span></div>
+      </div>
+      <div class="mock">
+        <div class="side"><div class="brand"><img src="logo-mark-ink.svg" alt="">pitch</div><div class="nav on">Home</div><div class="nav">Projects</div><div class="nav">Templates</div><div class="nav">Trash</div></div>
+        <div class="main"><h3>Hi! What will you make? <span class="btn">+ Create a design</span></h3>
+          <div class="cards">
+            <div class="card"><div class="thumb"><div class="page" style="background:#fff4d6"><div style="position:absolute;right:-12px;top:-12px;width:44px;height:44px;border-radius:50%;background:#ffb703"></div><div style="position:absolute;left:6px;top:30px;font:700 15px 'Space Grotesk';color:#e63946">BIG<br>SALE</div></div></div><b>Weekend sale</b><small>Edited just now</small></div>
+            <div class="card"><div class="thumb"><div class="page" style="background:#264653"><div style="position:absolute;inset:16px;border-radius:50%;background:#2a9d8f"></div></div></div><b>Grand opening</b><small>Edited yesterday</small></div>
+            <div class="card"><div class="thumb"><div class="page"></div></div><b>Untitled design</b><small>Edited 2 days ago</small></div>
+          </div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
