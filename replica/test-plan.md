@@ -82,7 +82,7 @@ in a later milestone).
 
 | case | type | steps | expected | auto | result |
 | --- | --- | --- | --- | --- | --- |
-| F04-H1 | happy | upload a PNG, place it, crop, lower transparency | image on page, saved | api: `test_three_step_upload`; e2e | pass (API); upload + place + PNG pass: e2e `f04-photos`; crop not built (milestone 3) |
+| F04-H1 | happy | upload a PNG, place it, crop, lower transparency | image on page, saved | api: `test_three_step_upload`; e2e | pass (API); upload + place + PNG pass: e2e `f04-photos`; crop pass: e2e `f04-crop-effects` |
 | F04-E1 | edge: file too large | 26 MB | "That image is over 25 MB." | api: `test_type_and_size_limits` | pass |
 | F04-E2 | edge: unsupported type | HEIC, SVG | "Use a PNG, JPG or WebP image." | api: `test_F04_E2_unsupported_type_heic`, `test_type_and_size_limits` | pass (API); UI pass: e2e `f04-photos` |
 | F04-E3 | edge: upload fails halfway | file never reaches Storage, retry | "didn't arrive", retry with same id succeeds, one asset | api: `test_F04_E3_upload_fails_halfway_then_retry` | pass |
@@ -93,6 +93,11 @@ in a later milestone).
 | F04-E8 | edge: trashed upload | trash an upload a design uses | still shows in the design | api: `test_F04_E8_trashed_upload_still_shows_in_designs` | pass |
 | F04-E9 | edge: file differs from what was promised | promise 1 KB, send 25 MB | file deleted, row deleted, 422 | api: `test_file_that_does_not_match_is_thrown_away` | pass |
 | F04-N1 | negative: someone else's image | put Bob's asset id in Alice's design | no link for it (placeholder) | api: `test_open_design_signs_only_own_ready_images` | pass |
+| S17-H1 | happy: crop | Crop, drag the right side to the middle, Done; download; undo | half the photo, x unchanged; red kept, blue gone in the PNG; whole photo back | e2e `f04-crop-effects` | pass |
+| S17-E1 | edge: cancel, reset, double-click | double-click opens crop; Escape keeps nothing; Enter keeps; Reset + Done removes the crop | as described | e2e `f04-crop-effects` | pass |
+| S17-E2 | edge: a turned photo | turn 90°, crop its own right side (now at the bottom) | the kept part stays where it was on the page (pixels) | e2e `f04-crop-effects` | pass |
+| S16-H1 | happy: text effects | Shadow on, Blur +2 by keyboard, Outline on, Shadow off | stored each time; Effects stays pressed while the outline is on | e2e `f04-crop-effects` | pass |
+| X-6 | new fields stay optional | save without them, with null, with bad values | old designs save; bad crop / shadow / outline refused | api: `test_document_3e.py` (3 tests) | pass |
 
 ## F05 Arrange a layout (S08, S13)
 
@@ -222,3 +227,8 @@ paste, the right-click menu, download sizes and the pages grid.
 
 Automated: 87 API tests (**87 passed**; 14 new check the templates), 57 end-to-end tests (**57 passed**, two full
 runs; 4 new for templates).
+
+## Totals (2026-10-29, after milestone 3e)
+
+Automated: 90 API tests (**90 passed**), 61 end-to-end tests (**61 passed**, two full runs). Milestone 3 added 23 API
+and 27 end-to-end tests.

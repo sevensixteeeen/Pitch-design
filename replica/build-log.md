@@ -389,6 +389,33 @@ ruff. Every template was looked at full size in the editor.
 
 Feature matrix: "Start from a template (our own set)" → yes.
 
+## Milestone 3e: crop and text effects (2026-10-29, branch `build/milestone-3e`)
+
+Server first (bugs.md T3): `app/document.py` got three optional fields, so older designs stay valid and the
+editor can never save something the server refuses: a photo's `crop` (fractions of the photo, inside it) and a
+text's `shadow` and `outline`. 3 API tests were written first and failed, then passed.
+
+| piece | status | what's in it | missing / harder than expected |
+| --- | --- | --- | --- |
+| S17 crop | done | Crop button (or double-click a photo): the whole photo faded, the part inside the frame at full strength; drag the frame or its handles (it stays on the photo); Done / Enter keeps it (one undo step), Cancel / Escape drops it, Reset shows the whole photo; clicking elsewhere, the Download panel and the page grid keep the crop first | the hardest piece of milestone 3: the frame lives in the photo's own (turned, flipped) box, and Done works out the new box so the kept part doesn't move on the page; a test turns the photo 90° and checks the download by pixel. No keyboard way to crop yet |
+| S16 effects | done | Effects button for text: shadow (colour, distance, direction, blur, opacity), outline (colour, thickness); sliders are live with one undo step; effects grow with the text when a group or a template is resized | curved text is a "could" (milestone 4) |
+
+Bug caught before it shipped: the Crop button first asked the store for a new function on every check, which
+would have made React re-render without end; it now asks for a plain yes / no.
+
+Checks: 90 API tests (3 new), 61 end-to-end tests (4 new in `e2e/f04-crop-effects.spec.ts`: crop and its
+download, cancel / reset / double-click, a turned photo, effects on and off), run twice with no flaky test; axe on
+crop mode and the Effects panel; build, ruff. Screenshots of crop mode and the panel looked at.
+
+Feature matrix: crop and text effects → yes. Parity 90.2 → 93.4.
+
+### Milestone 3 done
+
+All 14 "should" rows are built (3a–3e), except S24 "Not found / no access", which only waits for a live check on
+Supabase (open the link of a design deleted forever). Parity 71.5 → 93.4 over the milestone. Left: the "could"
+rows (milestone 4). Note: "Search your own designs" is still `no` in the matrix, but Home has had a working search
+box since milestone 1; worth a check and an update.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.
