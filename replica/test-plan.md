@@ -72,9 +72,11 @@ in a later milestone).
 
 | case | type | steps | expected | auto | result |
 | --- | --- | --- | --- | --- | --- |
-| F03-H1 | happy | Templates → pick one → edit → download | new design is a copy; template unchanged | api + e2e | not built (milestone 3) |
-| F03-E1 | edge: fonts not loaded | open a template on a cold cache | text measured after fonts load, no jumping lines | e2e | not built |
-| F03-E2 | edge: apply to a non-empty page (S12) | apply over existing content | asks replace or add page | e2e | not built |
+| F03-H1 | happy | Templates → pick one → edit → download | new design is a copy; template unchanged | api + e2e | pass: e2e `f03-templates` (copy with new ids, opens in the editor, listed on Home); templates checked by api `test_templates.py` |
+| F03-E1 | edge: fonts not loaded | open a template on a cold cache | text measured after fonts load, no jumping lines | e2e | pass: text is measured after the template's fonts load (e2e `f03-templates`, previews wait for fonts too) |
+| F03-E2 | edge: apply to a non-empty page (S12) | apply over existing content | asks replace or add page | e2e | pass: e2e `f03-templates` (empty page: applied at once; otherwise add as a new page or replace; undo) |
+| F03-E3 | edge: filter and search | Presentations; search "poster"; search "zebra" | 2; 2; "No templates match" with Show all | e2e `f03-templates` | pass |
+| F03-E4 | edge: 390 px wide | the Templates screen on a phone | 12 cards, no sideways scroll | e2e `f03-templates` | pass |
 
 ## F04 Use my own photo (S08 → S11 → S17)
 
@@ -215,3 +217,8 @@ panel, lock and Layers.
 
 Automated: 73 API tests, 53 end-to-end tests (**53 passed**, two full runs). New: 6 end-to-end tests for copy and
 paste, the right-click menu, download sizes and the pages grid.
+
+## Totals (2026-10-29, after milestone 3d)
+
+Automated: 87 API tests (**87 passed**; 14 new check the templates), 57 end-to-end tests (**57 passed**, two full
+runs; 4 new for templates).

@@ -370,6 +370,25 @@ the specs. No server change.
 
 Feature matrix: shortcuts (copy / paste), right-click menu, export scale and pages grid → yes.
 
+## Milestone 3d: templates (2026-10-29, branch `build/milestone-3d`)
+
+Your decision: the templates are files in the app, not rows in the (existing, still unused) `templates` table.
+
+| piece | status | what's in it | missing / harder than expected |
+| --- | --- | --- | --- |
+| Templates (content) | done | 12 of our own, every word, colour and layout written here: Weekend sale, Quote card, Grand opening, Thank you note (posts); Event story, Tip of the day (stories); Title slide, Three key points (slides); Workshop poster, Bake sale (posters); Party invitation, Meeting notes (A4). Shapes, lines and our fonts only, no photos | `make_templates.py` writes `templates.json`; `tests/test_templates.py` checks every one against the server's save rules, so a template can never be refused |
+| S04 Templates screen | done | search, kinds (All, Social posts, Stories, Presentations, Posters, A4 documents), a preview of each; picking one makes a new design from a copy (new ids, text measured with the real font) and opens it; no-results state | the first previews were cut off for tall templates (a 1:1.4 page in a 4:3 box); they now fit both ways |
+| S12 Templates tab (editor) | done | the same templates; on an empty page one is applied at once, resized evenly to fit the design and centred; on a page with content it asks "Add as a new page" or "Replace page N"; one undo step | multi-page templates aren't needed yet (all are one page) |
+
+How: previews use the canvas's own drawing (`PagePreview` in `Canvas.tsx`), so they always match what the editor
+shows; outside the editor they get a small empty store of their own. They wait for their fonts first.
+
+Checks: 87 API tests (14 new), 57 end-to-end tests (4 new in `e2e/f03-templates.spec.ts`), run twice with no
+flaky test; axe on the screen, the no-results state, the editor tab and the replace-or-add dialog; 390 px; build,
+ruff. Every template was looked at full size in the editor.
+
+Feature matrix: "Start from a template (our own set)" → yes.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

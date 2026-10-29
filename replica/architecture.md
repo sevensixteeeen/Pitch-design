@@ -224,6 +224,10 @@ Each milestone ends with something you can click.
 **3. Should-haves** (15 rows)
 - lock, Layers tab, X/Y/W/H inputs, crop (S17), flip, text effects (S16), spacing
 - templates: `templates` table, `GET /api/templates`, S04, S12; write 10–20 of our own
+  **Changed 2026-10-29 (milestone 3d, your decision):** the templates are files in the app
+  (`frontend/src/templates/templates.json`, written by `make_templates.py`), not table rows. No route, no
+  seeding of the live database, previews drawn in the browser. `backend/tests/test_templates.py` checks each
+  one against the save rules. The `templates` table stays, unused.
 - pages grid view (S18)
 - folders: `folders` table, folder routes, S06
 - trash: S07, restore, delete forever, `POST /api/cron/purge` + GitHub Actions
