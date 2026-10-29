@@ -2,7 +2,8 @@
 // Download (S20). Resize (S22) comes in milestone 4.
 import { useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { Link, useNavigate } from "react-router";
-import { AlertTriangle, Check, Home, Redo2, Undo2 } from "lucide-react";
+import { AlertTriangle, Check, Redo2, Undo2 } from "lucide-react";
+import { LogoMark } from "../components/Logo";
 import { api } from "../data";
 import { cn, focusRing } from "../lib/cn";
 import { Button, IconButton } from "../components/ui/Button";
@@ -211,8 +212,9 @@ export function TopBar({ exportRef }: { exportRef: RefObject<ExportPage | null> 
   const navigate = useNavigate();
   return (
     <header className="flex h-(--tk-layout-topbar-h) shrink-0 items-center gap-3 border-b border-border bg-app px-3">
+      {/* the logo takes you home, as in most apps; it's still called Home */}
       <IconButton label="Home" onClick={() => navigate("/")}>
-        <Home strokeWidth={1.75} aria-hidden />
+        <LogoMark size={26} />
       </IconButton>
       <FileMenu onRename={() => setRenaming(true)} />
       <div className="flex items-center gap-1">

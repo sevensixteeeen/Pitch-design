@@ -25,9 +25,11 @@
   --color-on-danger: var(--tk-color-on-danger);
   --color-success: var(--tk-color-success);
   --color-warning: var(--tk-color-warning);
+  --color-spark: var(--tk-color-spark);
   --color-scrim: var(--tk-color-scrim);
   --font-sans: var(--tk-font-sans);
   --font-mono: var(--tk-font-mono);
+  --font-display: var(--tk-font-display);
   --text-xs: var(--tk-text-xs);
   --text-xs--line-height: var(--tk-text-xs-line);
   --text-xs--font-weight: var(--tk-text-xs-weight);

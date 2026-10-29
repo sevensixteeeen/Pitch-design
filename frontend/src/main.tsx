@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router/dom";
 import { Tooltip } from "radix-ui";
 import "@fontsource-variable/inter";
+import "@fontsource-variable/space-grotesk"; // headings and the wordmark (also one of the editor's fonts)
 import "./styles/index.css";
 import { AuthProvider } from "./auth";
 import { Toaster } from "./components/ui/feedback";

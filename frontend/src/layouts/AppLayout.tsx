@@ -1,8 +1,9 @@
-import { NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet } from "react-router";
 import { FolderOpen, Home, LayoutTemplate, LogOut, Settings, Trash2 } from "lucide-react";
 import { useAuth } from "../auth";
 import { cn, focusRing } from "../lib/cn";
 import { IconButton } from "../components/ui/Button";
+import { LogoMark, Wordmark } from "../components/Logo";
 
 const NAV = [
   { to: "/", label: "Home", icon: Home, end: true },
@@ -21,7 +22,10 @@ export function AppLayout() {
         Skip to content
       </a>
       <aside className="flex shrink-0 items-center gap-1 border-b border-border bg-app px-2 py-2 md:w-(--tk-layout-sidebar-w) md:flex-col md:items-stretch md:border-r md:border-b-0 md:px-3 md:py-4">
-        <p className="hidden px-3 pb-4 text-lg md:block">Pitch</p>
+        <Link to="/" aria-label="Pitch" className={cn("hidden rounded-md px-2 pb-5 md:block", focusRing)}>
+          <Wordmark size={30} />
+        </Link>
+        <LogoMark size={28} className="mx-1 md:hidden" />
         <nav aria-label="Main" className="flex flex-1 gap-1 overflow-x-auto md:flex-col">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -50,7 +54,7 @@ export function AppLayout() {
           </IconButton>
         </div>
       </aside>
-      <main id="main" className="min-w-0 flex-1 overflow-y-auto">
+      <main id="main" className="min-w-0 flex-1 overflow-y-auto bg-surface">
         <div className="mx-auto max-w-(--tk-layout-content-max) px-4 py-6 md:px-8 md:py-8">
           <Outlet />
         </div>

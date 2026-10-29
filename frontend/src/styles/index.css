@@ -19,6 +19,13 @@
   :focus-visible {
     outline: none;
   }
+  /* Pitch's voice in type (replica/brand.md): headings in the display font, a little tighter */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--tk-font-display);
+    letter-spacing: -0.01em;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
