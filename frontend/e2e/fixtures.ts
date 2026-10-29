@@ -79,9 +79,17 @@ export function designId(page: Page) {
 }
 
 interface StoredElement {
+  id: string;
   type: string;
+  kind?: string;
   x: number;
   y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  flip_x: boolean;
+  flip_y: boolean;
+  locked: boolean;
   text?: string;
   children?: StoredElement[];
 }
@@ -168,4 +176,21 @@ export function pngSize(bytes: Buffer) {
 export async function saved(page: Page) {
   await expect(page.getByText("Saving…")).toHaveCount(0);
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+}
+
+/** A plain red PNG made by the browser itself, so the test needs no image files. */
+export async function redPng(page: Page, width = 300, height = 200) {
+  const base64 = await page.evaluate(
+    ([w, h]) => {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d")!;
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(0, 0, w, h);
+      return c.toDataURL("image/png").split(",")[1];
+    },
+    [width, height],
+  );
+  return Buffer.from(base64, "base64");
 }

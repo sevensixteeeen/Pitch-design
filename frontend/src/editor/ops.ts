@@ -151,6 +151,73 @@ export function scaleElement(el: Element, s: number): Element {
   }
 }
 
+/** Flips the selected (unlocked) elements; a flip is drawn around the element's own centre. */
+export function flip(els: Element[], ids: string[], axis: "x" | "y"): Element[] {
+  const updates: Record<string, Partial<Element>> = {};
+  for (const el of els) {
+    if (!ids.includes(el.id) || el.locked) continue;
+    updates[el.id] = axis === "x" ? { flip_x: !el.flip_x } : { flip_y: !el.flip_y };
+  }
+  return patch(els, updates);
+}
+
+export function setLocked(els: Element[], ids: string[], locked: boolean): Element[] {
+  const updates: Record<string, Partial<Element>> = {};
+  for (const el of els) if (ids.includes(el.id)) updates[el.id] = { locked };
+  return patch(els, updates);
+}
+
+/** Moves one element to position `index` in the drawing order (0 = at the back). */
+export function moveTo(els: Element[], id: string, index: number): Element[] {
+  const from = els.findIndex((el) => el.id === id);
+  if (from < 0) return els;
+  const out = els.filter((el) => el.id !== id);
+  out.splice(Math.max(0, Math.min(out.length, index)), 0, els[from]);
+  return out;
+}
+
+export interface Geometry {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  rotation?: number;
+}
+
+const SIZE_MAX = 100_000; // same limit as the server
+
+/**
+ * Typed position, size or rotation for one element (the Position panel). Photos and groups keep
+ * their proportions (a typed width sets the height too, and the other way round); a text box's
+ * height follows its text and a line's height is its thickness, so only their width changes.
+ * `measure` gives a text box's height at a width (geometry.ts measureTextHeight).
+ */
+export function setGeometry(el: Element, g: Geometry, measure: (el: Element & { type: "text" }) => number): Element {
+  let next: Element = { ...el };
+  if (g.x !== undefined) next.x = pos(g.x);
+  if (g.y !== undefined) next.y = pos(g.y);
+  if (g.rotation !== undefined) next.rotation = round2(((g.rotation % 360) + 360) % 360);
+  const size = (v: number) => round2(Math.min(SIZE_MAX, Math.max(1, v)));
+  if (g.width !== undefined || g.height !== undefined) {
+    if (el.type === "group" || el.type === "image") {
+      const factor = g.width !== undefined ? size(g.width) / el.width : size(g.height!) / el.height;
+      const scaled = scaleElement(el, factor);
+      next = { ...scaled, x: next.x, y: next.y, rotation: next.rotation };
+    } else if (el.type === "text") {
+      if (g.width !== undefined) {
+        const width = size(g.width);
+        next = { ...next, width, height: measure({ ...(next as typeof el), width }) } as Element;
+      }
+    } else if (el.type === "line") {
+      if (g.width !== undefined) next.width = size(g.width);
+    } else {
+      if (g.width !== undefined) next.width = size(g.width);
+      if (g.height !== undefined) next.height = size(g.height);
+    }
+  }
+  return next;
+}
+
 export function nudge(els: Element[], ids: string[], dx: number, dy: number): Element[] {
   const updates: Record<string, Partial<Element>> = {};
   for (const el of els) if (ids.includes(el.id) && !el.locked) updates[el.id] = { x: pos(el.x + dx), y: pos(el.y + dy) };

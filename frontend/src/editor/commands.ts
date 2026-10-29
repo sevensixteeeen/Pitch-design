@@ -2,7 +2,7 @@
 import { walk, type DesignContent, type Element, type Hex, type LineElement, type ShapeElement, type TextElement } from "../lib/document";
 import { loadFonts } from "./fonts";
 import { keepTopLeft, measureTextHeight, round2 } from "./geometry";
-import { align, duplicate, group, nudge, patch, remove, reorder, ungroup, type AlignEdge, type LayerMove } from "./ops";
+import { align, duplicate, flip, group, moveTo, nudge, patch, remove, reorder, setGeometry, setLocked, ungroup, type AlignEdge, type Geometry, type LayerMove } from "./ops";
 import { activeElements, type EditorStore } from "./store";
 
 const firstPage = (store: EditorStore) => activeElements(store.getState());
@@ -52,11 +52,18 @@ export function styleLines(store: EditorStore, change: Partial<LineElement>, opt
   if (Object.keys(updates).length) s.change((els) => patch(els, updates), { gesture: opts.gesture });
 }
 
+/** Locked elements stay (and stay selected); unlock them first. */
 export function deleteSelection(store: EditorStore) {
   const s = store.getState();
   if (s.selectedIds.length === 0) return;
-  const n = s.selectedIds.length;
-  s.change((els) => remove(els, s.selectedIds), { select: [], announcement: n === 1 ? "Deleted 1 element" : `Deleted ${n} elements` });
+  const locked = firstPage(store).filter((el) => el.locked && s.selectedIds.includes(el.id)).map((el) => el.id);
+  const ids = s.selectedIds.filter((id) => !locked.includes(id));
+  if (ids.length === 0) {
+    s.setAnnouncement(locked.length === 1 ? "That element is locked. Unlock it to delete it." : "Those elements are locked. Unlock them to delete them.");
+    return;
+  }
+  const n = ids.length;
+  s.change((els) => remove(els, ids), { select: locked, announcement: n === 1 ? "Deleted 1 element" : `Deleted ${n} elements` });
 }
 
 export function duplicateSelection(store: EditorStore) {
@@ -78,6 +85,38 @@ export function alignSelection(store: EditorStore, edge: AlignEdge) {
   if (s.selectedIds.length === 0) return;
   const page = { x: 0, y: 0, width: s.design.width_px, height: s.design.height_px };
   s.change((els) => align(els, s.selectedIds, edge, page), { announcement: `Aligned ${edge}` });
+}
+
+export function flipSelection(store: EditorStore, axis: "x" | "y") {
+  const s = store.getState();
+  if (s.selectedIds.length === 0) return;
+  s.change((els) => flip(els, s.selectedIds, axis), { announcement: axis === "x" ? "Flipped horizontally" : "Flipped vertically" });
+}
+
+/** Locks the selection, or unlocks it when everything selected is locked already. */
+export function toggleLock(store: EditorStore, ids = store.getState().selectedIds) {
+  const s = store.getState();
+  const picked = firstPage(store).filter((el) => ids.includes(el.id));
+  if (picked.length === 0) return;
+  const lock = !picked.every((el) => el.locked);
+  s.change((els) => setLocked(els, ids, lock), { announcement: lock ? "Locked" : "Unlocked" });
+}
+
+/** A typed X, Y, width, height or rotation for one element (the Position panel). */
+export function setElementGeometry(store: EditorStore, id: string, g: Geometry) {
+  const s = store.getState();
+  const el = firstPage(store).find((x) => x.id === id);
+  if (!el || el.locked) return;
+  const next = setGeometry(el, g, measureTextHeight);
+  s.change((els) => els.map((x) => (x.id === id ? next : x)));
+}
+
+/** Drag a layer in the Layers list: `index` counts from the back (0 = drawn first). */
+export function moveLayerTo(store: EditorStore, id: string, index: number) {
+  const s = store.getState();
+  const els = firstPage(store);
+  if (els.findIndex((el) => el.id === id) === index) return;
+  s.change((all) => moveTo(all, id, index), { announcement: `Moved to layer ${els.length - index} of ${els.length}` });
 }
 
 /** Arrow keys: one undo step per key hold (the key handler ends the gesture on key up). */

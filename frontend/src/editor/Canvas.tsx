@@ -238,6 +238,7 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
   const stages = useRef<(Konva.Stage | null)[]>([]);
   const blocks = useRef<(HTMLElement | null)[]>([]);
   const transformer = useRef<Konva.Transformer>(null);
+  const lockedBox = useRef<Konva.Transformer>(null); // outline only, for selected locked elements
   const [colours] = useState(tokens);
   const [guides, setGuides] = useState<{ v: number[]; h: number[]; gaps: Gap[] }>({ v: [], h: [], gaps: [] });
   const noGuides = { v: [], h: [], gaps: [] };
@@ -317,6 +318,16 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
     : { text: [...CORNERS, ...SIDES_X], image: CORNERS, group: CORNERS, line: SIDES_X, shape: ALL_ANCHORS }[only.type];
   const keepRatio = !only || (only.type !== "shape" && only.type !== "line");
   const chosenKey = chosen.map((el) => el.id).join(",");
+  const lockedChosen = readOnly || editingId ? [] : activeEls.filter((el) => selectedIds.includes(el.id) && el.locked);
+  const lockedKey = lockedChosen.map((el) => el.id).join(",");
+
+  useEffect(() => {
+    const box = lockedBox.current;
+    if (!box) return;
+    box.nodes(lockedChosen.map((el) => nodeOn(active, el.id)).filter((n): n is Konva.Node => !!n));
+    box.getLayer()?.batchDraw();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockedKey, activeEls, scale, active]);
 
   useEffect(() => {
     const tr = transformer.current;
@@ -498,13 +509,13 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
       const s = stages.current[page];
       if (!s || !scale) throw new Error("The page isn't ready yet.");
       // the selection box and guides are not part of the design (they only exist on the active page)
-      const tr = page === active ? transformer.current : null;
+      const boxes = page === active ? [transformer.current, lockedBox.current] : [];
       const pixelRatio = Math.min(1 / scale, maxSide ? maxSide / Math.max(pw, ph) : Infinity);
-      tr?.hide();
+      boxes.forEach((b) => b?.hide());
       try {
         return s.toDataURL({ x: M, y: M, width: pw, height: ph, pixelRatio, mimeType: type, quality });
       } finally {
-        tr?.show();
+        boxes.forEach((b) => b?.show());
       }
     };
     return () => {
@@ -636,6 +647,17 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
                             })}
                             {marquee && <Rect {...marquee} stroke={colours.selection} strokeWidth={1} strokeScaleEnabled={false} dash={[4, 4]} />}
                           </Group>
+                          <Transformer
+                            ref={lockedBox}
+                            enabledAnchors={[]}
+                            rotateEnabled={false}
+                            resizeEnabled={false}
+                            borderStroke={colours.selection}
+                            borderStrokeWidth={1.5}
+                            borderDash={[4, 3]}
+                            ignoreStroke
+                            listening={false}
+                          />
                           <Transformer
                             ref={transformer}
                             enabledAnchors={anchors}

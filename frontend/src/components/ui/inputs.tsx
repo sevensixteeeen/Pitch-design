@@ -94,6 +94,8 @@ export function NumberField({
   error,
   size = "md",
   hideLabel,
+  disabled,
+  hint,
 }: {
   label: string;
   value: number;
@@ -104,6 +106,9 @@ export function NumberField({
   error?: string | null;
   size?: "sm" | "md";
   hideLabel?: boolean;
+  disabled?: boolean;
+  /** a short note under the field (e.g. why it's disabled) */
+  hint?: string;
 }) {
   const id = useId();
   const fmt = (v: number) => (Number.isFinite(v) ? String(Number(v.toFixed(decimals))) : "");
@@ -111,6 +116,7 @@ export function NumberField({
   // show the new value when it changes from outside (e.g. dragging on the canvas)
   useEffect(() => setText(Number.isFinite(value) ? String(Number(value.toFixed(decimals))) : ""), [value, decimals]);
   const commit = () => {
+    if (text.trim() === fmt(value)) return; // left without a change (e.g. tabbing through)
     const n = Number(text.replace(",", "."));
     if (Number.isFinite(n) && text.trim() !== "") onCommit(n);
     else setText(fmt(value));
@@ -140,15 +146,16 @@ export function NumberField({
           onChange={(e) => setText(e.target.value)}
           onBlur={commit}
           onKeyDown={onKeyDown}
+          disabled={disabled}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${id}-err` : undefined}
+          aria-describedby={error || hint ? `${id}-err` : undefined}
           className={cn(inputBase, "tabular-nums", size === "sm" ? "h-8 px-2 text-sm" : "h-10 px-3 text-sm", unit && "pr-9")}
         />
         {unit && <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-muted">{unit}</span>}
       </div>
-      {error && (
-        <p id={`${id}-err`} className="text-xs text-danger">
-          {error}
+      {(error || hint) && (
+        <p id={`${id}-err`} className={cn("text-xs", error ? "text-danger" : "text-muted")}>
+          {error || hint}
         </p>
       )}
     </div>

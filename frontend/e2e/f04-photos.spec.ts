@@ -1,24 +1,7 @@
 // F04 Use my own photo (S08 -> S11): upload, place, download with the photo in it.
 import { readFile } from "node:fs/promises";
 import type { Page } from "@playwright/test";
-import { createDesign, elementList, expect, expectAccessible, saved, signUp, test } from "./fixtures";
-
-/** A plain red PNG made by the browser itself, so the test needs no image files. */
-async function redPng(page: Page, width = 300, height = 200) {
-  const base64 = await page.evaluate(
-    ([w, h]) => {
-      const c = document.createElement("canvas");
-      c.width = w;
-      c.height = h;
-      const ctx = c.getContext("2d")!;
-      ctx.fillStyle = "#ff0000";
-      ctx.fillRect(0, 0, w, h);
-      return c.toDataURL("image/png").split(",")[1];
-    },
-    [width, height],
-  );
-  return Buffer.from(base64, "base64");
-}
+import { createDesign, elementList, expect, expectAccessible, redPng, saved, signUp, test } from "./fixtures";
 
 /** The colour at (x, y) of a PNG file, read back by the browser. */
 async function pixel(page: Page, png: Buffer, x: number, y: number) {

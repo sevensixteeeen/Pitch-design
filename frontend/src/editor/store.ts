@@ -69,6 +69,8 @@ export interface EditorState {
   deletePage(index: number): void;
   endGesture(): void;
   addElement(el: Element, announcement: string): void;
+  /** Something to tell screen readers when nothing changed (e.g. "That element is locked"). */
+  setAnnouncement(text: string): void;
   undo(): void;
   redo(): void;
   select(ids: string[]): void;
@@ -211,6 +213,7 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
           announcement: "Redone",
         };
       }),
+    setAnnouncement: (announcement) => set({ announcement }),
     select: (selectedIds) => set({ selectedIds }),
     toggleSelect: (id) =>
       set((s) => ({ selectedIds: s.selectedIds.includes(id) ? s.selectedIds.filter((x) => x !== id) : [...s.selectedIds, id] })),
