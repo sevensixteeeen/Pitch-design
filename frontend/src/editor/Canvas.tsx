@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "re
 import { Arrow, Ellipse, Group, Image as KonvaImage, Label, Layer, Line, Rect, Stage, Tag, Text, Transformer } from "react-konva";
 import type Konva from "konva";
 import { Copy, Plus, Trash2 } from "lucide-react";
-import { MAX_PAGES, type Element, type ImageElement, type LineElement, type TextElement } from "../lib/document";
+import { MAX_PAGES, type Element, type ImageElement, type LineElement, type Page, type TextElement } from "../lib/document";
 import { cn } from "../lib/cn";
 import { IconButton } from "../components/ui/Button";
 import { commitText } from "./commands";
@@ -222,6 +222,29 @@ function PageHeader({ index, count, active, readOnly, width, height }: { index: 
         </span>
       )}
     </div>
+  );
+}
+
+/**
+ * A page drawn small and still (template previews), as big as fits in `box` px. Uses the same drawing
+ * as the canvas, so it needs an EditorContext (for photo links); TemplatePreview gives it one.
+ */
+export function PagePreview({ page, width, height, box }: { page: Page; width: number; height: number; box: { width: number; height: number } }) {
+  const [colours] = useState(tokens);
+  const k = Math.min(box.width / width, box.height / height);
+  return (
+    <Stage width={Math.round(width * k)} height={Math.round(height * k)} listening={false}>
+      <Layer>
+        <Group scaleX={k} scaleY={k} clipX={0} clipY={0} clipWidth={width} clipHeight={height}>
+          <Rect width={width} height={height} fill={page.background.color} />
+          {page.elements.map((el) => (
+            <Group key={el.id} {...placement(el)}>
+              <ElementNode el={el} colours={colours} />
+            </Group>
+          ))}
+        </Group>
+      </Layer>
+    </Stage>
   );
 }
 

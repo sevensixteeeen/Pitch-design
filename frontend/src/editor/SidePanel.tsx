@@ -2,16 +2,18 @@
 // Elements (S09, rectangle only), Uploads (S11). Design and Projects come later.
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Tabs as RTabs } from "radix-ui";
-import { ImageUp, Layers, RotateCw, Shapes, Type } from "lucide-react";
+import { ImageUp, Layers, LayoutTemplate, RotateCw, Shapes, Type } from "lucide-react";
 import { api, UPLOAD_MAX_BYTES, UPLOAD_TYPES, type Asset } from "../data";
 import { makeImage, makeLine, makeShape, makeText } from "../lib/document";
 import { cn, focusRing } from "../lib/cn";
 import { Button } from "../components/ui/Button";
 import { EmptyState, Skeleton, Spinner } from "../components/ui/feedback";
 import { LayersPanel } from "./LayersPanel";
+import { TemplatesPanel } from "./TemplatesPanel";
 import { useEditor } from "./store";
 
 const TABS = [
+  { value: "templates", label: "Templates", icon: LayoutTemplate },
   { value: "text", label: "Text", icon: Type },
   { value: "elements", label: "Elements", icon: Shapes },
   { value: "uploads", label: "Uploads", icon: ImageUp },
@@ -40,6 +42,9 @@ export function SidePanel() {
           ))}
         </RTabs.List>
         <div className="w-(--tk-layout-panel-w) overflow-y-auto p-4">
+          <RTabs.Content value="templates" className="outline-none">
+            <TemplatesPanel />
+          </RTabs.Content>
           <RTabs.Content value="text" className="outline-none">
             <TextPanel />
           </RTabs.Content>

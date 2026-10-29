@@ -8,6 +8,7 @@ import { Home } from "./pages/Home";
 import { Projects } from "./pages/Projects";
 import { FolderPage } from "./pages/FolderPage";
 import { Trash } from "./pages/Trash";
+import { Templates } from "./pages/Templates";
 import { NotFound, StubPage } from "./pages/stubs";
 import { EditorPage } from "./editor/EditorPage";
 import { ResetPassword } from "./pages/ResetPassword";
@@ -26,7 +27,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Home /> }, // S02, with S03 as its "Create a design" popover
-      { path: "templates", element: <StubPage id="S04" title="Templates" milestone="milestone 3" /> },
+      { path: "templates", element: <Templates /> }, // S04
       { path: "projects", element: <Projects /> }, // S05
       { path: "folders/:folderId", element: <FolderPage /> }, // S06
       { path: "trash", element: <Trash /> }, // S07

@@ -64,8 +64,8 @@ export interface EditorState {
   /** Saves any unsaved edits now and waits for it. Set by the autosave. */
   flush: () => Promise<void>;
   setActivePage(index: number): void;
-  /** A blank page after `index`; it becomes the active page. */
-  addPage(index: number): void;
+  /** A page after `index` (blank unless one is given); it becomes the active page. */
+  addPage(index: number, page?: Page, announcement?: string): void;
   duplicatePage(index: number): void;
   /** Refused for the last remaining page (the server refuses it too). */
   deletePage(index: number): void;
@@ -151,12 +151,12 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
     flush: async () => {},
     setActivePage: (index) =>
       set((s) => (index === s.activePage || index < 0 || index >= s.content.pages.length ? s : { activePage: index, selectedIds: [], editingId: null })),
-    addPage: (index) =>
+    addPage: (index, page, announcement) =>
       set((s) => {
         if (s.readOnly || s.content.pages.length >= MAX_PAGES) return s;
         const pages = [...s.content.pages];
-        pages.splice(index + 1, 0, blankPage());
-        return commit(s, { ...s.content, pages }, { activePage: index + 1, selectedIds: [], announcement: `Added page ${index + 2}` });
+        pages.splice(index + 1, 0, page ?? blankPage());
+        return commit(s, { ...s.content, pages }, { activePage: index + 1, selectedIds: [], announcement: announcement ?? `Added page ${index + 2}` });
       }),
     duplicatePage: (index) =>
       set((s) => {
