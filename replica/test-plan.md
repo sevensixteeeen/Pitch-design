@@ -45,6 +45,9 @@ in a later milestone).
 | F01-H2 | happy: forgot password | Log in → Forgot password? → email → Send link; then /reset-password: short password refused, new one saved, log in with it; logged out, the page offers a new link | each state shown; new password works | e2e `f01-account`; manual: the real email | pass (fake data); live email loop passed 2026-10-28 |
 | F01-E12 | edge: show password | Tab to the eye button, Enter | password shown as text, `aria-pressed` on | e2e `f01-account` (F01-E10) | pass |
 | F01-E13 | edge: Pitch's server down (BUG-010) | open a reset link, log in, open Home while the API answers 502 | "Can't reach Pitch's server" with Try again (not "link doesn't work", not back to log in); after Try again with the API up, "Choose a new password" | e2e `real-mode/server-unreachable` | pass |
+| S23-H1 | happy: change password in Settings | wrong current; same password; 7 characters; then right | each refused with its message; then "Your password is changed", fields cleared; old password refused at login, new one works | e2e `settings` | pass |
+| S23-E1 | edge: 390 px wide | Settings on a phone | no sideways scroll | e2e `settings` | pass |
+| S23-E2 | edge: the real login code | wrong current, then right (Supabase acted out) | nothing saved for the wrong one; the new password sent once | e2e `real-mode/change-password` | pass |
 
 ## F02 Core loop: blank custom-size design → PNG (S02 → S03 → S08 → S10 → S09 → S19 → S20)
 
@@ -237,3 +240,7 @@ and 27 end-to-end tests.
 ## Totals (2026-10-29, after BUG-010)
 
 Automated: 90 API tests, 63 end-to-end tests (61 on fake data, 2 in the new "real-mode" project).
+
+## Totals (2026-10-30, after Settings)
+
+Automated: 90 API tests, 66 end-to-end tests (63 on fake data, 3 in real-mode).

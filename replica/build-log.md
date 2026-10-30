@@ -444,6 +444,17 @@ Checks: build; 63 end-to-end tests (one test confused the new logo link, first n
 link: renamed "Pitch"); two load timeouts on a busy laptop passed 3 out of 3 when rerun. Screenshots looked at (login,
 Home, editor, a 390 px phone). Brand sweep: no leftovers that users can see (details in `brand.md`).
 
+## Settings: change password (2026-10-30, branch `build/settings-password`)
+
+S23 Settings is a real screen now (the last "Not built yet" page; the placeholder is gone): the account email, and
+Change password. The current password is checked first, so an unlocked laptop isn't enough: Supabase changes a
+password without asking for the old one, so the app checks it by logging in with it, then saves the new one. Messages:
+"Your current password isn't right.", the same password, too short; success says so and clears the fields.
+
+Checks: 66 end-to-end tests (2 new on fake data: the whole flow, and 390 px; 1 new in real-mode: the real login code
+sends the current password to Supabase first and saves nothing when it's wrong), build. The fake-Supabase helpers for
+real-mode tests moved into `e2e/real-mode/fakeSupabase.ts`. Delete account (the API route exists) still has no screen.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

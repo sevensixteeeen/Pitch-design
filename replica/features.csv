@@ -51,7 +51,7 @@ Resize design to another size (copy and resize),editor,could,yes,no,S22 - paid M
 Curved text,text,could,yes,no,S16 [3p]
 Image corner radius and border,uploads,could,yes,no,[3p]
 Search your own designs,projects,could,yes,yes,S02 SearchInput | backend: q= title search (ilike) done | Home has had title search since M1 (fake data and live); live on Supabase 2026-10-29 (checked by you)
-Account settings and delete account,account,could,yes,partial,S23 | backend: DELETE /api/me done and tested; S23 screen pending
+Account settings and delete account,account,could,yes,partial,S23 | backend: DELETE /api/me done and tested; S23 screen pending | 2026-10-30: S23 Settings screen with the account email and Change password (current password checked first); e2e settings + real-mode change-password. Delete account still has no screen
 Canva template library,templates,skip,yes,skip,owned by Canva and its creators - use our own templates
 Stock photos / graphics / video / audio,elements,skip,yes,skip,licensed content - optional later via Unsplash/Pexels API under their terms
 Pro / licensed fonts,text,skip,yes,skip,licensed - use open-licence Google Fonts

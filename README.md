@@ -18,18 +18,18 @@ them, and download the result as PNG, JPG or PDF. Built step by step with the re
 
 - **30 of 30 must-have** and **all 14 should-have** features are built (`replica/features.csv`).
 - Feature parity with the original's core editor: **94.9 / 100** (`replica-diff`).
-- Checked by **90 API tests** and **63 end-to-end tests** in a real browser (Playwright, with an axe
+- Checked by **90 API tests** and **66 end-to-end tests** in a real browser (Playwright, with an axe
   accessibility scan of every screen). Every bug found is written up in `replica/bugs.md` (10 so far, all fixed).
 - Tried live on Supabase: sign up, password reset by email, create, autosave, upload a photo, place it and
   download the PNG.
 - Not built: the optional "could" features, such as version history, copy and resize, transparent PNG,
-  Google sign-in, curved text and an account settings screen.
+  Google sign-in, curved text and a delete-account screen.
 
 ## What it does
 
 | area | what you can do |
 | --- | --- |
-| account | sign up, log in, log out; "Forgot password?" with an email link; show / hide the password |
+| account | sign up, log in, log out; "Forgot password?" with an email link; change your password in Settings; show / hide the password |
 | home and projects | your designs with previews and search; folders (make, rename, delete, "Move to folder…"); Trash with Restore and Delete forever (deleted for good after 30 days) |
 | start a design | from a size preset, a custom size (px, in, mm, cm) or one of 12 templates (posts, stories, slides, posters, A4) |
 | add | headings and text, rectangles, ellipses, triangles, lines and arrows, your own photos, templates onto a page |
@@ -59,7 +59,7 @@ uv run pytest        # 90 API tests against a throwaway local Postgres
 
 cd frontend
 npx playwright install chromium   # the first time only
-npm run e2e          # 63 end-to-end tests, about 5 minutes; never touch Supabase
+npm run e2e          # 66 end-to-end tests, about 5 minutes; never touch Supabase
 ```
 
 Running it against your own Supabase project, the database migrations, the Trash clean-up and fixes for
