@@ -1,30 +1,30 @@
-  AAA   17.12:1  text                     on bg                   
-  AAA   15.35:1  text                     on surface              
-  AAA   14.19:1  text                     on surface-hover        
-  AAA   13.67:1  text                     on workspace            
-  AAA   15.57:1  text                     on accent-soft          
-  AA     6.77:1  text-muted               on bg                   
-  AA     6.07:1  text-muted               on surface              
-  AA     5.61:1  text-muted               on surface-hover        
-  AA     5.41:1  text-muted               on workspace            
-  AAA   17.12:1  on-inverse               on inverse              
-  AA     5.00:1  on-accent                on accent               
-  AA     6.68:1  on-accent                on accent-hover         
-  AA     5.00:1  accent                   on bg                   
-  AA     4.54:1  accent                   on accent-soft          
-  AA     6.59:1  on-danger                on danger               
-  AA     6.59:1  danger                   on bg                   
-  AA     5.46:1  danger                   on surface-hover        
-  AA     4.84:1  on-inverse               on guide                
-  AA     5.32:1  success                  on bg                   
-  AA     6.11:1  warning                  on bg                   
-  PASS   3.82:1  border-input             on bg                   ui
-  PASS   3.43:1  border-input             on surface              ui
-  PASS   5.00:1  accent                   on bg                   ui
-  PASS   4.48:1  accent                   on surface              ui
-  PASS   5.52:1  selection                on bg                   ui
-  PASS   4.41:1  selection                on workspace            ui
-  PASS   4.84:1  guide                    on bg                   ui
-  PASS   3.87:1  guide                    on workspace            ui
+  AAA   16.77:1  text                     on bg                   
+  AAA   18.25:1  text                     on surface              
+  AAA   14.97:1  text                     on surface-hover        
+  AAA   17.75:1  text                     on workspace            
+  AAA   13.44:1  text                     on accent-soft          
+  AAA    7.25:1  text-muted               on bg                   
+  AAA    7.89:1  text-muted               on surface              
+  AA     6.47:1  text-muted               on surface-hover        
+  AAA    7.68:1  text-muted               on workspace            
+  AAA   18.25:1  on-inverse               on inverse              
+  AA     6.25:1  on-accent                on accent               
+  AAA    8.67:1  on-accent                on accent-hover         
+  AA     5.74:1  accent                   on bg                   
+  AA     4.60:1  accent                   on accent-soft          
+  AAA    7.36:1  on-danger                on danger               
+  AA     6.76:1  danger                   on bg                   
+  AA     6.04:1  danger                   on surface-hover        
+  AAA    7.42:1  on-inverse               on guide                
+  AAA    9.32:1  success                  on bg                   
+  AAA   10.17:1  warning                  on bg                   
+  PASS   3.61:1  border-input             on bg                   ui
+  PASS   3.93:1  border-input             on surface              ui
+  PASS   5.74:1  accent                   on bg                   ui
+  PASS   6.25:1  accent                   on surface              ui
+  PASS   5.74:1  selection                on bg                   ui
+  PASS   6.08:1  selection                on workspace            ui
+  PASS   6.82:1  guide                    on bg                   ui
+  PASS   7.22:1  guide                    on workspace            ui
 
   28 pairs, 0 failing AA

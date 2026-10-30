@@ -8,57 +8,64 @@ import { Wordmark } from "../components/Logo";
 
 type Mode = "signup" | "login" | "forgot";
 
-const headings: Record<Mode, string> = {
-  signup: "Make your first design",
-  login: "Welcome back",
-  forgot: "Reset your password",
+// one word in italic, like every page title (replica/brand.md)
+const headings: Record<Mode, ReactNode> = {
+  signup: (
+    <>
+      Make your first <em>design</em>
+    </>
+  ),
+  login: (
+    <>
+      Welcome <em>back</em>
+    </>
+  ),
+  forgot: (
+    <>
+      Reset your <em>password</em>
+    </>
+  ),
 };
 
-/** The card every sign-in screen sits in. */
-export function AuthCard({ heading, children }: { heading: string; children: ReactNode }) {
+/** What Pitch offers, in numbers, on the brand panel. */
+const FACTS = [
+  { value: "12", label: "templates of our own" },
+  { value: "3×", label: "sharp downloads" },
+  { value: "0", label: "locked features" },
+];
+
+/** The screen every sign-in step sits on: the glowing brand panel (wide screens) and a glass card. */
+export function AuthCard({ heading, children }: { heading: ReactNode; children: ReactNode }) {
   return (
     <div className="flex min-h-full bg-surface">
-      {/* Pitch's brand panel on wide screens (replica/brand.md): our own shapes, no photos */}
-      <aside aria-label="About Pitch" className="hidden w-[44%] flex-col justify-between bg-accent-soft p-10 lg:flex">
+      <aside aria-label="About Pitch" className="bg-glow hidden w-[52%] flex-col justify-between p-10 lg:flex">
         <Wordmark size={34} />
-        <BrandIllustration />
         <div>
-          <h2 className="text-display">Design it. Pitch it.</h2>
-          <p className="mt-2 max-w-90 text-base text-muted">Posters, posts and slides in a calm editor. No upgrade pop-ups, nothing locked.</p>
+          <h2 className="font-serif text-[64px] leading-[1.05] font-medium">
+            Design it.
+            <br />
+            <em>Pitch</em> it.
+          </h2>
+          <p className="mt-4 max-w-105 text-base text-muted">Posters, posts and slides in a calm editor. No upgrade pop-ups, nothing locked.</p>
         </div>
+        <dl className="flex gap-10">
+          {FACTS.map((f) => (
+            <div key={f.label} className="flex flex-col-reverse">
+              <dt className="text-xs text-muted">{f.label}</dt>
+              <dd className="font-serif text-3xl">{f.value}</dd>
+            </div>
+          ))}
+        </dl>
       </aside>
       <div className="flex flex-1 items-center justify-center p-4">
-        <main className="w-full max-w-100 rounded-lg bg-app p-6 shadow-pop">
+        <main className="glass w-full max-w-100 rounded-lg border p-7 shadow-pop">
           <Wordmark size={26} className="lg:hidden" />
-          <h1 className="mt-3 text-xl lg:mt-0">{heading}</h1>
+          <h1 className="mt-3 text-[30px] leading-tight lg:mt-0">{heading}</h1>
           {children}
           {usingFakeData && <p className="mt-6 text-xs text-muted">Test build: accounts are stored only in this browser.</p>}
         </main>
       </div>
     </div>
-  );
-}
-
-/** Two pages being made, with a spark: drawn from the palette, decorative only. */
-function BrandIllustration() {
-  return (
-    <svg viewBox="0 0 360 280" aria-hidden className="mx-auto w-full max-w-90">
-      <g transform="rotate(-8 140 150)">
-        <rect x="60" y="40" width="150" height="200" rx="10" fill="var(--tk-color-bg)" stroke="var(--tk-color-border)" />
-        <rect x="60" y="150" width="150" height="90" rx="10" fill="var(--tk-color-text)" />
-        <circle cx="160" cy="95" r="34" fill="var(--tk-color-spark)" />
-        <rect x="78" y="172" width="90" height="12" rx="6" fill="var(--tk-color-bg)" />
-        <rect x="78" y="196" width="60" height="8" rx="4" fill="var(--tk-color-border)" />
-      </g>
-      <g transform="rotate(7 250 150)">
-        <rect x="180" y="60" width="140" height="180" rx="10" fill="var(--tk-color-bg)" stroke="var(--tk-color-border)" />
-        <rect x="200" y="84" width="100" height="70" rx="8" fill="var(--tk-color-accent)" />
-        <rect x="200" y="172" width="80" height="10" rx="5" fill="var(--tk-color-text)" />
-        <rect x="200" y="192" width="100" height="8" rx="4" fill="var(--tk-color-border)" />
-        <rect x="200" y="208" width="70" height="8" rx="4" fill="var(--tk-color-border)" />
-      </g>
-      <path d="M318 34l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="var(--tk-color-spark)" />
-    </svg>
   );
 }
 

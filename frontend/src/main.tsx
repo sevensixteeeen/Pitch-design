@@ -4,6 +4,8 @@ import { RouterProvider } from "react-router/dom";
 import { Tooltip } from "radix-ui";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk"; // headings and the wordmark (also one of the editor's fonts)
+import "@fontsource-variable/playfair-display"; // page titles (also one of the editor's fonts)
+import "@fontsource-variable/playfair-display/wght-italic.css"; // the italic word in page titles
 import "./styles/index.css";
 import { AuthProvider } from "./auth";
 import { Toaster } from "./components/ui/feedback";

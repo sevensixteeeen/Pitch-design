@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, RotateCw } from "lucide-react";
+import { Link } from "react-router";
+import { LayoutGrid, RotateCw, Sparkles } from "lucide-react";
 import { api, type DesignSummary } from "../data";
 import { useAuth } from "../auth";
+import { cn, focusRing } from "../lib/cn";
 import { DesignCard, DesignCardSkeleton } from "../components/DesignCard";
 import { Button } from "../components/ui/Button";
 import { SearchInput } from "../components/ui/inputs";
@@ -40,7 +42,20 @@ export function Home() {
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <h1 className="text-xl">Hi{user?.display_name ? `, ${user.display_name}` : ""}! What will you make?</h1>
+        <div>
+          <h1 className="text-display">
+            Hi{user?.display_name ? `, ${user.display_name}` : ""}! What will you <em>make</em>?
+          </h1>
+          <Link
+            to="/templates"
+            className={cn(
+              "mt-3 inline-flex items-center gap-1 rounded-pill border border-spark/45 bg-spark/10 px-3 py-1 text-xs font-semibold text-spark hover:bg-spark/20",
+              focusRing,
+            )}
+          >
+            <Sparkles className="size-3.5" aria-hidden /> Start from a template
+          </Link>
+        </div>
         <div className="flex flex-1 items-center gap-3 sm:justify-end">
           <SearchInput value={q} onChange={setQ} label="Search your designs" placeholder="Search your designs" loading={searching && !!q} className="flex-1 sm:max-w-80" />
           <CreateDesign />

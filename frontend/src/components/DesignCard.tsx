@@ -41,14 +41,14 @@ export function DesignCard({ design, actions = [], menuAlwaysVisible }: { design
         // no thumbnail yet: a box with the design's proportions
         <div
           aria-hidden
-          className="max-h-full max-w-full bg-workspace"
+          className="max-h-full max-w-full bg-surface-hover"
           style={{ aspectRatio: `${design.width_px} / ${design.height_px}`, height: design.height_px >= design.width_px ? "100%" : "auto", width: design.width_px > design.height_px ? "100%" : "auto" }}
         />
       )}
     </div>
   );
   return (
-    <div className="group relative rounded-lg border border-border bg-app p-2 transition-shadow hover:shadow-card">
+    <div className="glass group relative rounded-lg border p-2 transition-shadow hover:shadow-card">
       {trashed ? (
         thumb
       ) : (

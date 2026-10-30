@@ -94,7 +94,7 @@ export function Templates() {
                   disabled={making !== null}
                   aria-busy={making === t.id || undefined}
                   onClick={() => void use(t)}
-                  className={cn("group block w-full rounded-lg border border-border bg-app p-2 text-left transition-shadow hover:shadow-card disabled:opacity-70", focusRing)}
+                  className={cn("glass group block w-full rounded-lg border p-2 text-left transition-shadow hover:shadow-card disabled:opacity-70", focusRing)}
                 >
                   <span className="relative flex aspect-4/3 items-center justify-center overflow-hidden rounded-md bg-surface p-3">
                     <span className="shadow-card">

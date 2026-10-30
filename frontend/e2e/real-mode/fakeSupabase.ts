@@ -22,7 +22,15 @@ export function session() {
   return { access_token, token_type: "bearer", expires_in: 3600, expires_at: exp, refresh_token: "e2e-refresh", user: USER };
 }
 
-/** Pitch's API, answering who's logged in. */
+/**
+ * Pitch's API, acted out: who's logged in, and empty lists for the screens around. Every /api request is
+ * answered here, so a test never reaches a real API server that happens to be running on this computer.
+ */
 export async function apiUp(page: Page) {
-  await page.route("**/api/me", (route) => route.fulfill({ json: { id: USER.id, email: USER.email, display_name: null } }));
+  await page.route("**/api/**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === "/api/me") return route.fulfill({ json: { id: USER.id, email: USER.email, display_name: null } });
+    if (path === "/api/designs" || path === "/api/folders" || path === "/api/assets") return route.fulfill({ json: [] });
+    return route.fulfill({ status: 404, json: { detail: "Not found." } });
+  });
 }

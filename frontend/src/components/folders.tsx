@@ -19,7 +19,7 @@ export function designCount(n: number) {
 
 export function FolderCard({ folder, actions }: { folder: Folder; actions: CardAction[] }) {
   return (
-    <div className="group relative flex items-center gap-3 rounded-lg border border-border bg-app p-3 transition-shadow hover:shadow-card">
+    <div className="glass group relative flex items-center gap-3 rounded-lg border p-3 transition-shadow hover:shadow-card">
       <FolderIcon className="size-8 shrink-0 text-muted" strokeWidth={1.5} aria-hidden />
       <div className="min-w-0 flex-1">
         {/* the link covers the whole card; the "…" button sits above it */}

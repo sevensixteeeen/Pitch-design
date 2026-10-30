@@ -54,7 +54,7 @@ export function AppLayout() {
           </IconButton>
         </div>
       </aside>
-      <main id="main" className="min-w-0 flex-1 overflow-y-auto bg-surface">
+      <main id="main" className="bg-glow min-w-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-(--tk-layout-content-max) px-4 py-6 md:px-8 md:py-8">
           <Outlet />
         </div>

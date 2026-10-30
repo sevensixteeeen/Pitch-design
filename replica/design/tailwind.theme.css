@@ -30,6 +30,7 @@
   --font-sans: var(--tk-font-sans);
   --font-mono: var(--tk-font-mono);
   --font-display: var(--tk-font-display);
+  --font-serif: var(--tk-font-serif);
   --text-xs: var(--tk-text-xs);
   --text-xs--line-height: var(--tk-text-xs-line);
   --text-xs--font-weight: var(--tk-text-xs-weight);
