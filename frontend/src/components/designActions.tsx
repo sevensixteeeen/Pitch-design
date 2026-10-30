@@ -1,6 +1,7 @@
 // The "…" menu on a design card (Home S02, Projects S05, Folder S06): rename, make a copy,
 // move to a folder, move to Trash (with Undo).
-import { api, type DesignSummary } from "../data";
+import { useEffect, useRef } from "react";
+import { api, thumbnailUploads, type DesignSummary } from "../data";
 import type { CardAction } from "./DesignCard";
 import { NameDialog, useDialogState } from "./dialogs";
 import { MoveToFolderDialog } from "./folders";
@@ -14,6 +15,16 @@ type DesignDialog = { kind: "rename" | "move"; design: DesignSummary };
 export function useDesignActions(changed: () => void | Promise<void>) {
   const state = useDialogState<DesignDialog>();
   const d = state.value;
+
+  // every list of design cards uses these actions, so this is also where a list picks up a thumbnail
+  // that landed after it loaded
+  const latest = useRef(changed);
+  latest.current = changed;
+  useEffect(() => {
+    const reload = () => void latest.current();
+    thumbnailUploads.addEventListener("uploaded", reload);
+    return () => thumbnailUploads.removeEventListener("uploaded", reload);
+  }, []);
 
   const moveToTrash = async (design: DesignSummary) => {
     try {

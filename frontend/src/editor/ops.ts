@@ -208,6 +208,9 @@ const SIZE_MAX = 100_000; // same limit as the server
  * height follows its text and a line's height is its thickness, so only their width changes.
  * `measure` gives a text box's height at a width (geometry.ts measureTextHeight).
  */
+/** A text box narrower than one wide letter can't show any letter, so its text vanished (BUG-019). */
+export const minTextWidth = (fontSize: number) => Math.ceil(fontSize);
+
 export function setGeometry(el: Element, g: Geometry, measure: (el: Element & { type: "text" }) => number): Element {
   let next: Element = { ...el };
   if (g.x !== undefined) next.x = pos(g.x);
@@ -221,7 +224,7 @@ export function setGeometry(el: Element, g: Geometry, measure: (el: Element & { 
       next = { ...scaled, x: next.x, y: next.y, rotation: next.rotation };
     } else if (el.type === "text") {
       if (g.width !== undefined) {
-        const width = size(g.width);
+        const width = Math.max(size(g.width), minTextWidth(el.font_size));
         next = { ...next, width, height: measure({ ...(next as typeof el), width }) } as Element;
       }
     } else if (el.type === "line") {

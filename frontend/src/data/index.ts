@@ -7,5 +7,17 @@ import { supabaseConfigured } from "../lib/supabase";
 import type { DataLayer } from "./api";
 
 export const usingFakeData = !supabaseConfigured;
-export const api: DataLayer = usingFakeData ? fake : http;
+const layer: DataLayer = usingFakeData ? fake : http;
+
+/** Tells open design lists that a thumbnail landed. Leaving the editor uploads the last picture while
+ *  Home is already loading, and on a slow connection the list arrives first (BUG-021). */
+export const thumbnailUploads = new EventTarget();
+
+export const api: DataLayer = {
+  ...layer,
+  async uploadThumbnail(id, png) {
+    await layer.uploadThumbnail(id, png);
+    thumbnailUploads.dispatchEvent(new CustomEvent("uploaded", { detail: id }));
+  },
+};
 export * from "./api";

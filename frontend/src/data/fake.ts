@@ -346,6 +346,9 @@ export const fake: DataLayer = {
   },
 
   async uploadThumbnail(id, png) {
+    // tests can make this as slow as the real upload (two requests to a far-away server)
+    const slow = Number(sessionStorage.getItem("pitch.fake.thumbnailDelayMs")) || 0;
+    if (slow) await new Promise((resolve) => setTimeout(resolve, slow));
     const row = await owned<DesignRow>("designs", id);
     await put("thumbnails", { id, owner_id: row.owner_id, blob: png } satisfies ThumbRow);
     dropUrl(`thumb:${id}`);

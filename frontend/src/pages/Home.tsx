@@ -33,6 +33,9 @@ export function Home() {
   // debounce search 250 ms (components.md, SearchInput)
   useEffect(() => {
     setSearching(true);
+    // back from a search: the list on screen is the search result (maybe empty), so show the
+    // placeholders until the full list is back, not "Nothing here yet" (BUG-020)
+    if (!q) setDesigns(null);
     const t = setTimeout(() => load(q), q ? 250 : 0);
     return () => clearTimeout(t);
   }, [q, load]);

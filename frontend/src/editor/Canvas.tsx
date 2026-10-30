@@ -27,7 +27,7 @@ import {
   type Box,
   type Gap,
 } from "./geometry";
-import { keepFrameOnPhoto, nudge, patch, scaleElement, wholePhotoBox } from "./ops";
+import { keepFrameOnPhoto, minTextWidth, nudge, patch, scaleElement, wholePhotoBox } from "./ops";
 import { activeElements, useEditor, useEditorStore } from "./store";
 
 const SNAP_SCREEN_PX = 5; // components.md, SmartGuides
@@ -528,18 +528,20 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
         const length = clamp(el.width * sx, 1, 100_000);
         update = { width: round2(length), rotation, x: round2(node.x() - length / 2), y: round2(node.y() - el.height / 2) };
       } else {
-        const width = clamp(el.width * sx, 1, 100_000);
+        const transformedWidth = clamp(el.width * sx, 1, 100_000);
+        let width = transformedWidth;
         const transformedHeight = clamp(el.height * sy, 1, 100_000);
         let height = transformedHeight;
         update = { rotation };
         if (el.type === "text") {
           // corners scale the text; the side handles only change where it wraps
           const fontSize = clamp(Math.abs(sx - sy) < 0.001 ? el.font_size * sx : el.font_size, 1, 800);
+          width = Math.max(width, minTextWidth(fontSize));
           height = measureTextHeight({ ...el, width, font_size: fontSize });
           Object.assign(update, { font_size: round2(fontSize) });
         }
         // the node's position is its centre; if re-wrapping changed the height, keep the top-left corner
-        const { x, y } = keepTopLeft(node.x(), node.y(), width, transformedHeight, width, height, node.rotation());
+        const { x, y } = keepTopLeft(node.x(), node.y(), transformedWidth, transformedHeight, width, height, node.rotation());
         Object.assign(update, { x, y, width: round2(width), height: round2(height) });
       }
       node.scaleX(1);

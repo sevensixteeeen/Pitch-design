@@ -486,6 +486,11 @@ valid image"; and the API makes fewer trips to the database (one read request 1,
 Checks: 73 end-to-end tests (7 new in `e2e/minor-fixes.spec.ts`; F08-E11 now steps past "Make a copy" in the card
 menu) and 92 API tests (2 new in `tests/test_db.py`) pass.
 
+Then three more (BUG-019 to 021, branch `build/minor-fixes-2`): a text box can't get narrower than one letter,
+clearing a search on Home shows placeholders instead of a "Nothing here yet" flash, and a thumbnail that lands after
+Home has loaded now shows up (the lists reload). Checks: 76 end-to-end tests (3 new, each failing on the old code)
+and 92 API tests pass.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

@@ -243,4 +243,4 @@ Automated: 90 API tests, 63 end-to-end tests (61 on fake data, 2 in the new "rea
 
 ## Totals (2026-10-30, after Settings)
 
-Automated: 92 API tests, 73 end-to-end tests (70 on fake data, 3 in real-mode).
+Automated: 92 API tests, 76 end-to-end tests (73 on fake data, 3 in real-mode).

@@ -254,6 +254,23 @@ All found by you on 2026-10-30; fixed on branch `build/minor-fixes`. BUG-011 to 
   is never tested twice in a row; a read hands back a normal connection). What's left is distance: a Supabase
   project in Mumbai would make each trip about ten times shorter, but it means a new project and moving data.
 
+### BUG-019 to BUG-021: three more from you (2026-10-30)
+
+Fixed on branch `build/minor-fixes-2`; each has a test in `e2e/minor-fixes-2.spec.ts` that fails on the old code.
+
+- **BUG-019 (S3) Text vanishes at a negative width.** Position → Width = -50 squashed a text box to 1 px, and a
+  box narrower than one letter draws no letters at all. Fix: a text box is never narrower than its font size
+  (`minTextWidth` in `ops.ts`), in the Position panel and when dragging its side handles.
+- **BUG-020 (S4) "Nothing here yet" flashes after Clear search.** For a moment Home still held the empty search
+  result but no longer had a search, so it looked like you had no designs. Fix: placeholders until the full
+  list is back, as on Projects.
+- **BUG-021 (S3) No thumbnail for a background-only design.** Not about the background: leaving the editor right
+  after an edit uploads the last picture while Home loads its list, and on the real server (two requests, about
+  280 ms per database trip from India) the list arrives first, so the card stayed blank. The fake data answered
+  instantly, so tests never saw it; they can now slow its upload down (`pitch.fake.thumbnailDelayMs` in session
+  storage). Fix: the data layer announces each thumbnail that lands, and open design lists (Home, Projects, a
+  folder) reload.
+
 ## To check (not reproduced, can't be yet)
 
 - **T1 Accent search on Supabase.** ✅ Checked 2026-10-27 on the live database (locale `en_US.UTF-8`):
