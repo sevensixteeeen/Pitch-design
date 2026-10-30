@@ -455,6 +455,26 @@ Checks: 66 end-to-end tests (2 new on fake data: the whole flow, and 390 px; 1 n
 sends the current password to Supabase first and saves nothing when it's wrong), build. The fake-Supabase helpers for
 real-mode tests moved into `e2e/real-mode/fakeSupabase.ts`. Delete account (the API route exists) still has no screen.
 
+## A new look: Glow (2026-10-30, branch `build/brand-glow`)
+
+You asked for midnight with electric blue and orange, then shared a reference screenshot. Two previews were drawn
+(`brand/preview-midnight.png`, then `brand/preview-glow.png` with your exact palette); you chose Glow. Ember stays
+recorded in `brand.md` as the earlier look.
+
+In the app: a dark palette in the tokens (Midnight Black `#02070a`, Electric Blue `#0297de`, Cantaloupe Orange
+`#fc734d`; 28 pairs, 0 failing AA; blue buttons carry dark text), `color-scheme: dark`, a `.bg-glow` background
+(behind the login panel and the main screens, never in the editor) and `.glass` cards, both made from the tokens;
+page titles in Playfair Display with one italic word; the login screen rebuilt (serif tagline, three facts, glass
+card); an orange "Start from a template" link on Home; the logo and favicon in the new colours. No new packages
+(Playfair Display and its italic were already installed).
+
+Fixes after the first screenshots: the glow was too faint (now as strong as the preview), the login card used a
+corner size the tokens don't define, and a design without a thumbnail showed as an invisible dark box.
+
+Checks: 66 end-to-end tests with their axe scans (contrast included) pass; the real-mode tests now answer every /api
+request themselves, so they never reach an API server that happens to be running. Screenshots looked at: login, Home,
+Templates, the editor, a 390 px phone (`brand/glow-*.png`).
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

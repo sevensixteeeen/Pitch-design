@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Pitch: Glow</title>
+<style>
+  @font-face { font-family: "Playfair"; src: url("../../frontend/node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2") format("woff2"); font-weight: 400 900; }
+  @font-face { font-family: "Playfair"; font-style: italic; src: url("../../frontend/node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2") format("woff2"); font-weight: 400 900; }
+  @font-face { font-family: "Space Grotesk"; src: url("../../frontend/node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 300 700; }
+  @font-face { font-family: "Inter"; src: url("../../frontend/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: Inter, sans-serif; background: #02070a; color: #eef4f8; }
+  .glow { background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 9px),
+      radial-gradient(60% 55% at 50% 105%, rgba(252,115,77,.65), transparent 70%),
+      radial-gradient(70% 60% at 50% 70%, rgba(2,151,222,.55), transparent 72%),
+      #02070a; }
+  .serif { font-family: Playfair, serif; font-weight: 500; letter-spacing: -0.01em; } .serif em { font-style: italic; }
+  .logo { display: flex; align-items: center; gap: 10px; font: 700 26px "Space Grotesk"; letter-spacing: -0.02em; } .logo img { width: 34px; }
+  .glass { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(14px); border-radius: 16px; }
+  .btn { font: 600 14px Inter; background: #0297de; color: #02070a; padding: 11px 16px; border-radius: 10px; text-align: center; }
+  .btn2 { font: 600 14px Inter; background: rgba(255,255,255,.06); color: #eef4f8; border: 1px solid rgba(255,255,255,.16); padding: 10px 14px; border-radius: 10px; }
+  label { font-size: 12px; color: #93a4b1; display: block; margin: 14px 0 6px; }
+  .input { height: 42px; border: 1px solid #5b7080; border-radius: 10px; background: rgba(2,7,10,.6); }
+  .login { display: grid; grid-template-columns: 1.1fr 1fr; height: 760px; }
+  .hero { padding: 40px; display: flex; flex-direction: column; justify-content: space-between; }
+  .hero h2 { font-size: 64px; line-height: 1.05; } .hero p { color: #b8c6d1; font-size: 16px; margin-top: 14px; max-width: 420px; }
+  .stats { display: flex; gap: 40px; } .stats b { font: 500 30px Playfair, serif; display: block; } .stats span { color: #93a4b1; font-size: 12px; }
+  .formside { display: flex; align-items: center; justify-content: center; background: #02070a; }
+  .card { width: 380px; padding: 28px; }
+  .card h1 { font-size: 30px; } .link { color: #0297de; font-weight: 600; }
+  .home { display: grid; grid-template-columns: 220px 1fr; height: 640px; border-top: 1px solid #122029; }
+  .side { background: #050c10; border-right: 1px solid #122029; padding: 18px 12px; }
+  .nav { padding: 9px 10px; border-radius: 10px; font-size: 14px; margin-top: 4px; } .nav.on { background: rgba(2,151,222,.14); color: #3fb4f0; font-weight: 600; }
+  .top { padding: 34px 32px 26px; }
+  .top h1 { font-size: 46px; } .top .row { display: flex; justify-content: space-between; align-items: center; }
+  .chip { display: inline-block; margin-top: 12px; font-size: 12px; color: #fc734d; border: 1px solid rgba(252,115,77,.45); background: rgba(252,115,77,.1); padding: 5px 10px; border-radius: 999px; }
+  .cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 0 32px; }
+  .dcard { padding: 8px; } .thumb { height: 150px; border-radius: 10px; background: rgba(2,7,10,.55); display: flex; align-items: center; justify-content: center; }
+  .page { width: 88px; height: 116px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.6); position: relative; overflow: hidden; }
+  .dcard b { display: block; font-size: 13px; margin-top: 8px; } .dcard small { color: #93a4b1; font-size: 12px; }
+  .sale { position:absolute; left:8px; top:40px; font:700 19px "Space Grotesk"; color:#e63946; }
+  .quote { position:absolute; left:10px; top:44px; width:68px; font:italic 12px Playfair, serif; color:#2b2d42; }
+</style></head><body>
+  <section class="login">
+    <div class="hero glow">
+      <div class="logo"><img src="logo-mark-glow.svg" alt="">pitch</div>
+      <div><h2 class="serif">Design it.<br><em>Pitch</em> it.</h2><p>Posters, posts and slides in a calm editor. No upgrade pop-ups, nothing locked.</p></div>
+      <div class="stats"><div><b>12</b><span>templates of our own</span></div><div><b>3×</b><span>sharp downloads</span></div><div><b>0</b><span>locked features</span></div></div>
+    </div>
+    <div class="formside"><div class="card glass">
+      <h1 class="serif">Make your first <em>design</em></h1>
+      <label>Email</label><div class="input"></div>
+      <label>Password</label><div class="input"></div>
+      <div class="btn" style="margin-top:20px">Create account</div>
+      <p style="text-align:center;margin-top:14px;color:#93a4b1;font-size:14px">Have an account? <span class="link">Log in</span></p>
+    </div></div>
+  </section>
+  <section class="home">
+    <div class="side"><div class="logo" style="font-size:22px"><img src="logo-mark-glow.svg" alt="" style="width:28px">pitch</div><div style="height:14px"></div>
+      <div class="nav on">Home</div><div class="nav">Projects</div><div class="nav">Templates</div><div class="nav">Trash</div><div class="nav">Settings</div></div>
+    <div class="glow">
+      <div class="top"><div class="row"><h1 class="serif">Hi! What will you <em>make</em>?</h1><span><span class="btn2">Search your designs</span> <span class="btn">+ Create a design</span></span></div>
+        <span class="chip">✦ Start from a template</span></div>
+      <div class="cards">
+        <div class="dcard glass"><div class="thumb"><div class="page" style="background:#fff4d6"><div style="position:absolute;right:-14px;top:-14px;width:54px;height:54px;border-radius:50%;background:#ffb703"></div><div class="sale">BIG<br>SALE</div></div></div><b>Weekend sale</b><small>Edited just now</small></div>
+        <div class="dcard glass"><div class="thumb"><div class="page" style="background:#264653"><div style="position:absolute;inset:20px;border-radius:50%;background:#2a9d8f"></div></div></div><b>Grand opening</b><small>Edited yesterday</small></div>
+        <div class="dcard glass"><div class="thumb"><div class="page" style="background:#f1ede4"><div class="quote">Small steps every day…</div></div></div><b>Quote card</b><small>Edited 2 days ago</small></div>
+        <div class="dcard glass"><div class="thumb"><div class="page"></div></div><b>Untitled design</b><small>Edited 3 days ago</small></div>
+      </div>
+    </div>
+  </section>
+</body></html>

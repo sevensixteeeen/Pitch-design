@@ -1,4 +1,4 @@
-<img src="frontend/public/favicon.svg" alt="Pitch logo: a bold P with a marigold spark" width="72">
+<img src="frontend/public/favicon.svg" alt="Pitch logo: a bold P with an orange spark" width="72">
 
 # Pitch (learning project)
 
@@ -74,7 +74,7 @@ common errors are all in **[HOW-TO-RUN.md](HOW-TO-RUN.md)**.
 | API | FastAPI (Python 3.12, uv); Pydantic checks every saved design; psycopg 3 with plain SQL |
 | database, logins, files | Supabase: Postgres, Auth, a private Storage bucket with short-lived signed links |
 | tests | pytest with a throwaway local Postgres (pgserver); Playwright + axe-core in Chromium on fake data |
-| identity | its own: ember red-orange, warm paper greys, ink text, a marigold spark; a P-and-spark logo; Space Grotesk headings (`replica/brand.md`) |
+| identity | its own, "Glow": a dark app in Midnight Black, Electric Blue and Cantaloupe Orange, a blue-to-orange glow, glass cards, serif page titles (Playfair Display), a P-and-spark logo (`replica/brand.md`) |
 | hosting | none, on purpose: it runs locally (the API on port 8000, the editor on 5173). Only Supabase is online |
 
 A few choices worth knowing, with the reasons in `replica/architecture.md` and `replica/build-log.md`:

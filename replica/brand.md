@@ -1,25 +1,29 @@
 # Pitch: brand
 
-Chosen 2026-10-29 (direction "A · Ember", see `brand/preview.png`). A learning project that is never deployed,
-so there are no trademark, domain, store or handle checks: the name "Pitch" was your choice on 2026-10-27, and
+Current look: **Glow** (chosen 2026-10-30 from your reference: a dark app, Midnight Black, Electric Blue, Cantaloupe
+Orange, a glowing gradient, serif titles). Earlier looks are kept below under History. A learning project that is never
+deployed, so there are no trademark, domain, store or handle checks: the name "Pitch" was your choice on 2026-10-27, and
 the README says Pitch isn't linked to Canva or to the presentation app also called Pitch.
+
+The palette and the mood come from a screenshot you shared (a social-media video showing a landing-page concept). Only
+the ideas are used (three colours, a glow, a serif title with one italic word, glass cards): none of that page's layout,
+words, logo or product.
 
 ## Idea
 
-**Design it. Pitch it.** Pitch is where you shape an idea and get it ready to show: a poster, a post, a slide.
-It should feel warm and confident, like a good sketchbook, and calm: nothing pushed at you, nothing locked
+**Design it. *Pitch* it.** Pitch is where you shape an idea and get it ready to show: a poster, a post, a slide.
+It should feel like a calm studio at night: dark, focused, with a warm glow; nothing pushed at you, nothing locked
 (the angle from `fixes.md`).
 
 ## Logo
 
-- **Mark:** a bold **P** in a rounded square, with a small marigold **spark** in the top-right corner: an
-  idea being pitched. Ember square, white P, marigold spark.
+- **Mark:** a bold **P** in a rounded square, with a small **spark** in the top-right corner: an idea being pitched.
+  Glow colours: Electric Blue square, Midnight P, Cantaloupe Orange spark.
 - **Wordmark:** "pitch" in lowercase, Space Grotesk bold, slightly tight, next to the mark.
-- Works at 16 px (browser tab) up to any size: plain shapes, no thin lines, no gradient.
+- Works at 16 px (browser tab) up to any size: plain shapes, no thin lines, no gradient in the mark.
 - **Never like the original's mark:** no circle badge, no script lettering, no purple, turquoise or gradient.
-- Files: `brand/logo-mark-ember.svg` (the master), `frontend/public/favicon.svg` (same), and
+- Files: `brand/logo-mark-glow.svg` (the master), `frontend/public/favicon.svg` (same), and
   `frontend/src/components/Logo.tsx` (`LogoMark`, `Wordmark`), which takes its colours from the tokens.
-- Where it's used: the browser tab, the sidebar (links to Home), the login screen, the editor's Home button.
 
 ## Colour
 
@@ -27,20 +31,28 @@ All in `design/tokens.json`; `python contrast.py tokens.json`: 28 pairs, 0 faili
 
 | role | colour | use |
 | --- | --- | --- |
-| accent | Ember `#c8401a` (hover `#a8330f`) | main buttons, the active item, links, the logo |
-| accent-soft | Blush `#fdf2ed` | the active menu item, the login brand panel |
-| text | Ink `#1f1b16` | all text; muted text `#625a51` |
-| surface / workspace | Paper `#f6f2ec` / `#ebe5dc` | page backgrounds, the editor's workspace |
-| spark | Marigold `#f2a900` | decoration only (the logo, illustrations): never text, it fails contrast |
-| danger | Crimson-rose `#b3203c` | Delete buttons: a different red from ember, so they can't be mixed up |
-| selection | Blue `#2f5bea` | the canvas selection box: it must show on any design, red-orange ones too |
+| surface | Midnight Black `#02070a` | the page behind everything |
+| bg | Panel `#0a141b` | the sidebar, panels, dialogs |
+| workspace | `#050c10` | the editor around the pages (no glow there: the design is the star) |
+| accent | Electric Blue `#0297de` (hover `#3fb4f0`) | main buttons, links, the active item, the canvas selection |
+| on-accent | Midnight `#02070a` | text on blue buttons: white on this blue would be only 3.2:1 |
+| spark | Cantaloupe Orange `#fc734d` | the logo's spark, small highlights ("Start from a template"), the warm part of the glow, snapping guides |
+| text | `#eef4f8`; muted `#93a4b1` | all text |
+| danger | Coral `#ff6b7a` | Delete buttons, with dark text |
 
-Kept away from the original's colours (`brand.json`: purple `#8b3dff` / `#7d2ae8`, turquoise `#00c4cc`).
+## The glow and glass
+
+- **Glow** (`.bg-glow` in `styles/index.css`): Electric Blue rising into Cantaloupe Orange from the bottom, over
+  Midnight, with faint vertical lines. Behind the login brand panel and the main screens (Home, Projects, Templates,
+  Trash, Settings). Never in the editor.
+- **Glass** (`.glass`): see-through, slightly blurred cards over the glow: design, folder and template cards, the login
+  card. Both are built from the colour tokens with `color-mix`, so they follow any palette change.
 
 ## Type
 
-- Headings (h1–h3) and the wordmark: **Space Grotesk** (open licence, already one of the editor's fonts).
-- Everything else: **Inter**.
+- Page titles (h1): **Playfair Display**, medium, often with one word in *italic* ("Hi! What will you *make*?").
+- Smaller headings (h2, h3) and the wordmark: **Space Grotesk**.
+- Everything else: **Inter**. All three were already in the app (open licence); no new packages.
 
 ## Voice
 
@@ -52,15 +64,19 @@ Three words: **warm** (not cute), **plain** (not curt), **calm** (not flat).
 | Say what happened and what to do: "Can't reach Pitch's server. Check that it's running." | Blame the user, or say "Error 502" |
 | Short sentences, everyday words | Jargon, exclamation marks everywhere |
 | Tell people when nothing is lost | Scare people about things that are undoable |
-| "Design it. Pitch it." | Upgrade nags, "Go Pro" |
+| "Design it. *Pitch* it." | Upgrade nags, "Go Pro" |
 
-The existing screens already follow this, so no strings were rewritten; the login brand panel adds the tagline
-"Design it. Pitch it." and "Posters, posts and slides in a calm editor. No upgrade pop-ups, nothing locked."
+## History
 
-## Sweep (2026-10-29)
+- **Ember** (2026-10-29 → 2026-10-30): a light app with ember red-orange `#c8401a`, warm paper greys, ink text, a
+  marigold spark, Space Grotesk headings. `brand/preview.png`, `brand/logo-mark-ember.svg`, screenshots `brand/shot-*.png`.
+- **Midnight** (2026-10-30, not used): a first dark draft with `#0b1120` and `#3d8bff`, replaced by your reference
+  palette. `brand/preview-midnight.png`.
 
-`sweep.py . --config replica/brand.json` reports 87 "Canva" hits, but 84 are the ordinary word "canvas". A
-search for "Canva" not followed by "s" finds only things kept on purpose: the repo, folder and package names
-`canva-clone` (your decision, 2026-10-27), internal storage and test-database names, the README's "not linked to
-Canva" note, and a comment in the first database migration (already applied, so left as it is). None of the
-original's colours appear anywhere.
+## Sweep (2026-10-29, unchanged since)
+
+`sweep.py . --config replica/brand.json` reports "Canva" hits, but nearly all are the ordinary word "canvas". A search
+for "Canva" not followed by "s" finds only things kept on purpose: the repo, folder and package names `canva-clone`
+(your decision, 2026-10-27), internal storage and test-database names, the README's "not linked to Canva" note, and a
+comment in the first database migration (already applied). None of the original's colours appear anywhere; Electric
+Blue `#0297de` is a sky blue, well away from the original's turquoise `#00c4cc`.

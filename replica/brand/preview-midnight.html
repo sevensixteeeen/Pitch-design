@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Pitch: Midnight</title>
+<style>
+  @font-face { font-family: "Space Grotesk"; src: url("../../frontend/node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 300 700; }
+  @font-face { font-family: "Inter"; src: url("../../frontend/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: Inter, sans-serif; background: #070b16; color: #e8ecf6; padding: 32px; }
+  h1 { font: 700 26px "Space Grotesk"; } .lead { color: #9aa6c4; margin: 4px 0 24px; }
+  .row { display: flex; gap: 32px; align-items: center; margin-bottom: 24px; }
+  .word { font: 700 48px/1 "Space Grotesk"; letter-spacing: -0.03em; }
+  .lockup { display: flex; align-items: center; gap: 14px; } .lockup img { width: 56px; }
+  .sizes { display: flex; align-items: end; gap: 14px; color: #9aa6c4; font-size: 12px; } .sizes div { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .swatches { display: flex; gap: 8px; } .sw { width: 100px; } .sw i { display: block; height: 44px; border-radius: 8px; border: 1px solid #24304d; } .sw span { display: block; font-size: 11px; color: #9aa6c4; margin-top: 4px; }
+  .mock { display: grid; grid-template-columns: 200px 1fr; border-radius: 12px; overflow: hidden; border: 1px solid #24304d; height: 470px; }
+  .side { background: #121a2e; border-right: 1px solid #24304d; padding: 16px 12px; }
+  .brand { display: flex; align-items: center; gap: 8px; font: 700 22px "Space Grotesk"; padding: 0 6px 16px; } .brand img { width: 28px; }
+  .nav { padding: 9px 10px; border-radius: 8px; font-size: 14px; margin-bottom: 2px; color: #e8ecf6; } .nav.on { background: #14254d; color: #3d8bff; font-weight: 600; }
+  .main { background: #0b1120; padding: 22px; }
+  .main h3 { font: 700 24px "Space Grotesk"; display: flex; justify-content: space-between; align-items: center; }
+  .btn { font: 600 14px Inter; background: #3d8bff; color: #08101f; padding: 10px 16px; border-radius: 8px; }
+  .btn2 { font: 600 14px Inter; background: #121a2e; color: #e8ecf6; border: 1px solid #24304d; padding: 9px 14px; border-radius: 8px; margin-right: 8px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+  .card { background: #121a2e; border: 1px solid #24304d; border-radius: 10px; padding: 8px; }
+  .thumb { height: 140px; border-radius: 6px; background: #070b16; display: flex; align-items: center; justify-content: center; }
+  .page { width: 82px; height: 108px; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.5); position: relative; overflow: hidden; }
+  .card b { display: block; font-size: 13px; margin-top: 8px; } .card small { color: #9aa6c4; font-size: 12px; }
+  .tag { display: inline-block; margin-top: 18px; padding: 6px 10px; border-radius: 999px; background: #2a1a0a; color: #ff8a1f; font-size: 12px; font-weight: 600; border: 1px solid #5a3412; }
+</style></head><body>
+  <h1>Pitch: Midnight</h1>
+  <p class="lead">A dark app: midnight navy, electric blue for actions, orange as the spark and for highlights. Designs on the pages stay white.</p>
+  <div class="row">
+    <div class="lockup"><img src="logo-mark-midnight.svg" alt=""><span class="word">pitch</span></div>
+    <div class="sizes"><div><img src="logo-mark-midnight.svg" width="16" alt="">16 px</div><div><img src="logo-mark-midnight.svg" width="32" alt="">32 px</div><div><img src="logo-mark-midnight.svg" width="64" alt="">64 px</div></div>
+    <div class="swatches">
+      <div class="sw"><i style="background:#0b1120"></i><span>Midnight #0b1120</span></div>
+      <div class="sw"><i style="background:#121a2e"></i><span>Panel #121a2e</span></div>
+      <div class="sw"><i style="background:#3d8bff"></i><span>Electric blue #3d8bff</span></div>
+      <div class="sw"><i style="background:#ff8a1f"></i><span>Orange #ff8a1f</span></div>
+      <div class="sw"><i style="background:#e8ecf6"></i><span>Text #e8ecf6</span></div>
+    </div>
+  </div>
+  <div class="mock">
+    <div class="side"><div class="brand"><img src="logo-mark-midnight.svg" alt="">pitch</div><div class="nav on">Home</div><div class="nav">Projects</div><div class="nav">Templates</div><div class="nav">Trash</div><div class="nav">Settings</div></div>
+    <div class="main"><h3>Hi! What will you make? <span><span class="btn2">New folder</span><span class="btn">+ Create a design</span></span></h3>
+      <span class="tag">✦ 12 new templates</span>
+      <div class="cards">
+        <div class="card"><div class="thumb"><div class="page" style="background:#fff4d6"><div style="position:absolute;right:-14px;top:-14px;width:52px;height:52px;border-radius:50%;background:#ffb703"></div><div style="position:absolute;left:7px;top:36px;font:700 18px 'Space Grotesk';color:#e63946">BIG<br>SALE</div></div></div><b>Weekend sale</b><small>Edited just now</small></div>
+        <div class="card"><div class="thumb"><div class="page" style="background:#264653"><div style="position:absolute;inset:18px;border-radius:50%;background:#2a9d8f"></div></div></div><b>Grand opening</b><small>Edited yesterday</small></div>
+        <div class="card"><div class="thumb"><div class="page" style="background:#f1ede4"><div style="position:absolute;left:10px;top:40px;width:62px;font:italic 11px Georgia;color:#2b2d42">Small steps every day…</div></div></div><b>Quote card</b><small>Edited 2 days ago</small></div>
+        <div class="card"><div class="thumb"><div class="page"></div></div><b>Untitled design</b><small>Edited 3 days ago</small></div>
+      </div></div>
+  </div>
+</body></html>
