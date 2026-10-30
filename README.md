@@ -14,12 +14,41 @@ them, and download the result as PNG, JPG or PDF. Built step by step with the re
 > planned from public sources only (help pages, store listings, public reviews) and contains none of
 > Canva's code, logos, icons, fonts, templates or copy. The 12 templates are written for this project.
 
+## Screenshots
+
+The "Glow" look: midnight black, electric blue and a spark of orange (`replica/brand.md`). Shown with
+made-up data.
+
+<table>
+  <tr>
+    <td><img src="replica/brand/glow-login.png" alt="Login: a glowing panel saying Design it. Pitch it., next to the sign-up card"></td>
+    <td><img src="replica/brand/glow-home.png" alt="Home: Hi! What will you make?, with a recent design card"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Log in</b></td>
+    <td align="center"><b>Home</b></td>
+  </tr>
+  <tr>
+    <td><img src="replica/brand/glow-templates.png" alt="Templates: twelve templates as cards, with filters by kind"></td>
+    <td><img src="replica/brand/glow-editor.png" alt="The editor: a launch poster with the Layers panel open and a circle selected"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Templates</b></td>
+    <td align="center"><b>Editor</b></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="replica/brand/glow-phone.png" alt="Projects on a phone-sized screen" width="260"><br>
+  <b>On a phone</b>
+</p>
+
 ## Status: milestones 1–3 done (2026-10-29)
 
 - **30 of 30 must-have** and **all 14 should-have** features are built (`replica/features.csv`).
 - Feature parity with the original's core editor: **94.9 / 100** (`replica-diff`).
 - Checked by **92 API tests** and **76 end-to-end tests** in a real browser (Playwright, with an axe
-  accessibility scan of every screen). Every bug found is written up in `replica/bugs.md` (10 so far, all fixed).
+  accessibility scan of every screen). Every bug found is written up in `replica/bugs.md` (21 so far, all fixed).
 - Tried live on Supabase: sign up, password reset by email, create, autosave, upload a photo, place it and
   download the PNG.
 - Not built: the optional "could" features, such as version history, copy and resize, transparent PNG,
