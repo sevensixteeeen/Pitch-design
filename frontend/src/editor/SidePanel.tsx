@@ -138,7 +138,10 @@ function ElementsPanel() {
 
 /** Reads an image's size in the browser (the server only checks bytes and type). */
 async function imageSize(file: File) {
-  const bitmap = await createImageBitmap(file);
+  // the browser's own error ("The source image could not be decoded") means nothing to people
+  const bitmap = await createImageBitmap(file).catch(() => {
+    throw new Error("this file isn't a valid image.");
+  });
   const size = { width_px: bitmap.width, height_px: bitmap.height };
   bitmap.close();
   return size;

@@ -33,7 +33,7 @@ export function CreateDesign() {
   const [h, setH] = useState(1080);
   const [busy, setBusy] = useState(false);
   const toPx = (v: number) => Math.round(v * PX_PER_UNIT[unit]);
-  const error = sizeError(toPx(w), toPx(h));
+  const error = sizeError(toPx(w), toPx(h), unit);
 
   const create = async (widthPx: number, heightPx: number, displayUnit: DisplayUnit) => {
     setBusy(true);

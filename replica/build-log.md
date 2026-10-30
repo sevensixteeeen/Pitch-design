@@ -475,6 +475,17 @@ Checks: 66 end-to-end tests with their axe scans (contrast included) pass; the r
 request themselves, so they never reach an API server that happens to be running. Screenshots looked at: login, Home,
 Templates, the editor, a 390 px phone (`brand/glow-*.png`).
 
+## Small fixes (2026-10-30, branch `build/minor-fixes`)
+
+Eight things you found clicking around (bugs.md BUG-011 to 018): new elements now step down and right instead of
+stacking, and new shapes are Electric Blue; the font size box shows "60" and "800"; the rotate handle stays at
+the top of a flipped, rotated element (flips are drawn by an inner group); the size error uses the chosen unit;
+the Projects sort is remembered; design cards have "Make a copy"; a broken image file says "this file isn't a
+valid image"; and the API makes fewer trips to the database (one read request 1,655 ms → 546 ms from your PC).
+
+Checks: 73 end-to-end tests (7 new in `e2e/minor-fixes.spec.ts`; F08-E11 now steps past "Make a copy" in the card
+menu) and 92 API tests (2 new in `tests/test_db.py`) pass.
+
 ## Notes for later
 
 - The main JS file is 1,123 kB (336 kB gzipped) after 2c: Konva, supabase-js, Radix and the editor.

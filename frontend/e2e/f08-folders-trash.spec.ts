@@ -128,6 +128,7 @@ test.describe("F08 folders", () => {
     await more.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("menuitem", { name: "Rename" })).toBeFocused();
+    await page.keyboard.press("ArrowDown"); // Make a copy
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter"); // Move to folder…
     const folderBox = page.getByRole("dialog", { name: "Move to folder" }).getByRole("combobox", { name: "Folder" });

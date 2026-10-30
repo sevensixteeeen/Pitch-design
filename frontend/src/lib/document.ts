@@ -118,11 +118,15 @@ export const SIZE_MAX = 8000;
 export const AREA_MAX = 25_000_000;
 export const PX_PER_UNIT: Record<DisplayUnit, number> = { px: 1, in: 96, mm: 96 / 25.4, cm: 96 / 2.54 };
 
-/** Error text for a width/height in px, or null when it is allowed. Same rules as schema.sql. */
-export function sizeError(widthPx: number, heightPx: number): string | null {
+/** Error text for a width/height in px, or null when it is allowed. Same rules as schema.sql.
+ *  `unit` is what the person typed in, so the limits are shown in it (e.g. "0.42–83.33 in"). */
+export function sizeError(widthPx: number, heightPx: number, unit: DisplayUnit = "px"): string | null {
   if (!Number.isFinite(widthPx) || !Number.isFinite(heightPx)) return "Enter a width and a height.";
   if (widthPx < SIZE_MIN || heightPx < SIZE_MIN || widthPx > SIZE_MAX || heightPx > SIZE_MAX) {
-    return `Each side must be ${SIZE_MIN}–${SIZE_MAX} px.`;
+    // min rounded up and max rounded down, so both shown limits are allowed sizes
+    const k = PX_PER_UNIT[unit];
+    const [min, max] = unit === "px" ? [SIZE_MIN, SIZE_MAX] : [Math.ceil((SIZE_MIN / k) * 100) / 100, Math.floor((SIZE_MAX / k) * 100) / 100];
+    return `Each side must be ${min}–${max} ${unit}.`;
   }
   if (widthPx * heightPx > AREA_MAX) return "That's too large. Width × height can be at most 25 million px.";
   return null;
@@ -180,7 +184,7 @@ export function makeShape(pageW: number, pageH: number, kind: ShapeElement["kind
     ...base(Math.round((pageW - side) / 2), Math.round((pageH - side) / 2), side, side),
     type: "shape",
     kind,
-    fill: "#9aa3ad",
+    fill: "#0297de", // Electric Blue, so a new shape stands out from grey ones
     stroke: null,
     stroke_width: 0,
     corner_radius: 0,

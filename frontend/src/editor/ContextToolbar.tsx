@@ -103,7 +103,7 @@ function TextControls({ store, texts }: { store: EditorStore; texts: TextElement
           ))}
         </Menu.Content>
       </Menu.Root>
-      <div className="w-16">
+      <div className="w-20 shrink-0">
         <NumberField
           label="Font size"
           hideLabel

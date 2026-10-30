@@ -1,7 +1,7 @@
 // S08 canvas (Konva). Every page is drawn on its own stage, stacked vertically with a label and page
 // actions above it (components.md, Canvas + Page). One page is active: selecting, moving, resizing,
 // rotating, snapping and typing happen there. Clicking another page makes it active.
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Arrow, Ellipse, Group, Image as KonvaImage, Label, Layer, Line, Rect, Stage, Tag, Text, Transformer } from "react-konva";
 import type Konva from "konva";
 import { Copy, Plus, Trash2 } from "lucide-react";
@@ -154,24 +154,26 @@ function CropOverlay({ el, M, scale, colours }: { el: ImageElement; M: number; s
     <>
       <Group x={M} y={M} scaleX={scale} scaleY={scale}>
         <Group {...place} onMouseDown={(e) => (e.cancelBubble = true)}>
-          <KonvaImage image={img} {...photo} opacity={0.35} />
-          <Group clipX={frame.x} clipY={frame.y} clipWidth={frame.width} clipHeight={frame.height} listening={false}>
-            <KonvaImage image={img} {...photo} />
-          </Group>
-          <Rect
-            ref={rect}
-            name="crop-frame"
-            {...frame}
-            fill="rgba(0,0,0,0)" // invisible, but it can be grabbed anywhere inside
-            draggable
-            onDragMove={(e) => {
-              const n = e.target;
-              const kept = keepFrameOnPhoto({ x: n.x(), y: n.y(), width: frame.width, height: frame.height }, photo);
-              n.position({ x: kept.x, y: kept.y });
-            }}
-            onDragEnd={(e) => save(e.target)}
-            onTransformEnd={(e) => save(e.target)}
-          />
+          <Mirrored el={el}>
+            <KonvaImage image={img} {...photo} opacity={0.35} />
+            <Group clipX={frame.x} clipY={frame.y} clipWidth={frame.width} clipHeight={frame.height} listening={false}>
+              <KonvaImage image={img} {...photo} />
+            </Group>
+            <Rect
+              ref={rect}
+              name="crop-frame"
+              {...frame}
+              fill="rgba(0,0,0,0)" // invisible, but it can be grabbed anywhere inside
+              draggable
+              onDragMove={(e) => {
+                const n = e.target;
+                const kept = keepFrameOnPhoto({ x: n.x(), y: n.y(), width: frame.width, height: frame.height }, photo);
+                n.position({ x: kept.x, y: kept.y });
+              }}
+              onDragEnd={(e) => save(e.target)}
+              onTransformEnd={(e) => save(e.target)}
+            />
+          </Mirrored>
         </Group>
       </Group>
       <Transformer
@@ -220,17 +222,28 @@ function LineNode({ el }: { el: LineElement }) {
   );
 }
 
-/** Where an element sits inside its parent: by its centre, so rotation and flips turn around the middle. */
+/** Where an element sits inside its parent: by its centre, so rotation turns around the middle. */
 const placement = (el: Element) => ({
   x: el.x + el.width / 2,
   y: el.y + el.height / 2,
   offsetX: el.width / 2,
   offsetY: el.height / 2,
   rotation: el.rotation,
-  scaleX: el.flip_x ? -1 : 1,
-  scaleY: el.flip_y ? -1 : 1,
   opacity: el.opacity,
 });
+
+/**
+ * Flips, inside the placed group: what's drawn is mirrored within the element's own box. Kept off the
+ * placed group itself, because the Transformer reads a negative scale as a half turn and then shows
+ * the rotate handle at the bottom of a flipped, rotated element.
+ */
+function Mirrored({ el, children }: { el: Element; children: ReactNode }) {
+  return (
+    <Group x={el.flip_x ? el.width : 0} y={el.flip_y ? el.height : 0} scaleX={el.flip_x ? -1 : 1} scaleY={el.flip_y ? -1 : 1}>
+      {children}
+    </Group>
+  );
+}
 
 function ElementNode({ el, colours }: { el: Element; colours: Colours }) {
   const url = useEditor((s) => (el.type === "image" ? s.assetUrls[el.src.asset_id] : undefined));
@@ -269,7 +282,9 @@ function ElementNode({ el, colours }: { el: Element; colours: Colours }) {
         <>
           {el.children.map((child) => (
             <Group key={child.id} {...placement(child)}>
-              <ElementNode el={child} colours={colours} />
+              <Mirrored el={child}>
+                <ElementNode el={child} colours={colours} />
+              </Mirrored>
             </Group>
           ))}
         </>
@@ -322,7 +337,9 @@ export function PagePreview({ page, width, height, box }: { page: Page; width: n
           <Rect width={width} height={height} fill={page.background.color} />
           {page.elements.map((el) => (
             <Group key={el.id} {...placement(el)}>
-              <ElementNode el={el} colours={colours} />
+              <Mirrored el={el}>
+                <ElementNode el={el} colours={colours} />
+              </Mirrored>
             </Group>
           ))}
         </Group>
@@ -525,8 +542,8 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
         const { x, y } = keepTopLeft(node.x(), node.y(), width, transformedHeight, width, height, node.rotation());
         Object.assign(update, { x, y, width: round2(width), height: round2(height) });
       }
-      node.scaleX(el.flip_x ? -1 : 1);
-      node.scaleY(el.flip_y ? -1 : 1);
+      node.scaleX(1);
+      node.scaleY(1);
       // Konva can report the end of a transform once per node: only real changes count
       if (Object.entries(update).some(([k, v]) => (el as unknown as Record<string, unknown>)[k] !== v)) updates[el.id] = update;
     }
@@ -749,7 +766,9 @@ export function Canvas({ exportRef }: { exportRef: RefObject<ExportPage | null> 
                                 else if (el.type === "image") store.getState().startCrop(el.id);
                               }}
                             >
-                              <ElementNode el={el} colours={colours} />
+                              <Mirrored el={el}>
+                                <ElementNode el={el} colours={colours} />
+                              </Mirrored>
                             </Group>
                           ))}
                         </Group>

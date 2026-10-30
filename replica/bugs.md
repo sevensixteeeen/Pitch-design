@@ -222,6 +222,38 @@ server" apart from "logged out" (`auth.tsx`), and the reset page, every screen b
 The tests run in a new "real-mode" Playwright project: the real data layer against a made-up Supabase address,
 with every Supabase and API answer acted out by the test, so nothing leaves the browser.
 
+### BUG-011 to BUG-018: small things you found clicking around (2026-10-30)
+
+All found by you on 2026-10-30; fixed on branch `build/minor-fixes`. BUG-011 to 017 each have a test in
+`e2e/minor-fixes.spec.ts` (the rotate-handle one was checked to fail on the old code).
+
+- **BUG-011 (S3) New elements stack and vanish.** Every new shape or text box landed exactly in the centre, and
+  new shapes were grey `#9aa3ad`, the same as an existing grey rectangle, so a new one seemed to disappear.
+  Fix: a new element steps down and right (4 % of the page's shorter side) while its spot is taken and it still
+  fits (`store.ts addElement`); new shapes are Electric Blue `#0297de`.
+- **BUG-012 (S4) Font size box too narrow.** "60" showed as "6(" and "32" as "3": a crowded toolbar squeezed
+  the 64 px box. Fix: 80 px and it never shrinks (`ContextToolbar.tsx`).
+- **BUG-013 (S3) Rotate handle jumps after a flip.** On a rotated element, a flip moved the rotate handle to the
+  bottom. A flip was drawn as a negative scale on the element's own node, which the Transformer reads as a half
+  turn. Fix: the flip moved to an inner group (`Mirrored` in `Canvas.tsx`), so the selected node is never
+  mirrored; the crop overlay mirrors the same way. Saved designs don't change.
+- **BUG-014 (S4) Wrong unit in the size error.** With inches chosen, Create a design still said "40–8000 px".
+  Fix: the limits are shown in the chosen unit, "0.42–83.33 in" (min rounded up, max down, so both are allowed).
+- **BUG-015 (S4) Sort resets.** "Title A–Z" on Projects went back to "Last edited" after leaving the page.
+  Fix: the choice is remembered in this browser (local storage; if storage is blocked, it just isn't remembered).
+- **BUG-016 (S4) Menus don't match.** The editor's File menu had "Make a copy", the design cards didn't. Fix: the
+  card menu has it too; the copy stays where you are (same folder) and the list shows it.
+- **BUG-017 (S4) Unclear upload error.** A broken image file showed the browser's "The source image could not be
+  decoded". Fix: "broken.png: this file isn't a valid image."
+- **BUG-018 (S3) Slow server answers.** On localhost, API calls took 1–2.3 s and opening a design about 5 s.
+  Measured from your PC: one trip to the Supabase database (Ireland) takes about 280 ms, and every read made
+  about 6 (a connection test, BEGIN, the deleted-account check, the profile insert, the query, COMMIT).
+  Fix: the two login checks are one statement (`auth.py`); reads (GET) run without BEGIN/COMMIT; a connection
+  used in the last 30 s isn't tested again (`db.py`). Measured on the live database with read-only stand-in
+  queries: one read request 1,655 ms → 546 ms. Tests: `tests/test_db.py` (BUG-005 still passes; a connection
+  is never tested twice in a row; a read hands back a normal connection). What's left is distance: a Supabase
+  project in Mumbai would make each trip about ten times shorter, but it means a new project and moving data.
+
 ## To check (not reproduced, can't be yet)
 
 - **T1 Accent search on Supabase.** ✅ Checked 2026-10-27 on the live database (locale `en_US.UTF-8`):

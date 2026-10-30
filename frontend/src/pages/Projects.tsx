@@ -17,8 +17,28 @@ const SORTS: { value: Sort; label: string }[] = [
   { value: "title", label: "Title A–Z" },
 ];
 
+// the chosen sort is remembered in this browser; storage can be blocked (private windows), so
+// reading or writing it never breaks the page
+const SORT_KEY = "pitch.projects.sort";
+function savedSort(): Sort {
+  try {
+    const v = localStorage.getItem(SORT_KEY);
+    return SORTS.some((o) => o.value === v) ? (v as Sort) : "updated";
+  } catch {
+    return "updated";
+  }
+}
+
 export function Projects() {
-  const [sort, setSort] = useState<Sort>("updated");
+  const [sort, setSortState] = useState<Sort>(savedSort);
+  const setSort = (next: Sort) => {
+    setSortState(next);
+    try {
+      localStorage.setItem(SORT_KEY, next);
+    } catch {
+      // not remembered, but still sorted
+    }
+  };
   const [designs, setDesigns] = useState<DesignSummary[] | null>(null);
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [failed, setFailed] = useState(false);

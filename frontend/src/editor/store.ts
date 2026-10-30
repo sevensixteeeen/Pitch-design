@@ -225,7 +225,22 @@ export function createEditorStore(design: Design, assetUrls: Record<string, stri
         };
       }),
     endGesture: () => set((s) => (s.gestureStart ? { past: push(s.past, s.gestureStart), gestureStart: null } : s)),
-    addElement: (el, announcement) => get().change((els) => [...els, el], { select: [el.id], announcement }),
+    addElement: (el, announcement) => {
+      // a new element never lands exactly on top of another one: step it down and right
+      // while that spot is taken (and while it still fits on the page)
+      const s = get();
+      const { width_px: pageW, height_px: pageH } = s.design;
+      const taken = activePageOf(s).elements;
+      const step = Math.max(4, Math.round(Math.min(pageW, pageH) * 0.04));
+      const free = (x: number, y: number) => !taken.some((o) => Math.abs(o.x - x) < 1 && Math.abs(o.y - y) < 1);
+      let { x, y } = el;
+      while (!free(x, y) && x + step + el.width <= pageW && y + step + el.height <= pageH) {
+        x += step;
+        y += step;
+      }
+      const placed = { ...el, x, y };
+      get().change((els) => [...els, placed], { select: [placed.id], announcement });
+    },
     undo: () =>
       set((s) => {
         if (s.readOnly || s.past.length === 0) return s;

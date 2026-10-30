@@ -1,5 +1,5 @@
-// The "…" menu on a design card (Home S02, Projects S05, Folder S06): rename, move to a folder,
-// move to Trash (with Undo).
+// The "…" menu on a design card (Home S02, Projects S05, Folder S06): rename, make a copy,
+// move to a folder, move to Trash (with Undo).
 import { api, type DesignSummary } from "../data";
 import type { CardAction } from "./DesignCard";
 import { NameDialog, useDialogState } from "./dialogs";
@@ -34,8 +34,25 @@ export function useDesignActions(changed: () => void | Promise<void>) {
     });
   };
 
+  // same as File > Make a copy in the editor, but the copy stays here (in the same folder)
+  const makeCopy = async (design: DesignSummary) => {
+    const id = crypto.randomUUID();
+    try {
+      const { design: full } = await api.getDesign(design.id);
+      await api.createDesign({ id, title: `${full.title} (copy)`.slice(0, TITLE_MAX), width_px: full.width_px, height_px: full.height_px, display_unit: full.display_unit });
+      await api.saveContent(id, full.content, 1);
+      if (full.folder_id) await api.updateDesign(id, { folder_id: full.folder_id });
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Couldn't make a copy. Try again.", { kind: "error" });
+      return;
+    }
+    await changed();
+    toast(`Made a copy of "${design.title}"`);
+  };
+
   const actions = (design: DesignSummary): CardAction[] => [
     { label: "Rename", onSelect: () => state.open({ kind: "rename", design }) },
+    { label: "Make a copy", onSelect: () => void makeCopy(design) },
     { label: "Move to folder…", onSelect: () => state.open({ kind: "move", design }) },
     { label: "Move to Trash", onSelect: () => void moveToTrash(design), danger: true },
   ];
