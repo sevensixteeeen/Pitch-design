@@ -145,8 +145,3 @@ replica/               the plan and the reports
   build-log.md         what was built in each milestone, and what was harder than expected
 HOW-TO-RUN.md          run it, test it, fix common errors
 ```
-
-## Secrets
-
-Keys live only in `.env.local`, which git ignores. `.env.example` lists every variable name without values.
-Never commit real keys or paste them anywhere public.
