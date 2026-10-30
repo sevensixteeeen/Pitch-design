@@ -83,6 +83,28 @@ in Trash for over 30 days are deleted for good, with their files. The terminal s
 `Trash clean-up: deleted for good 0 design(s) ...`. To run it by hand: `uv run --env-file ../.env.local python -m app.purge`.
 To turn it off, add `PURGE_ON_START=0` to `.env.local`.
 
+### Or with one command (just using Pitch, not changing code)
+
+The API can serve the website too, so only one terminal is needed. Once, and again after any code change:
+
+```
+cd frontend
+npm run build
+```
+
+Then each time:
+
+```
+cd backend
+uv run --env-file ../.env.local uvicorn app.main:app
+```
+
+and open **http://localhost:8000**. Nothing refreshes by itself when code changes (rebuild instead).
+
+Email links (password reset, sign-up confirmation) come back to the address you used, so in Supabase add
+`http://localhost:8000/**` under Authentication > URL Configuration > Redirect URLs. Without it Supabase sends
+the link to the Site URL (5173), which only works while `npm run dev` is running.
+
 ## If something goes wrong
 
 | you see | do this |
