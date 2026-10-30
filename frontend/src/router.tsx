@@ -1,5 +1,4 @@
-// Every screen in the recon inventory has a route. Screens of later milestones
-// show a "Not built yet" page until their turn (replica/architecture.md, Build order).
+// Every screen in the recon inventory has a route (S01–S24, see replica/recon.md).
 import { createBrowserRouter } from "react-router";
 import { RequireAuth } from "./auth";
 import { AppLayout } from "./layouts/AppLayout";
@@ -9,7 +8,8 @@ import { Projects } from "./pages/Projects";
 import { FolderPage } from "./pages/FolderPage";
 import { Trash } from "./pages/Trash";
 import { Templates } from "./pages/Templates";
-import { NotFound, StubPage } from "./pages/stubs";
+import { Settings } from "./pages/Settings";
+import { NotFound } from "./pages/stubs";
 import { EditorPage } from "./editor/EditorPage";
 import { ResetPassword } from "./pages/ResetPassword";
 import { routeResetLink } from "./lib/supabase";
@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
       { path: "projects", element: <Projects /> }, // S05
       { path: "folders/:folderId", element: <FolderPage /> }, // S06
       { path: "trash", element: <Trash /> }, // S07
-      { path: "settings", element: <StubPage id="S23" title="Settings" milestone="milestone 4" /> },
+      { path: "settings", element: <Settings /> }, // S23 (change password)
     ],
   },
   {

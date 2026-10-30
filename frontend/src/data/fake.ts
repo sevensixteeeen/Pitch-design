@@ -226,6 +226,15 @@ export const fake: DataLayer = {
     await put("users", { ...user, password_hash: await hash(password) });
   },
 
+  async changePassword(current, next) {
+    await wait();
+    if (next.length < 8) throw new ValidationError("Use at least 8 characters for your new password.");
+    const user = await me();
+    if (user.password_hash !== (await hash(current))) throw new ValidationError("Your current password isn't right.");
+    if (current === next) throw new ValidationError("That's your current password. Pick a new one.");
+    await put("users", { ...user, password_hash: await hash(next) });
+  },
+
   async listDesigns(query = {}) {
     await wait();
     const user = await me();

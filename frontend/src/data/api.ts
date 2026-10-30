@@ -121,6 +121,8 @@ export interface DataLayer {
   requestPasswordReset(email: string): Promise<void>;
   /** For the logged-in user (the email link logs them in first). */
   setNewPassword(password: string): Promise<void>;
+  /** Settings: checks the current password first, so an unlocked laptop isn't enough to change it. */
+  changePassword(current: string, next: string): Promise<void>;
 
   // designs
   listDesigns(query?: ListDesignsQuery): Promise<DesignSummary[]>;

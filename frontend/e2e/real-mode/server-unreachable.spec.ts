@@ -3,25 +3,7 @@
 // Runs the app's real data layer against a made-up Supabase address: this file answers every Supabase
 // request itself and acts out the API server being down, so nothing leaves the browser.
 import { expect, test, type Page } from "@playwright/test";
-
-const SUPABASE = "https://e2e-dummy.supabase.co";
-const USER = {
-  id: "11111111-1111-4111-8111-111111111111",
-  aud: "authenticated",
-  role: "authenticated",
-  email: "reset@example.test",
-  app_metadata: { provider: "email" },
-  user_metadata: {},
-  created_at: "2026-01-01T00:00:00Z",
-};
-
-/** A login token shaped like Supabase's (never checked by anyone: there's no server in these tests). */
-function session() {
-  const exp = Math.floor(Date.now() / 1000) + 3600;
-  const part = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
-  const access_token = `${part({ alg: "HS256", typ: "JWT" })}.${part({ sub: USER.id, email: USER.email, aud: "authenticated", role: "authenticated", exp })}.sig`;
-  return { access_token, token_type: "bearer", expires_in: 3600, expires_at: exp, refresh_token: "e2e-refresh", user: USER };
-}
+import { session, SUPABASE, USER } from "./fakeSupabase";
 
 let unexpected: string[] = [];
 

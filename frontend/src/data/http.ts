@@ -154,6 +154,20 @@ export const http: DataLayer = {
     if (error) throw new ValidationError(authMessage(error));
   },
 
+  async changePassword(current, next) {
+    if (next.length < 8) throw new ValidationError("Use at least 8 characters for your new password.");
+    const { data } = await supabase().auth.getSession();
+    const email = data.session?.user.email;
+    if (!email) throw new SignedOutError();
+    // Supabase changes a password without asking for the old one, so check it by logging in with it
+    const check = await supabase().auth.signInWithPassword({ email, password: current });
+    if (check.error) {
+      throw new ValidationError(check.error.code === "invalid_credentials" ? "Your current password isn't right." : authMessage(check.error));
+    }
+    const { error } = await supabase().auth.updateUser({ password: next });
+    if (error) throw new ValidationError(authMessage(error));
+  },
+
   listDesigns(q = {}) {
     return call<DesignSummary[]>(
       "GET",
