@@ -83,6 +83,12 @@ in Trash for over 30 days are deleted for good, with their files. The terminal s
 `Trash clean-up: deleted for good 0 design(s) ...`. To run it by hand: `uv run --env-file ../.env.local python -m app.purge`.
 To turn it off, add `PURGE_ON_START=0` to `.env.local`.
 
+### Or with a double-click
+
+Double-click **`Start Pitch.bat`** in the repo folder (or a shortcut to it; `replica/brand/pitch.ico` is the logo as
+an icon). It rebuilds the website, starts the API (which serves the website too) and opens http://localhost:8000.
+Its window starts minimised in the taskbar: close it to stop Pitch. If Pitch is already running, it just opens it.
+
 ### Or with one command (just using Pitch, not changing code)
 
 The API can serve the website too, so only one terminal is needed. Once, and again after any code change:
