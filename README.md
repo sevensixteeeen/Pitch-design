@@ -98,7 +98,7 @@ Everything else, such as your own Supabase project, the database setup and fixes
 | database, logins, files | Supabase: Postgres, Auth, and a private Storage bucket with short-lived links |
 | tests | pytest with a throwaway Postgres; Playwright with an axe accessibility scan of every screen |
 
-A few choices worth knowing:
+A few choices worth knowing (the whole backend, with diagrams, is in **[SYSTEM-DESIGN.md](SYSTEM-DESIGN.md)**):
 
 - **One data layer, two versions.** Every screen talks to `frontend/src/data/api.ts`. `fake.ts` keeps data in
   the browser and `http.ts` talks to the real server, so the app and its browser tests run without any account.
@@ -126,6 +126,7 @@ backend/               the FastAPI server (app/) and its tests (tests/)
 supabase/migrations/   the database tables
 replica/               the plan and reports: recon, architecture, design, brand, features, tests, bugs, build log
 HOW-TO-RUN.md          how to run it, test it and fix common errors
+SYSTEM-DESIGN.md       how the backend works: requests, data, saving, uploads, speed, security
 ```
 
 ## A learning project
